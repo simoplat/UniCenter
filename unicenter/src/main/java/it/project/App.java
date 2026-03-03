@@ -8,8 +8,6 @@ public class App {
         System.out.println("BENVENUTO IN UNICENTER");
         Scanner sc = new Scanner(System.in);
 
-        //Test manuale
-        Professore prof = new Professore();
-        prof.menuPersonale(sc);
+        
     }
 }

@@ -5,6 +5,7 @@ import java.util.Scanner;
 public class Professore extends Utente {
 
     // Metodo principale per il professore
+    @Override
     public void menuPersonale(Scanner sc) {
         int scelta = -1;
 
