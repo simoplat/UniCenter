@@ -27,7 +27,7 @@ public class Studente extends Utente {
                         creaCarriera(sc);
                         break;
                     case 2:
-                        System.out.println(carriera != null ? carriera : "Nessuna carriera attiva.");
+                        visualizzaCarriera();
                         break;
                     case 0:
                         System.out.println("Uscita...");
@@ -40,10 +40,15 @@ public class Studente extends Utente {
     }
 
     public void creaCarriera(Scanner sc){
+        if(this.carriera != null) {
+            System.out.println("Sei già iscritto a un corso");
+            return;
+        } else
         this.carriera = new Carriera(0, 0);
     }
 
-    public Studente(Carriera carriera) {
+    public Studente(Carriera carriera, int id, String nome, String cognome, String email, String password, String codiceFiscale) {
+        super(id, nome, cognome, email, password, codiceFiscale);
         this.carriera = carriera;
     }
 
@@ -55,6 +60,12 @@ public class Studente extends Utente {
         this.carriera = carriera;
     }
 
+    public void visualizzaCarriera(){
+        if(this.carriera == null) {
+            System.out.println("Carriera attiva: "+ this.carriera);
+        } else
+            System.out.println("Non hai una carriera attiva al momento");
+    }
     
 
 }

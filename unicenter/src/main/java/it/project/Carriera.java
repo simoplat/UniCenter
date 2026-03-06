@@ -20,7 +20,7 @@ public class Carriera {
 
     @Override
     public String toString() {
-        return "Carriera [Matricola: " + matricola + ", Tasse: " + tasse + "€]";
+        return "Carriera [Matricola: " + matricola + "Stato: " + stato + ", Tasse: " + tasse + "€]";
     }
 
 }

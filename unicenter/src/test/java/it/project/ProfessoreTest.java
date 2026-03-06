@@ -19,7 +19,7 @@ public class ProfessoreTest {
     public void setUp() {
         // Redirigiamo l'output del sistema per poterlo leggere nei test
         System.setOut(new PrintStream(outContent));
-        professore = new Professore();
+        professore = new Professore(1,"mario","rossi","mrossi@email.com", "1234", "MRRS1023");
     }
 
     @AfterEach

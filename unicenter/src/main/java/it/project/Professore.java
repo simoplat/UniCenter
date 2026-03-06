@@ -4,6 +4,10 @@ import java.util.Scanner;
 
 public class Professore extends Utente {
 
+    public Professore(int id, String nome, String cognome, String email, String password, String codiceFiscale) {
+        super(id, nome, cognome, email, password, codiceFiscale);
+    }
+
     // Metodo principale per il professore
     @Override
     public void menuPersonale(Scanner sc) {
