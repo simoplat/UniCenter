@@ -16,5 +16,9 @@ public class Carriera {
         this.libretto = new HashMap<>();
     }
 
+    @Override
+    public String toString() {
+        return "Carriera [matricola=" + matricola + ", stato=" + stato + "]";
+    }
 
 }

@@ -8,6 +8,7 @@ public abstract class Utente {
     private String email;
     private String password;
     private String codiceFiscale;
+    protected ConsoleUI consoleUi;
 
 
     public Utente(int id, String nome, String cognome, String email, String password, String codiceFiscale) {
@@ -17,11 +18,10 @@ public abstract class Utente {
         this.email = email;
         this.password = password;
         this.codiceFiscale = codiceFiscale;
+        this.consoleUi = ConsoleUI.getInstance();
     }
 
-    public void menuPersonale() {
-        
-    }
+    public abstract void menuPersonale();
 
     public int getId() {
         return id;
@@ -71,4 +71,7 @@ public abstract class Utente {
         this.codiceFiscale = codiceFiscale;
     }
     
+    public String toString() {
+        return getNome() + " " +  getCognome();
+    }
 }
