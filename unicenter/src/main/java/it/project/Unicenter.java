@@ -3,6 +3,7 @@ package it.project;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import it.project.exceptions.UtenteNonTrovatoException;
@@ -13,6 +14,7 @@ public class Unicenter {
     private ConsoleUI consoleUi;
     private ControllerAppelli ctrlAppelli;
     private GestoreMaterie gestoreMaterie; 
+    private Map<String, Materia> materie;
 
 
     private static class UnicenterHolder {
@@ -26,13 +28,15 @@ public class Unicenter {
     private Unicenter() {
         this.studenti = new HashMap<>();
         this.professori = new HashMap<>();
+        this.materie = new HashMap<>();
         this.consoleUi = ConsoleUI.getInstance();
+        this.ctrlAppelli = new ControllerAppelli(new HashMap<>());
+        this.gestoreMaterie = new GestoreMaterie(this.materie, new HashMap<>(), new HashMap<>());
         popolaDati();// SIMULAZIONE DI UN DATABASE
     }
 
     public void start() {
         consoleUi.mostraMessaggio("BENVENUTO IN UNICENTER");
-
         Utente utenteLoggato = null;
 
         while (utenteLoggato == null) {
@@ -63,41 +67,41 @@ public class Unicenter {
             }
         }
 
-        throw new UtenteNonTrovatoException("Non è stato trovato nessun utente con queste credenziali");
+        throw new UtenteNonTrovatoException("Credenziali errate.");
     }
 
     private void popolaDati(){
-        //SIMULAZIONE CARICAMENTO DA DATABASE
-        //CONTROLLER
-        Appello appelloFisica = new Appello(1, LocalDate.of(2026, 6, 15), "Aula Magna", LocalTime.of(9, 30), 150, 0, "Nessuno", 101);
-        Appello appelloAnalisi = new Appello(2, LocalDate.of(2026, 7, 10), "Aula B1", LocalTime.of(14, 0), 50, 10, "Propedeuticità Matematica 0", 102);
-        this.ctrlAppelli.aggiungiAppello(appelloAnalisi);
-        this.ctrlAppelli = new ControllerAppelli();
-        this.ctrlAppelli.aggiungiAppello(appelloFisica);
-        //
-        this.gestoreMaterie = new GestoreMaterie();
+        // 1. Creazione Materie
+        Materia m1 = new Materia(101, 6, "Fisica");
+        Materia m2 = new Materia(102, 9, "Analisi Matematica");
+        materie.put("101", m1);
+        materie.put("102", m2);
 
-        //
+        // 2. Creazione Professori
         Professore p1 = new Professore(1, "Mario", "Rossi", "mario.rossi@uni.it", "123", "RSSMRA80A01H501U");
         Professore p2 = new Professore(2, "Elena", "Bianchi", "elena.bianchi@uni.it", "456", "BNCLNE85B41L219Z");
-
         professori.put(p1.getId(), p1);
         professori.put(p2.getId(), p2);
 
-        Studente s1 = new Studente(null, 1, "Luca", "Verdi", "luca.verdi@stud.it", "student789", "VRDLCU02M10F205R");
-        Studente s2 = new Studente(null, 2, "Giulia", "Neri", "giulia.neri@stud.it", "ghjkl321", "NREGLI03S50G273E");
-        Carriera c1 = new Carriera(1, 200);
-        Carriera c2 = new Carriera(1, 200);
+        // 3. Associazioni Professore-Materia
+        gestoreMaterie.associaProfessoreAMateria(1, 101); // Rossi -> Fisica
+        gestoreMaterie.associaProfessoreAMateria(2, 102); // Bianchi -> Analisi
 
-        s1.setCarriera(c1);
-        s2.setCarriera(c2);
+        // 4. Creazione Studenti e Carriere
+        Studente s1 = new Studente(null, 10, "Luca", "Verdi", "luca.verdi@stud.it", "stud1", "VRDLCU02M10F205R");
+        s1.setCarriera(new Carriera(1001, 250.0));
         studenti.put(s1.getCodiceFiscale(), s1);
-        studenti.put(s2.getCodiceFiscale(), s2);
+
+        // 5. Appelli esistenti
+        ctrlAppelli.aggiungiAppello(new Appello(1, LocalDate.of(2026, 6, 15), "Aula Magna", LocalTime.of(9, 30), 150, 0, "Nessuno", 101));
     }
 
     protected void creaAppello(int idProfessore) throws UtenteNonTrovatoException {
         ctrlAppelli.trovaProfessore(idProfessore, professori);
-        gestoreMaterie.trovaMaterieDiProfessore(idProfessore);
+        List <Materia> listaMaterie = gestoreMaterie.trovaMaterieDiProfessore(idProfessore);
+        for (Materia materia : listaMaterie) {
+            consoleUi.mostraMessaggio(materia.toString());
+        }
         
     }
 }

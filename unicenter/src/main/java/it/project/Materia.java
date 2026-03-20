@@ -35,5 +35,9 @@ public class Materia {
         this.nome = nome;
     }
 
-    
+    @Override
+    public String toString() {
+        return "Materia [idMateria=" + idMateria + ", crediti=" + crediti + ", nome=" + nome + "]";
+    }
+
 }
