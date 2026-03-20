@@ -1,5 +1,7 @@
 package it.project;
 
+import it.project.exceptions.UtenteNonTrovatoException;
+
 public class Professore extends Utente {
 
     public Professore(int id, String nome, String cognome, String email, String password, String codiceFiscale) {
@@ -63,6 +65,14 @@ public class Professore extends Utente {
 
     private void aggiungiAppello() {
         consoleUi.mostraMessaggio("Procedura di aggiunta appello avviata.");
+        try {
+            Unicenter.getInstance().creaAppello(getId());
+            
+            
+        } catch (UtenteNonTrovatoException e) {
+            consoleUi.mostraErrore("Non è stato possibile aggiungere un Appello");
+        }
+        
     }
 
     private void modificaAppello() {
