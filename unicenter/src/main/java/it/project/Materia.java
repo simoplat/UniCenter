@@ -1,43 +1,35 @@
 package it.project;
 
+import it.project.generator.CodiceAppelloGenerator;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Materia {
-    private int idMateria;
-    private int crediti;
+    private String codiceMateria;
     private String nome;
-    
-    public Materia(int idMateria, int crediti, String nome) {
-        this.idMateria = idMateria;
-        this.crediti = crediti;
+    private int cfu;
+    private List<Appello> appelli;
+
+    public Materia(String codiceMateria, String nome, int cfu) {
+        this.codiceMateria = codiceMateria;
         this.nome = nome;
+        this.cfu = cfu;
+        this.appelli = new ArrayList<>();
     }
 
-    public int getIdMateria() {
-        return idMateria;
+    /**
+     * Pattern Creator & Factory Method:
+     * La materia crea e registra un nuovo appello associandogli un codice univoco.
+     */
+    public Appello creaAppello(LocalDateTime dataOra, String aula, int posti, String vincoloCognome) {
+        String codiceAppello = CodiceAppelloGenerator.getInstance().generateCodice();
+        Appello nuovoAppello = new Appello(codiceAppello, this.codiceMateria, dataOra, aula, posti, vincoloCognome);
+        this.appelli.add(nuovoAppello);
+        return nuovoAppello;
     }
 
-    public void setIdMateria(int idMateria) {
-        this.idMateria = idMateria;
-    }
-
-    public int getCrediti() {
-        return crediti;
-    }
-
-    public void setCrediti(int crediti) {
-        this.crediti = crediti;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    @Override
-    public String toString() {
-        return "Materia [idMateria=" + idMateria + ", crediti=" + crediti + ", nome=" + nome + "]";
-    }
-
+    public List<Appello> getAppelli() { return appelli; }
+    public String getCodiceMateria() { return codiceMateria; }
+    public String getNome() { return nome; }
 }

@@ -2,7 +2,7 @@ package it.project;
 
 public abstract class Utente {
     
-    private int id;
+    private String id;
     private String nome;
     private String cognome;
     private String email;
@@ -10,8 +10,12 @@ public abstract class Utente {
     private String codiceFiscale;
     protected ConsoleUI consoleUi;
 
+    // Costruttore vuoto di default
+    public Utente() {
+    }
 
-    public Utente(int id, String nome, String cognome, String email, String password, String codiceFiscale) {
+
+    public Utente(String id, String nome, String cognome, String email, String password, String codiceFiscale) {
         this.id = id;
         this.nome = nome;
         this.cognome = cognome;
@@ -21,13 +25,19 @@ public abstract class Utente {
         this.consoleUi = ConsoleUI.getInstance();
     }
 
+    public Utente(String nome, String cognome, String email) {
+        this.nome = nome;
+        this.cognome = cognome;
+        this.email = email;
+    }
+
     public abstract void menuPersonale();
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

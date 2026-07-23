@@ -1,91 +1,41 @@
 package it.project;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Appello {
-
-    private int idAppello;
-    private LocalDate dataAppello;
-    private String aulaAppello;
-    private LocalTime orario;
+    private String codiceAppello;
+    private String codiceMateria;
+    private LocalDateTime dataOra;
+    private String aula;
     private int postiDisponibili;
-    private int postiPrenotati;
-    private String vincolo;
-    private int idMateria;
-    
-    public Appello(int idAppello, LocalDate dataAppello, String aulaAppello, LocalTime orario, int postiDisponibili,
-            int postiPrenotati, String vincolo, int idMateria) {
-        this.idAppello = idAppello;
-        this.dataAppello = dataAppello;
-        this.aulaAppello = aulaAppello;
-        this.orario = orario;
+    private String vincoloLetteraCognome;
+    private List<Studente> iscritti;
+
+    public Appello(String codiceAppello, String codiceMateria, LocalDateTime dataOra, String aula, int postiDisponibili, String vincoloLetteraCognome) {
+        this.codiceAppello = codiceAppello;
+        this.codiceMateria = codiceMateria;
+        this.dataOra = dataOra;
+        this.aula = aula;
         this.postiDisponibili = postiDisponibili;
-        this.postiPrenotati = postiPrenotati;
-        this.vincolo = vincolo;
-        this.idMateria = idMateria;
+        this.vincoloLetteraCognome = vincoloLetteraCognome;
+        this.iscritti = new ArrayList<>();
     }
 
-    public int getIdAppello() {
-        return idAppello;
+    public synchronized void aggiungiIscritto(Studente studente) {
+        if (postiDisponibili <= 0) {
+            throw new IllegalStateException("Nessun posto disponibile per l'appello " + codiceAppello);
+        }
+        iscritti.add(studente);
+        postiDisponibili--;
     }
 
-    public LocalDate getDataAppello() {
-        return dataAppello;
-    }
-
-    public void setDataAppello(LocalDate dataAppello) {
-        this.dataAppello = dataAppello;
-    }
-
-    public String getAulaAppello() {
-        return aulaAppello;
-    }
-
-    public void setAulaAppello(String aulaAppello) {
-        this.aulaAppello = aulaAppello;
-    }
-
-    public LocalTime getOrario() {
-        return orario;
-    }
-
-    public void setOrario(LocalTime orario) {
-        this.orario = orario;
-    }
-
-    public int getPostiDisponibili() {
-        return postiDisponibili;
-    }
-
-    public void setPostiDisponibili(int postiDisponibili) {
-        this.postiDisponibili = postiDisponibili;
-    }
-
-    public int getPostiPrenotati() {
-        return postiPrenotati;
-    }
-
-    public void setPostiPrenotati(int postiPrenotati) {
-        this.postiPrenotati = postiPrenotati;
-    }
-
-    public String getVincolo() {
-        return vincolo;
-    }
-
-    public void setVincolo(String vincolo) {
-        this.vincolo = vincolo;
-    }
-
-    public int getIdMateria() {
-        return idMateria;
-    }
-
-    public void setIdMateria(int idMateria) {
-        this.idMateria = idMateria;
-    }
-    
-    
-
+    public String getCodiceAppello() { return codiceAppello; }
+    public String getCodiceMateria() { return codiceMateria; }
+    public LocalDateTime getDataOra() { return dataOra; }
+    public String getAula() { return aula; }
+    public int getPostiDisponibili() { return postiDisponibili; }
+    public String getVincoloLetteraCognome() { return vincoloLetteraCognome; }
+    public List<Studente> getIscritti() { return iscritti; }
 }
