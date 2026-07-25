@@ -19,7 +19,7 @@ public class ConsoleUI {
 
     public String leggiStringa(String prompt) {
         System.out.print(prompt);
-        return scanner.nextLine();
+        return scanner.nextLine();  // trim? 
     }
 
     public int leggiIntero(String prompt) {
@@ -40,5 +40,9 @@ public class ConsoleUI {
 
     public void mostraErrore(String msg) {
         System.out.println("ERRORE: " + msg);
+    }
+
+    public void mostraIntestazione(String titolo) {
+        System.out.println("   " + titolo);
     }
 }

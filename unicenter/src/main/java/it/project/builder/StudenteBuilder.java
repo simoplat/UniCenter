@@ -7,6 +7,7 @@ public class StudenteBuilder {
     private String nome;
     private String cognome;
     private String email;
+    private String password = "pass123"; // Password predefinita se non impostata
     private String corsoDiLaurea;
 
     public StudenteBuilder setNome(String nome) {
@@ -24,6 +25,11 @@ public class StudenteBuilder {
         return this;
     }
 
+    public StudenteBuilder setPassword(String password) {
+        this.password = password;
+        return this;
+    }
+
     public StudenteBuilder setCorsoDiLaurea(String corsoDiLaurea) {
         this.corsoDiLaurea = corsoDiLaurea;
         return this;
@@ -34,6 +40,8 @@ public class StudenteBuilder {
             throw new IllegalArgumentException("Dati studente incompleti per l'immatricolazione.");
         }
         String matricola = MatricolaGenerator.getInstance().generateMatricola();
-        return new Studente(matricola, nome, cognome, email, corsoDiLaurea);
+        
+        // Passa la password al costruttore di Studente
+        return new Studente(matricola, nome, cognome, email, password, corsoDiLaurea);
     }
 }

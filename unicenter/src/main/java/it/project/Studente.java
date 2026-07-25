@@ -8,19 +8,31 @@ public class Studente extends Utente {
     private double totaleTasse;
     private PianoDiStudi pianoStudi; 
 
-    public Studente(String matricola, String nome, String cognome, String email, String corsoDiLaurea) {
-        
-        super(nome, cognome, email);
+    public Studente(String matricola, String nome, String cognome, String email, String password, String corsoDiLaurea) {
+        super(nome, cognome, email, password, null); // Passa null per il codice fiscale
         this.setNome(nome);
         this.setCognome(cognome);
         this.setEmail(email);
         
-        // Imposta i campi specifici di Studente
         this.matricola = matricola;
         this.corsoDiLaurea = corsoDiLaurea;
         this.tassePagate = false;
         this.pianoStudi = new PianoDiStudi();
     }
+
+    public Studente(String matricola, String nome, String cognome, String email, String password, String codiceFiscale, String corsoDiLaurea) {
+        super(nome, cognome, email, password, codiceFiscale);
+        this.setNome(nome);
+        this.setCognome(cognome);
+        this.setEmail(email);
+        
+        this.matricola = matricola;
+        this.corsoDiLaurea = corsoDiLaurea;
+        this.tassePagate = false;
+        this.pianoStudi = new PianoDiStudi();
+    }
+
+
 
     
     @Override

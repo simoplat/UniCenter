@@ -7,8 +7,12 @@ import it.project.notification.EmailServiceAdapter;
 import it.project.notification.INotificaService;
 import it.project.validation.*;
 
+import java.util.Scanner;
+import it.project.exceptions.UtenteNonTrovatoException;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,15 +60,8 @@ public class Unicenter {
     }
 
 
-    public void start() {
-        console.mostraMessaggio("=================================================================");
-        console.mostraMessaggio("      BENVENUTO IN UNICENTER - GESTIONE UNIVERSITARIA           ");
-        console.mostraMessaggio("=================================================================");
-    }
 
-    // =========================================================================
-    // UC8: Iscriversi a Corso di Laurea (Immatricolazione)
-    // =========================================================================
+    // Immatricolazione
     public Studente immatricolaStudente(String nome, String cognome, String email, String corso, double tassaBase) {
         Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, corso, tassaBase);
         utenti.add(nuovoStudente);
@@ -73,11 +70,7 @@ public class Unicenter {
         return nuovoStudente;
     }
 
-
-
-    // =========================================================================
-    // UC1: Inserire Appello d'Esame
-    // =========================================================================
+    // Inserire Appello d'Esame
     public Appello creaNuovoAppello(String codiceMateria, LocalDateTime dataOra, String aula, int posti, String vincoloCognome) {
         Materia materia = trovaMateria(codiceMateria)
                 .orElseThrow(() -> new IllegalArgumentException("Materia non trovata: " + codiceMateria));
@@ -90,9 +83,7 @@ public class Unicenter {
         return nuovoAppello;
     }
 
-    // =========================================================================
-    // UC2: Iscriversi ad un Appello d'Esame
-    // =========================================================================
+    // Iscriversi ad un Appello d'Esame
     public boolean iscriviStudenteAdAppello(String matricola, String codiceAppello) {
         Studente studente = trovaStudente(matricola)
                 .orElseThrow(() -> new IllegalArgumentException("Studente non trovato: " + matricola));
@@ -103,12 +94,86 @@ public class Unicenter {
         return iscrizioneAppelloController.iscriviStudente(studente, appello);
     }
 
-    // =========================================================================
-    // Metodi di Utility e Ricerca
-    // =========================================================================
     public void aggiungiMateria(Materia materia) {
         this.materie.add(materia);
     }
+
+public void popolaDataBase() {
+    try {
+        console.mostraMessaggio("[DB POPULATION] Avvio popolamento dati di prova...");
+
+        // INSERIMENTO MATERIE
+        Materia ingSoftware = new Materia("IS01", "Ingegneria del Software", 9);
+        Materia basiDati = new Materia("BD01", "Basi di Dati", 6);
+        Materia architetture = new Materia("AR01", "Architettura dei Calcolatori", 6);
+
+        this.aggiungiMateria(ingSoftware);
+        this.aggiungiMateria(basiDati);
+        this.aggiungiMateria(architetture);
+
+        // INSERIMENTO PROFESSORI
+        Professore profRossi = new Professore(
+                "1", "Mario", "Rossi", "mario.rossi@unicenter.it", "pass123", "RSSMRA80A01H501U"
+        );
+        Professore profVerdi = new Professore(
+                "2", "Giuseppe", "Verdi", "giuseppe.verdi@unicenter.it", "pass123", "VRDGPP75B02F205X"
+        );
+
+        this.utenti.add(profRossi);
+        this.utenti.add(profVerdi);
+
+        // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
+
+        // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
+        Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "Ingegneria Informatica", 500.0);
+        st1.getPianoStudi().aggiungiMateria("IS01");
+        st1.getPianoStudi().aggiungiMateria("BD01");
+        st1.setTassePagate(true); // Tasse Saldate
+
+        // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei validatori)
+        Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "Ingegneria Informatica", 500.0);
+        st2.getPianoStudi().aggiungiMateria("IS01");
+        st2.setTassePagate(false); // Tasse NON Saldate
+
+        // Studente 3: Anna Bianchi (Piano di studi limitato)
+        Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "Ingegneria Informatica", 500.0);
+        st3.getPianoStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
+        st3.setTassePagate(true);
+
+        // CREAZIONE APPELLI D'ESAME (UC1 + Factory Method + CodiceAppelloGenerator)
+        LocalDateTime dataAppello1 = LocalDateTime.now().plusDays(10).withHour(9).withMinute(0);
+        LocalDateTime dataAppello2 = LocalDateTime.now().plusDays(20).withHour(14).withMinute(30);
+
+        // Appello 1: Ingegneria del Software (IS01) - 15 posti, fascia cognome R-Z
+        Appello app1 = this.creaNuovoAppello("IS01", dataAppello1, "Aula Magna", 15, "R-Z");
+
+        // Appello 2: Basi di Dati (BD01) - 1 solo posto (per testare PostiDisponibiliValidator)
+        Appello app2 = this.creaNuovoAppello("BD01", dataAppello2, "Lab Informatica 2", 1, "A-Z");
+
+        console.mostraMessaggio("[DB POPULATION] Popolamento completato con successo!");
+        console.mostraMessaggio("  - Materie caricate: " + materie.size());
+        console.mostraMessaggio("  - Utenti caricati: " + utenti.size() + " (3 Studenti, 2 Professori)");
+        console.mostraMessaggio("  - Appelli generati: " + app1.getCodiceAppello() + " (" + app1.getCodiceMateria() + "), " 
+                           + app2.getCodiceAppello() + " (" + app2.getCodiceMateria() + ")");
+        console.mostraMessaggio("-----------------------------------------------------------------\n");
+
+    } catch (Exception e) {
+        console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
+    }
+}
+
+public Utente effettuaLogin(String email, String password) throws UtenteNonTrovatoException {
+    for (Utente u : utenti) {
+        if (u.getEmail().equalsIgnoreCase(email) && u.getPassword().equals(password)) {
+            return u;
+        }
+    }
+    throw new UtenteNonTrovatoException("Credenziali non valide: email o password errati.");
+}
+
+public List<Materia> getMaterie() {
+    return Collections.unmodifiableList(materie);
+}
 
     public Optional<Materia> trovaMateria(String codiceMateria) {
         return materie.stream()
@@ -143,67 +208,6 @@ public class Unicenter {
             }
         }
         return studenti;
-    }
-
-
-    public void popolaDataBase(){
-
-        Materia ingSoftware = new Materia("IS01", "Ingegneria del Software", 9);
-        Materia basiDati = new Materia("BD01", "Basi di Dati", 6);
-        
-        this.aggiungiMateria(ingSoftware);
-        this.aggiungiMateria(basiDati);
-
-        
-        // UC8: ISCRIVERSI A CORSO DI LAUREA (IMMATRICOLAZIONE);
-        console.mostraMessaggio("IMMATRICOLAZIONE STUDENTI E CALCOLO TASSE");
-
-        // Immatricolazione via StudenteBuilder, MatricolaGenerator e CalcoloTasseStrategy
-        Studente mario = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "Ingegneria Informatica", 500.00);
-        Studente luigi = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "Ingegneria Informatica", 500.00);
-        Studente anna = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "Ingegneria Informatica", 500.00);
-
-        // Configurazione Piani di Studi (Materia IS01 presente per Mario e Luigi, non per Anna)
-        mario.getPianoStudi().aggiungiMateria("IS01");
-        luigi.getPianoStudi().aggiungiMateria("IS01");
-        // Anna non ha IS01 nel piano di studi per testare la fallibilità del PianoStudiValidator
-
-        // Simulazione saldo tasse (solo Mario ha saldato le tasse universitarie)
-        mario.setTassePagate(true);
-        console.mostraMessaggio("--> Stato Tasse: Mario Rossi = PAGATO | Luigi Verdi = NON PAGATO | Anna Bianchi = NON PAGATO\n");
-
-
-        // UC1: INSERIRE / AGGIORNARE APPELLO D'ESAME
-        console.mostraMessaggio("CREAZIONE APPELLO D'ESAME CON NOTIFICA OBSERVER/ADAPTER");
-
-        LocalDateTime dataEsame = LocalDateTime.now().plusDays(15);
-        
-        // Creazione appello via Factory Method (Materia) con 1 solo posto disponibile e vincolo fascia 'R-Z'
-        Appello appelloIS = this.creaNuovoAppello("IS01", dataEsame, "Aula Magna", 1, "R-Z");
-        console.mostraMessaggio("--> Appello generato con codice univoco: " + appelloIS.getCodiceAppello() + "\n");
-
-
-        // UC2: ISCRIVERSI AD UN APPELLO D'ESAME (TEST CHAIN OF RESPONSIBILITY)
-        console.mostraMessaggio("ISCRIZIONE APPELLI CON CATENA DI VALIDAZIONE (CHAIN OF RESP.)");
-
-        // TEST 1: Mario Rossi (Piano Studi OK, Tasse OK, Posti OK, Iniziale Cognome 'R' OK)
-        console.mostraMessaggio("\n[TEST 1] Tentativo iscrizione: Mario Rossi (" + mario.getMatricola() + ")");
-        boolean esitoMario = this.iscriviStudenteAdAppello(mario.getMatricola(), appelloIS.getCodiceAppello());
-        console.mostraMessaggio("ESITO: " + (esitoMario ? "SUCCESSO (Studente iscritto)" : "FALLITO"));
-
-        // TEST 2: Luigi Verdi (Piano Studi OK, Tasse KO -> Fallirà su TassaPaidValidator)
-        console.mostraMessaggio("\n[TEST 2] Tentativo iscrizione: Luigi Verdi (" + luigi.getMatricola() + ")");
-        boolean esitoLuigi = this.iscriviStudenteAdAppello(luigi.getMatricola(), appelloIS.getCodiceAppello());
-        console.mostraMessaggio("ESITO: " + (esitoLuigi ? "SUCCESSO (Studente iscritto)" : "FALLITO"));
-
-        // Per il TEST 3: Paghiamo le tasse a Luigi per farlo avanzare nella catena
-        luigi.setTassePagate(true);
-
-        // TEST 3: Luigi Verdi ci riprova (Piano Studi OK, Tasse OK, Posti KO -> Fallirà su PostiDisponibiliValidator)
-        console.mostraMessaggio("\n[TEST 3] Secondo tentativo iscrizione: Luigi Verdi (" + luigi.getMatricola() + ") dopo saldo tasse");
-        boolean esitoLuigi2 = this.iscriviStudenteAdAppello(luigi.getMatricola(), appelloIS.getCodiceAppello());
-        console.mostraMessaggio("ESITO: " + (esitoLuigi2 ? "SUCCESSO (Studente iscritto)" : "FALLITO"));
-
     }
 
 }
