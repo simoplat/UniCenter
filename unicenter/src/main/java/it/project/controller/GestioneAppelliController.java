@@ -22,7 +22,7 @@ public class GestioneAppelliController {
     public GestioneAppelliController(INotificaService notificaService, IscrizioneValidator validatorChain) {
         this.notificaService = notificaService;
         this.validatorChain = validatorChain;
-        this.appelli = null;
+        this.appelli = new ArrayList<>();
     }
 
     public Appello creaNuovoAppello(Materia materia, LocalDateTime dataOra, String aula, int posti, String vincoloCognome, List<Studente> studentiIscrittiCorso) {
@@ -79,7 +79,10 @@ public class GestioneAppelliController {
     }
 
     public List <Appello> trovaAppelliDisponibili(List <String> codiciMaterie) {
-        List <Appello> appelliDisponibili = new ArrayList<>();;
+        if(appelli == null || appelli.isEmpty()) {
+            return null;
+        }
+        List <Appello> appelliDisponibili = new ArrayList<>();
         for (String codiceMateria : codiciMaterie) {
             for (Appello ap: appelli) {
                 if (ap.getCodiceMateria().equals(codiceMateria)) {

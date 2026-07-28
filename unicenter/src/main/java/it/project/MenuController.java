@@ -6,12 +6,11 @@ public class MenuController {
 
 
     private final ConsoleUI console = ConsoleUI.getInstance();
-    private final Unicenter unicenter;
+    private Unicenter unicenter;
     
 
-    public MenuController() {
-        this.unicenter = Unicenter.getInstance();
-
+    public MenuController(Unicenter unicenter) {
+        this.unicenter = unicenter;
     }
 
     public void avvia() {
@@ -60,7 +59,12 @@ public class MenuController {
                 case 1 -> {
                     console.mostraMessaggio("\n--- Iscrizione Appello ---");
                     // Invocazione della catena di validazione e iscrizione
-                    StampaAppelli(unicenter.visualizzaAppelliDisponibili());
+                    List <Appello> appelliDisponibili = unicenter.visualizzaAppelliDisponibili();
+                    if(appelliDisponibili == null || appelliDisponibili.isEmpty()) {
+                        console.mostraMessaggio("Nessun appello disponibile al momento.");
+                        break;
+                    }
+                    StampaAppelli(appelliDisponibili);
                     String codiceAppello = console.leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti");
                     if (!unicenter.iscriviStudenteAdAppello(codiceAppello)) {
                         console.mostraMessaggio("Codice appello non valido. Riprova.");

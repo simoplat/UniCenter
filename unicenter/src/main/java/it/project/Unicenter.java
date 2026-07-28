@@ -30,6 +30,7 @@ public class Unicenter {
     private Unicenter() {
         this.utenti = new ArrayList<>();
         this.materie = new ArrayList<>();
+        this.menuController = new MenuController(this);
         
         // Inizializzazione Adapter Notifiche
         this.notificaService = new EmailServiceAdapter();
@@ -46,7 +47,6 @@ public class Unicenter {
                 .addValidator(new PostiDisponibiliValidator())
                 .addValidator(new CognomeFasciaValidator())
                 .build();
-        this.menuController = new MenuController();
     }
 
     private static class UnicenterHolder {
