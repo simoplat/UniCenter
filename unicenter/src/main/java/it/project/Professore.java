@@ -11,11 +11,6 @@ public class Professore extends Utente {
         this.idProfessore = idProfessore;
     }
 
-    // 2. Overload: accetta l'ID come numero intero (es. 1 anziché "1") e lo converte in String
-    public Professore(int idProfessore, String nome, String cognome, String email, String password, String codiceFiscale) {
-        super(nome, cognome, email, password, codiceFiscale);
-        this.idProfessore = String.valueOf(idProfessore);
-    }
 
     // 3. Overload a 4 parametri per retrocompatibilità (se creato senza ID)
     public Professore(String nome, String cognome, String email, String password, String codiceFiscale) {

@@ -98,7 +98,25 @@ public class MenuController {
             switch (scelta) {
                 case 1 -> {
                     console.mostraMessaggio("\n--- Creazione Appello ---");
+                    List <Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
+                    StampaMaterie(materieDelProfessore);
+                    String codiceMateria = console.leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
+                    if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
+                        console.mostraMessaggio("Non sei abilitato a creare appelli per questa materia. Riprova.");
+                        break;
+                    }
                     
+                    String dataOraStr = console.leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
+                    String aula = console.leggiStringa("Inserisci l'aula dell'appello: ");
+                    int posti = console.leggiIntero("Inserisci il numero di posti disponibili: ");
+                    String vincoloCognome = console.leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
+                    Appello nuovoAppello = new Appello(dataOraStr, codiceMateria, null, aula, posti, vincoloCognome);
+                    Boolean successo = unicenter.creaNuovoAppello(nuovoAppello);
+                    if(successo) {
+                        console.mostraMessaggio("Appello creato con successo!");
+                    } else {
+                        console.mostraMessaggio("Errore nella creazione dell'appello. Controlla i dati inseriti.");
+                    } break;
                 }
                 case 2 -> {
                     console.mostraMessaggio("\n--- Lista Iscritti ---");
@@ -151,5 +169,10 @@ public class MenuController {
     public void StampaAppelli(List<Appello> appelliDisponibili) {
        console.mostraMessaggio(appelliDisponibili.toString());;
     }
+
+    public void StampaMaterie(List<Materia> materie) {
+       console.mostraMessaggio(materie.toString());;
+    }
+
 
 }

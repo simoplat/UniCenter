@@ -1,9 +1,8 @@
 package it.project;
 
-import it.project.controller.GestioneAppelliController;
-import it.project.controller.ImmatricolazioneController;
 import it.project.notification.EmailServiceAdapter;
 import it.project.notification.INotificaService;
+import it.project.controller.*;
 import it.project.validation.*;
 
 import it.project.exceptions.UtenteNonTrovatoException;
@@ -17,11 +16,10 @@ import java.util.Optional;
 public class Unicenter {
 
     private final List<Utente> utenti;
-    private final List<Materia> materie;
-    
     private final INotificaService notificaService;
     private final ImmatricolazioneController immatricolazioneController;
     private final GestioneAppelliController gestioneAppelliController;
+    private final GestoreMaterie gestoreMaterie;
     private final MenuController menuController;
     private Utente currentUser = null;
 
@@ -29,7 +27,6 @@ public class Unicenter {
 
     private Unicenter() {
         this.utenti = new ArrayList<>();
-        this.materie = new ArrayList<>();
         this.menuController = new MenuController(this);
         
         // Inizializzazione Adapter Notifiche
@@ -40,6 +37,8 @@ public class Unicenter {
 
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
         this.gestioneAppelliController = new GestioneAppelliController(this.notificaService, null);
+
+        this.gestoreMaterie = new GestoreMaterie();
 
         // 3. Inizializzazione Controller UC2 (Iscrizione Appelli con Chain of Responsibility)
         IscrizioneValidator catenaValidazione = new ValidationChainBuilder()
@@ -74,16 +73,8 @@ public class Unicenter {
     }
 
     // Inserire Appello d'Esame
-    public Appello creaNuovoAppello(String codiceMateria, LocalDateTime dataOra, String aula, int posti, String vincoloCognome) {
-        Materia materia = trovaMateria(codiceMateria)
-                .orElseThrow(() -> new IllegalArgumentException("Materia non trovata: " + codiceMateria));
-
-        // Recupera tutti gli studenti iscritti per notificarli dell'apertura
-        List<Studente> studentiIscritti = getStudentiIscritti();
-
-        Appello nuovoAppello = gestioneAppelliController.creaNuovoAppello(materia, dataOra, aula, posti, vincoloCognome, studentiIscritti);
-        console.mostraMessaggio("[UNICENTER] Creato nuovo appello " + nuovoAppello.getCodiceAppello() + " per " + materia.getNome());
-        return nuovoAppello;
+    public boolean creaNuovoAppello(Appello appello) {
+        return gestioneAppelliController.creaNuovoAppello(appello);
     }
 
     // iscriviStudenteAdAppello , iscrizione appello
@@ -105,10 +96,6 @@ public class Unicenter {
         return false;
     }
 
-    public void aggiungiMateria(Materia materia) {
-        this.materie.add(materia);
-    }
-
 public void popolaDataBase() {
     try {
         console.mostraMessaggio("[DB POPULATION] Avvio popolamento dati di prova...");
@@ -118,9 +105,9 @@ public void popolaDataBase() {
         Materia basiDati = new Materia("BD01", "Basi di Dati", 6);
         Materia architetture = new Materia("AR01", "Architettura dei Calcolatori", 6);
 
-        this.aggiungiMateria(ingSoftware);
-        this.aggiungiMateria(basiDati);
-        this.aggiungiMateria(architetture);
+        this.gestoreMaterie.associaProfessoreAMateria("1", "IS01");
+        this.gestoreMaterie.associaProfessoreAMateria("1", "BD01");
+        this.gestoreMaterie.associaProfessoreAMateria("2", "AR01");
 
         // INSERIMENTO PROFESSORI
         Professore profRossi = new Professore(
@@ -156,17 +143,13 @@ public void popolaDataBase() {
         LocalDateTime dataAppello2 = LocalDateTime.now().plusDays(20).withHour(14).withMinute(30);
 
         // Appello 1: Ingegneria del Software (IS01) - 15 posti, fascia cognome R-Z
-        Appello app1 = this.creaNuovoAppello("IS01", dataAppello1, "Aula Magna", 15, "R-Z");
+        Appello app1 = new Appello("APP1", "IS01", dataAppello1, "Aula Magna", 15, "A-Z");
+        this.gestioneAppelliController.creaNuovoAppello(app1);
 
-        // Appello 2: Basi di Dati (BD01) - 1 solo posto (per testare PostiDisponibiliValidator)
-        Appello app2 = this.creaNuovoAppello("BD01", dataAppello2, "Lab Informatica 2", 1, "A-Z");
+        Appello app2 = new Appello("APP2", "BD01", dataAppello2, "Aula 101", 10, "A-Z");
+        this.gestioneAppelliController.creaNuovoAppello(app2);
 
-        console.mostraMessaggio("[DB POPULATION] Popolamento completato con successo!");
-        console.mostraMessaggio("  - Materie caricate: " + materie.size());
-        console.mostraMessaggio("  - Utenti caricati: " + utenti.size() + " (3 Studenti, 2 Professori)");
-        console.mostraMessaggio("  - Appelli generati: " + app1.getCodiceAppello() + " (" + app1.getCodiceMateria() + "), " 
-                           + app2.getCodiceAppello() + " (" + app2.getCodiceMateria() + ")");
-        console.mostraMessaggio("-----------------------------------------------------------------\n");
+  
 
     } catch (Exception e) {
         console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
@@ -182,15 +165,7 @@ public Utente effettuaLogin(String email, String password) throws UtenteNonTrova
     throw new UtenteNonTrovatoException("Credenziali non valide: email o password errati.");
 }
 
-public List<Materia> getMaterie() {
-    return Collections.unmodifiableList(materie);
-}
 
-    public Optional<Materia> trovaMateria(String codiceMateria) {
-        return materie.stream()
-                .filter(m -> m.getCodiceMateria().equalsIgnoreCase(codiceMateria))
-                .findFirst();
-    }
 
     public Optional<Studente> trovaStudente(String matricola) {
         return utenti.stream()
@@ -199,19 +174,6 @@ public List<Materia> getMaterie() {
                 .filter(s -> s.getMatricola().equalsIgnoreCase(matricola))
                 .findFirst();
     }
-
-    public Optional<Appello> trovaAppello(String codiceAppello) {
-        for (Materia m : materie) {
-            for (Appello a : m.getAppelli()) {
-                if (a.getCodiceAppello().equalsIgnoreCase(codiceAppello)) {
-                    return Optional.of(a);
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-
 
     public List<Studente> getStudentiIscritti() {
         List<Studente> studenti = new ArrayList<>();
@@ -222,8 +184,6 @@ public List<Materia> getMaterie() {
         }
         return studenti;
     }
-
-
 
     public boolean esisteUtente(String email) {
         for (Utente u : utenti) {
@@ -247,6 +207,16 @@ public List<Materia> getMaterie() {
 
     public Utente getCurrentUser() {
         return currentUser;
+    }
+
+    public List<Materia> getMaterieDelProfessore() {
+        Professore professore = (Professore) getCurrentUser();
+        return gestoreMaterie.trovaMaterieDiProfessore(professore.getIdProfessore());
+    }
+
+    public boolean isProfessoreAbilitatoAMateria(String codiceMateria) {
+        Professore professore = (Professore) getCurrentUser();
+        return gestoreMaterie.isProfessoreAbilitatoAMateria(professore.getIdProfessore(), codiceMateria);
     }
 
 }

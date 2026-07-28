@@ -18,39 +18,35 @@ public class GestioneAppelliController {
     Unicenter unicenter = Unicenter.getInstance();
     ConsoleUI console = ConsoleUI.getInstance();
 
-
     public GestioneAppelliController(INotificaService notificaService, IscrizioneValidator validatorChain) {
         this.notificaService = notificaService;
         this.validatorChain = validatorChain;
         this.appelli = new ArrayList<>();
     }
 
-    public Appello creaNuovoAppello(Materia materia, LocalDateTime dataOra, String aula, int posti, String vincoloCognome, List<Studente> studentiIscrittiCorso) {
+    public boolean creaNuovoAppello(Appello appello) {
         // VERIFICA DELLA DATA (UC1 - Controllo Dati Invalidi)
+        String codiceMateria = appello.getCodiceMateria();
+        LocalDateTime dataOra = appello.getDataOra();
+        String aula = appello.getAula();
+        int postiDisponibili = appello.getPostiDisponibili();
+        String vincoloLetteraCognome = appello.getVincoloLetteraCognome();
+
         if (dataOra == null) {
-            throw new IllegalArgumentException("Impossibile creare l'appello: la data e l'ora non possono essere nulle.");
+            return false; // Data non valida
         }
 
         if (dataOra.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Data o ora non valida: non è possibile inserire un appello nel passato (" + dataOra + ").");
-        }
-
-        if (materia == null) {
-            throw new IllegalArgumentException("Impossibile creare l'appello: la materia non è valida.");
+            return false;
         }
 
         // Creazione dell'appello mediante Factory Method dell'entità Materia
-        Appello appello = materia.creaAppello(dataOra, aula, posti, vincoloCognome);
+        appelli.add(appello);
 
         // Pattern Observer: Invio notifiche agli studenti iscritti al corso
-        if (notificaService != null && studentiIscrittiCorso != null) {
-            String messaggio = "Nuovo appello inserito per la materia " + materia.getNome() + " previsto per il: " + dataOra;
-            for (Studente s : studentiIscrittiCorso) {
-                notificaService.inviaNotifica(s.getEmail(), messaggio);
-            }
-        }
+        // da fare le notifiche
 
-        return appello;
+        return true;
     }
 
     public boolean iscriviStudente(Studente currentUser, String codiceAppello) {
@@ -61,15 +57,14 @@ public class GestioneAppelliController {
         try {
             // Esegue i controlli della Chain of Responsibility
             validatorChain.validate(currentUser, appello);
-            
+
             // Se la validazione passa, registra l'iscritto
             appello.aggiungiIscritto(currentUser);
 
             // Invia la notifica via adapter
             notificaService.inviaNotifica(
-                currentUser.getEmail(),
-                "Iscrizione confermata per l'appello " + appello.getCodiceAppello()
-            );
+                    currentUser.getEmail(),
+                    "Iscrizione confermata per l'appello " + appello.getCodiceAppello());
 
             return true;
         } catch (Exception e) {
@@ -78,28 +73,28 @@ public class GestioneAppelliController {
         }
     }
 
-    public List <Appello> trovaAppelliDisponibili(List <String> codiciMaterie) {
-        if(appelli == null || appelli.isEmpty()) {
+    public List<Appello> trovaAppelliDisponibili(List<String> codiciMaterie) {
+        if (appelli == null || appelli.isEmpty()) {
             return null;
         }
-        List <Appello> appelliDisponibili = new ArrayList<>();
+        List<Appello> appelliDisponibili = new ArrayList<>();
         for (String codiceMateria : codiciMaterie) {
-            for (Appello ap: appelli) {
+            for (Appello ap : appelli) {
                 if (ap.getCodiceMateria().equals(codiceMateria)) {
                     appelliDisponibili.add(ap);
                 }
             }
         }
-        return appelliDisponibili;        
+        return appelliDisponibili;
     }
 
-
-    public Appello trovAppelloById(String codiceAppello){
-        for (Appello app: appelli){
-            if (app.getCodiceAppello().equals(codiceAppello)){
+    public Appello trovAppelloById(String codiceAppello) {
+        for (Appello app : appelli) {
+            if (app.getCodiceAppello().equals(codiceAppello)) {
                 return app;
             }
-        } return null;
+        }
+        return null;
     }
 
 }
