@@ -1,13 +1,13 @@
 package it.project;
 
 import java.util.List;
+import java.time.format.DateTimeFormatter;
 
 public class MenuController {
 
-
     private final ConsoleUI console = ConsoleUI.getInstance();
     private Unicenter unicenter;
-    
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'alle' HH:mm");
 
     public MenuController(Unicenter unicenter) {
         this.unicenter = unicenter;
@@ -55,17 +55,18 @@ public class MenuController {
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
             switch (scelta) {
-                
+
                 case 1 -> {
                     console.mostraMessaggio("\n--- Iscrizione Appello ---");
                     // Invocazione della catena di validazione e iscrizione
-                    List <Appello> appelliDisponibili = unicenter.visualizzaAppelliDisponibili();
-                    if(appelliDisponibili == null || appelliDisponibili.isEmpty()) {
+                    List<Appello> appelliDisponibili = unicenter.visualizzaAppelliDisponibili();
+                    if (appelliDisponibili == null || appelliDisponibili.isEmpty()) {
                         console.mostraMessaggio("Nessun appello disponibile al momento.");
                         break;
                     }
                     StampaAppelli(appelliDisponibili);
-                    String codiceAppello = console.leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti");
+                    String codiceAppello = console
+                            .leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti: ");
                     if (!unicenter.iscriviStudenteAdAppello(codiceAppello)) {
                         console.mostraMessaggio("Codice appello non valido. Riprova.");
                         break;
@@ -98,29 +99,30 @@ public class MenuController {
             switch (scelta) {
                 case 1 -> {
                     console.mostraMessaggio("\n--- Creazione Appello ---");
-                    List <Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
+                    List<Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
                     StampaMaterie(materieDelProfessore);
                     String codiceMateria = console.leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
                     if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
                         console.mostraMessaggio("Non sei abilitato a creare appelli per questa materia. Riprova.");
                         break;
                     }
-                    
+
                     String dataOraStr = console.leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
                     String aula = console.leggiStringa("Inserisci l'aula dell'appello: ");
                     int posti = console.leggiIntero("Inserisci il numero di posti disponibili: ");
                     String vincoloCognome = console.leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
                     Appello nuovoAppello = new Appello(dataOraStr, codiceMateria, null, aula, posti, vincoloCognome);
                     Boolean successo = unicenter.creaNuovoAppello(nuovoAppello);
-                    if(successo) {
+                    if (successo) {
                         console.mostraMessaggio("Appello creato con successo!");
                     } else {
                         console.mostraMessaggio("Errore nella creazione dell'appello. Controlla i dati inseriti.");
-                    } break;
+                    }
+                    break;
                 }
                 case 2 -> {
                     console.mostraMessaggio("\n--- Lista Iscritti ---");
-                    
+
                 }
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
@@ -135,44 +137,59 @@ public class MenuController {
         console.mostraMessaggio("\n------------------------------------------");
         console.mostraMessaggio("      IMMATRICOLAZIONE NUOVO STUDENTE     ");
         console.mostraMessaggio("------------------------------------------");
-        //immatricolazioneController.immatricolaStudente();
+        // immatricolazioneController.immatricolaStudente();
     }
 
-    
-
-
-
-    public void loginUtente(){
+    public void loginUtente() {
         console.mostraMessaggio("\n------------------------------------------");
         console.mostraMessaggio("                 LOGIN                     ");
         console.mostraMessaggio("------------------------------------------");
         String email = console.leggiStringa("Inserisci email: ");
-        if(!unicenter.esisteUtente(email)) {
+        if (!unicenter.esisteUtente(email)) {
             console.mostraMessaggio("Email non registrata. Riprova.");
             return;
         }
         String password = console.leggiStringa("Inserisci password: ");
-        if(!unicenter.passwordCorretta(email, password)) {
+        if (!unicenter.passwordCorretta(email, password)) {
             console.mostraMessaggio("Password errata. Riprova.");
             return;
         }
         console.mostraMessaggio("Login effettuato con successo!");
         console.mostraMessaggio("Benvenuto, " + unicenter.getCurrentUser().getNome() + "!");
-        if(unicenter.getCurrentUser() instanceof Studente){
+        if (unicenter.getCurrentUser() instanceof Studente) {
             menuStudente();
-        } else if(unicenter.getCurrentUser() instanceof Professore){
+        } else if (unicenter.getCurrentUser() instanceof Professore) {
             menuProfessore();
         }
         return;
     }
 
     public void StampaAppelli(List<Appello> appelliDisponibili) {
-       console.mostraMessaggio(appelliDisponibili.toString());;
+        for (Appello appello : appelliDisponibili) {
+            // Formatta la data
+            String dataOraFormattata = appello.getDataOra().format(formatter);
+
+            console.mostraMessaggio(
+                    "Codice Appello: " + appello.getCodiceAppello() + "\n" +
+                            "Materia: " + appello.getCodiceMateria() + "\n" +
+                            "Data e Ora: " + dataOraFormattata + "\n" +
+                            "Aula: " + appello.getAula() + "\n" +
+                            "Posti Disponibili: " + appello.getPostiDisponibili() + "\n" +
+                            "Vincolo Cognome: "
+                            + (appello.getVincoloLetteraCognome() != null ? appello.getVincoloLetteraCognome()
+                                    : "Nessuno")
+                            + "\n" +
+                            "----------------------------------------");
+        }
     }
 
     public void StampaMaterie(List<Materia> materie) {
-       console.mostraMessaggio(materie.toString());;
+        for (Materia materia : materie) {
+            console.mostraMessaggio(
+                    "Codice Materia: " + materia.getCodiceMateria() + "\n" +
+                            "Nome Materia: " + materia.getNome() + "\n" +
+                            "----------------------------------------");
+        }
     }
-
 
 }

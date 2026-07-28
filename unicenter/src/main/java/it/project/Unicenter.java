@@ -120,6 +120,8 @@ public void popolaDataBase() {
         this.utenti.add(profRossi);
         this.utenti.add(profVerdi);
 
+        gestoreMaterie.associaProfessoreAMateria("1", "IS01");
+
         // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
         // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
