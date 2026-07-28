@@ -1,203 +1,151 @@
 package it.project;
 
-import it.project.exceptions.UtenteNonTrovatoException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.util.List;
 
 public class MenuController {
-    // 1. Istanza statica privata per il Singleton
-    private static MenuController instance;
 
+
+    private final ConsoleUI console = ConsoleUI.getInstance();
     private final Unicenter unicenter;
-    private final ConsoleUI ui;
+    
 
-    // 2. Costruttore PRIVATO
-    private MenuController() {
-        this.unicenter = Unicenter.getInstance(); 
-        this.ui = ConsoleUI.getInstance(); 
-    }
+    public MenuController() {
+        this.unicenter = Unicenter.getInstance();
 
-    // 3. Metodo statico pubblico per ottenere l'unica istanza
-    public static synchronized MenuController getInstance() {
-        if (instance == null) {
-            instance = new MenuController();
-        }
-        return instance;
     }
 
     public void avvia() {
-        // Popola il DB con i dati di test (UC8, UC1, UC2)[cite: 2]
-        unicenter.popolaDataBase();
+        boolean running = true;
 
-        ui.mostraIntestazione("BENVENUTO IN UNICENTER SYSTEM");
+        while (running) {
+            console.mostraMessaggio("\n==========================================");
+            console.mostraMessaggio("   UNICENTER - Gestione Universitaria   ");
+            console.mostraMessaggio("==========================================");
+            console.mostraMessaggio("1. Login");
+            console.mostraMessaggio("2. Immatricolazione Nuovo Studente");
+            console.mostraMessaggio("0. Esci dal sistema");
 
-        boolean inEsecuzione = true;
+            int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
-        while (inEsecuzione) {
-            ui.mostraMessaggio("\n--- ACCESSO UTENTE ---");
-            ui.mostraMessaggio("(Digita 'esci' come email per chiudere il programma)");
-
-            String email = ui.leggiStringa("Email: ");
-
-            if (email.equalsIgnoreCase("esci")) {
-                inEsecuzione = false;
-                ui.mostraMessaggio("\nChiusura del sistema UniCenter in corso... Arrivederci!");
-                break;
-            }
-
-            String password = ui.leggiStringa("Password: ");
-
-            try {
-                Utente utenteLoggato = unicenter.effettuaLogin(email, password);
-                ui.mostraMessaggio("\n✅ Accesso effettuato! Benvenuto/a " + utenteLoggato.getNome() + " " + utenteLoggato.getCognome());
-
-                // Smistamento in base al ruolo
-                if (utenteLoggato instanceof Professore) {
-                    menuProfessore((Professore) utenteLoggato);
-                } else if (utenteLoggato instanceof Studente) {
-                    menuStudente((Studente) utenteLoggato);
+            switch (scelta) {
+                case 1 -> loginUtente();
+                case 2 -> gestisciImmatricolazione();
+                case 0 -> {
+                    console.mostraMessaggio("\nUscita dal sistema UniCenter. Arrivederci!");
+                    running = false;
+                    System.exit(0);
                 }
-
-            } catch (UtenteNonTrovatoException e) {
-                ui.mostraErrore(e.getMessage());
-                ui.mostraMessaggio("Verifica le credenziali e riprova.");
+                default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
         }
     }
 
-    // =========================================================================
-    // MENU PROFESSORE (UC1)[cite: 2]
-    // =========================================================================
-    private void menuProfessore(Professore prof) {
-        boolean inSessione = true;
+    // ==========================================
+    // MENU AREA STUDENTE
+    // ==========================================
+    private void menuStudente() {
+        boolean back = false;
 
-        while (inSessione) {
-            ui.mostraIntestazione("AREA RISERVATA PROFESSORE: Prof. " + prof.getCognome());
-            ui.mostraMessaggio("1. [UC1] Inserisci / Crea Nuovo Appello d'Esame");
-            ui.mostraMessaggio("2. Visualizza Catalogo Materie e Appelli");
-            ui.mostraMessaggio("0. Logout");
+        while (!back) {
+            console.mostraMessaggio("\n------------------------------------------");
+            console.mostraMessaggio("            AREA STUDENTE                 ");
+            console.mostraMessaggio("------------------------------------------");
+            console.mostraMessaggio("1. Iscriviti ad un appello d'esame");
+            console.mostraMessaggio("0. Torna al menu principale");
 
-            String scelta = ui.leggiStringa("Seleziona un'opzione: ");
+            int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
             switch (scelta) {
-                case "1":
-                    formCreazioneAppello();
-                    break;
-                case "2":
-                    mostraCatalogo();
-                    break;
-                case "0":
-                    inSessione = false;
-                    ui.mostraMessaggio("Logout effettuato. Ritorno alla schermata di login.");
-                    break;
-                default:
-                    ui.mostraErrore("Opzione non valida!");
+                
+                case 1 -> {
+                    console.mostraMessaggio("\n--- Iscrizione Appello ---");
+                    // Invocazione della catena di validazione e iscrizione
+                    StampaAppelli(unicenter.visualizzaAppelliDisponibili());
+                    String codiceAppello = console.leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti");
+                    if (!unicenter.iscriviStudenteAdAppello(codiceAppello)) {
+                        console.mostraMessaggio("Codice appello non valido. Riprova.");
+                        break;
+                    } else {
+                        console.mostraMessaggio("Iscrizione avvenuta con successo all'appello " + codiceAppello);
+                    }
+
+                }
+                case 0 -> back = true;
+                default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
         }
     }
 
-    // =========================================================================
-    // MENU STUDENTE (UC2)[cite: 2]
-    // =========================================================================
-    private void menuStudente(Studente studente) {
-        boolean inSessione = true;
+    // ==========================================
+    // MENU AREA PROFESSORE / DOCENTE
+    // ==========================================
+    private void menuProfessore() {
+        boolean back = false;
 
-        while (inSessione) {
-            ui.mostraIntestazione("AREA RISERVATA STUDENTE: " + studente.getNome() + " " + studente.getCognome());
-            ui.mostraMessaggio("Matricola: " + studente.getMatricola() + " | Corso: " + studente.getCorsoDiLaurea());
-            ui.mostraMessaggio("1. [UC2] Iscriviti ad un Appello d'Esame");
-            ui.mostraMessaggio("2. Visualizza Appelli Disponibili");
-            ui.mostraMessaggio("3. Dettaglio Carriera e Stato Tasse");
-            ui.mostraMessaggio("0. Logout");
-
-            String scelta = ui.leggiStringa("Seleziona un'opzione: ");
+        while (!back) {
+            console.mostraMessaggio("\n------------------------------------------");
+            console.mostraMessaggio("         AREA PROFESSORE / DOCENTE        ");
+            console.mostraMessaggio("------------------------------------------");
+            console.mostraMessaggio("1. Crea nuovo appello d'esame");
+            console.mostraMessaggio("2. Visualizza iscritti ad un appello");
+            console.mostraMessaggio("0. Torna al menu principale");
+            int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
             switch (scelta) {
-                case "1":
-                    formIscrizioneAppello(studente);
-                    break;
-                case "2":
-                    mostraCatalogo();
-                    break;
-                case "3":
-                    mostraDettaglioStudente(studente);
-                    break;
-                case "0":
-                    inSessione = false;
-                    ui.mostraMessaggio("Logout effettuato. Ritorno alla schermata di login.");
-                    break;
-                default:
-                    ui.mostraErrore("Opzione non valida!");
+                case 1 -> {
+                    console.mostraMessaggio("\n--- Creazione Appello ---");
+                    
+                }
+                case 2 -> {
+                    console.mostraMessaggio("\n--- Lista Iscritti ---");
+                    
+                }
+                case 0 -> back = true;
+                default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
         }
     }
 
-    // =========================================================================
-    // FORM DI GESTIONE CASI D'USO
-    // =========================================================================
-    private void formCreazioneAppello() {
-        ui.mostraMessaggio("\n--- [UC1] CREAZIONE NUOVO APPELLO D'ESAME ---");
-        try {
-            String codiceMateria = ui.leggiStringa("Codice Materia (es. IS01): ");
-            String strDataOra = ui.leggiStringa("Data e Ora (formato: yyyy-MM-dd HH:mm): ");
+    // ==========================================
+    // SEGRETERIA / IMMATRICOLAZIONE
+    // ==========================================
+    private void gestisciImmatricolazione() {
+        console.mostraMessaggio("\n------------------------------------------");
+        console.mostraMessaggio("      IMMATRICOLAZIONE NUOVO STUDENTE     ");
+        console.mostraMessaggio("------------------------------------------");
+        //immatricolazioneController.immatricolaStudente();
+    }
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-            LocalDateTime dataOra = LocalDateTime.parse(strDataOra, formatter);
+    
 
-            String aula = ui.leggiStringa("Aula: ");
-            int posti = ui.leggiIntero("Numero posti disponibili: ");
-            String vincolo = ui.leggiStringa("Vincolo cognome (es. A-M, R-Z o premi Invio per nessuno): ");
 
-            Appello appello = unicenter.creaNuovoAppello(codiceMateria, dataOra, aula, posti, vincolo);
-            ui.mostraMessaggio("✅ Appello creato con successo! Codice univoco: " + appello.getCodiceAppello());
 
-        } catch (DateTimeParseException e) {
-            ui.mostraErrore("Formato data/ora non valido! Usa il formato yyyy-MM-dd HH:mm (es. 2026-09-20 09:00).");
-        } catch (Exception e) {
-            ui.mostraErrore("Errore durante la creazione dell'appello: " + e.getMessage());
+    public void loginUtente(){
+        console.mostraMessaggio("\n------------------------------------------");
+        console.mostraMessaggio("                 LOGIN                     ");
+        console.mostraMessaggio("------------------------------------------");
+        String email = console.leggiStringa("Inserisci email: ");
+        if(!unicenter.esisteUtente(email)) {
+            console.mostraMessaggio("Email non registrata. Riprova.");
+            return;
         }
-    }
-
-    private void formIscrizioneAppello(Studente studente) {
-        ui.mostraMessaggio("\n--- [UC2] ISCRIZIONE APPELLO D'ESAME ---");
-        try {
-            String codiceAppello = ui.leggiStringa("Inserisci Codice Appello (es. APP-00001): ");
-
-            boolean esito = unicenter.iscriviStudenteAdAppello(studente.getMatricola(), codiceAppello);
-
-            if (esito) {
-                ui.mostraMessaggio("✅ Iscrizione avvenuta con successo!");
-            } else {
-                ui.mostraMessaggio("❌ Iscrizione respinta dai controlli di validazione.");
-            }
-
-        } catch (Exception e) {
-            ui.mostraErrore("Errore durante l'iscrizione: " + e.getMessage());
+        String password = console.leggiStringa("Inserisci password: ");
+        if(!unicenter.passwordCorretta(email, password)) {
+            console.mostraMessaggio("Password errata. Riprova.");
+            return;
         }
+        console.mostraMessaggio("Login effettuato con successo!");
+        console.mostraMessaggio("Benvenuto, " + unicenter.getCurrentUser().getNome() + "!");
+        if(unicenter.getCurrentUser() instanceof Studente){
+            menuStudente();
+        } else if(unicenter.getCurrentUser() instanceof Professore){
+            menuProfessore();
+        }
+        return;
     }
 
-    private void mostraCatalogo() {
-        ui.mostraMessaggio("\n--- CATOLOGO MATERIE E APPELLI ---");
-        unicenter.getMaterie().forEach(m -> {
-            ui.mostraMessaggio("\n📘 [" + m.getCodiceMateria() + "] " + m.getNome());
-            if (m.getAppelli().isEmpty()) {
-                ui.mostraMessaggio("   └─ Nessun appello disponibile.");
-            } else {
-                m.getAppelli().forEach(a -> 
-                    ui.mostraMessaggio("   └─ 📅 Appello [" + a.getCodiceAppello() + "] | Data: " + a.getDataOra() 
-                            + " | Posti: " + a.getPostiDisponibili() + " | Vincolo: " 
-                            + (a.getVincoloLetteraCognome().isEmpty() ? "Nessuno" : a.getVincoloLetteraCognome()))
-                );
-            }
-        });
+    public void StampaAppelli(List<Appello> appelliDisponibili) {
+       console.mostraMessaggio(appelliDisponibili.toString());;
     }
 
-    private void mostraDettaglioStudente(Studente studente) {
-        ui.mostraMessaggio("\n--- DETTAGLIO CARRIERA STUDENTE ---");
-        ui.mostraMessaggio("Nome completo: " + studente.getNome() + " " + studente.getCognome());
-        ui.mostraMessaggio("Matricola: " + studente.getMatricola());
-        ui.mostraMessaggio("Corso di Laurea: " + studente.getCorsoDiLaurea());
-        ui.mostraMessaggio("Stato Tasse: " + (studente.isTassePagate() ? "PAGATE (€" + studente.getTotaleTasse() + ")" : "NON PAGATE"));
-    }
 }

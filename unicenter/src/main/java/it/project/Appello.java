@@ -38,4 +38,13 @@ public class Appello {
     public int getPostiDisponibili() { return postiDisponibili; }
     public String getVincoloLetteraCognome() { return vincoloLetteraCognome; }
     public List<Studente> getIscritti() { return iscritti; }
+
+    @Override
+    public String toString() {
+        return "Appello [codiceAppello=" + codiceAppello + ", codiceMateria=" + codiceMateria + ", dataOra=" + dataOra
+                + ", aula=" + aula + ", postiDisponibili=" + postiDisponibili + ", vincoloLetteraCognome="
+                + vincoloLetteraCognome + "]";
+    }
+
+    
 }

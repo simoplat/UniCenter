@@ -1,13 +1,11 @@
 package it.project;
 
 import it.project.controller.GestioneAppelliController;
-import it.project.controller.IscrizioneAppelloController;
 import it.project.controller.ImmatricolazioneController;
 import it.project.notification.EmailServiceAdapter;
 import it.project.notification.INotificaService;
 import it.project.validation.*;
 
-import java.util.Scanner;
 import it.project.exceptions.UtenteNonTrovatoException;
 
 import java.time.LocalDateTime;
@@ -24,7 +22,8 @@ public class Unicenter {
     private final INotificaService notificaService;
     private final ImmatricolazioneController immatricolazioneController;
     private final GestioneAppelliController gestioneAppelliController;
-    private final IscrizioneAppelloController iscrizioneAppelloController;
+    private final MenuController menuController;
+    private Utente currentUser = null;
 
     ConsoleUI console = ConsoleUI.getInstance();
 
@@ -39,7 +38,7 @@ public class Unicenter {
         this.immatricolazioneController = new ImmatricolazioneController();
 
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
-        this.gestioneAppelliController = new GestioneAppelliController(this.notificaService);
+        this.gestioneAppelliController = new GestioneAppelliController(this.notificaService, null);
 
         // 3. Inizializzazione Controller UC2 (Iscrizione Appelli con Chain of Responsibility)
         IscrizioneValidator catenaValidazione = new ValidationChainBuilder()
@@ -47,8 +46,7 @@ public class Unicenter {
                 .addValidator(new PostiDisponibiliValidator())
                 .addValidator(new CognomeFasciaValidator())
                 .build();
-
-        this.iscrizioneAppelloController = new IscrizioneAppelloController(this.notificaService, catenaValidazione);
+        this.menuController = new MenuController();
     }
 
     private static class UnicenterHolder {
@@ -60,6 +58,11 @@ public class Unicenter {
     }
 
 
+    public void avvia() {
+        console.mostraMessaggio("[UNICENTER] Avvio del sistema UniCenter...");
+        popolaDataBase();
+        menuController.avvia();
+    }
 
     // Immatricolazione
     public Studente immatricolaStudente(String nome, String cognome, String email, String corso, double tassaBase) {
@@ -83,15 +86,23 @@ public class Unicenter {
         return nuovoAppello;
     }
 
-    // Iscriversi ad un Appello d'Esame
-    public boolean iscriviStudenteAdAppello(String matricola, String codiceAppello) {
-        Studente studente = trovaStudente(matricola)
-                .orElseThrow(() -> new IllegalArgumentException("Studente non trovato: " + matricola));
+    // iscriviStudenteAdAppello , iscrizione appello
+    public List<Appello> visualizzaAppelliDisponibili(){
+        Studente studente = (Studente) this.currentUser;
 
-        Appello appello = trovaAppello(codiceAppello)
-                .orElseThrow(() -> new IllegalArgumentException("Appello non trovato: " + codiceAppello));
-
-        return iscrizioneAppelloController.iscriviStudente(studente, appello);
+        PianoDiStudi pianoDiStudi= studente.getPianoStudi();
+        if (pianoDiStudi == null || pianoDiStudi.getStato().equals("IN_ATTESA")) {
+            console.mostraMessaggio("[UNICENTER] Impossibile iscrivere lo studente: il piano di studi non è approvato.");
+            return null;
+        }
+        return gestioneAppelliController.trovaAppelliDisponibili(pianoDiStudi.getCodiciMaterie());
+    }
+   
+    public boolean iscriviStudenteAdAppello(String codiceAppello){
+        if (gestioneAppelliController.iscriviStudente((Studente) this.currentUser,codiceAppello)) {
+            return true;
+        }
+        return false;
     }
 
     public void aggiungiMateria(Materia materia) {
@@ -200,6 +211,8 @@ public List<Materia> getMaterie() {
         return Optional.empty();
     }
 
+
+
     public List<Studente> getStudentiIscritti() {
         List<Studente> studenti = new ArrayList<>();
         for (Utente u : utenti) {
@@ -208,6 +221,32 @@ public List<Materia> getMaterie() {
             }
         }
         return studenti;
+    }
+
+
+
+    public boolean esisteUtente(String email) {
+        for (Utente u : utenti) {
+            if (u.getEmail().equalsIgnoreCase(email)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean passwordCorretta(String email, String password) {
+        for (Utente u : utenti) {
+            if (u.getEmail().equalsIgnoreCase(email) && u.getPassword().equals(password)) {
+                this.currentUser = u; // Imposta l'utente corrente dopo il login
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    public Utente getCurrentUser() {
+        return currentUser;
     }
 
 }

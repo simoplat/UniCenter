@@ -27,4 +27,8 @@ public class PianoDiStudi {
     public void setStato(String stato) {
         this.stato = stato;
     }
+
+    public List<String> getCodiciMaterie() {
+        return codiciMaterie;
+    }
 }
