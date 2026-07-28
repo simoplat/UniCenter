@@ -41,8 +41,4 @@ public class Professore extends Utente {
         this.idProfessore = String.valueOf(idProfessore);
     }
 
-    @Override
-    public void menuPersonale() {
-        System.out.println("=== MENU PROFESSORE ===");
-    }
 }

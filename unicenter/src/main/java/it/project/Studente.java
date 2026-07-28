@@ -34,16 +34,6 @@ public class Studente extends Utente {
 
 
 
-    
-    @Override
-    public void menuPersonale() {
-        System.out.println("=== MENU STUDENTE ===");
-        System.out.println("1. Visualizza libretto / carriera");
-        System.out.println("2. Iscriviti ad un appello d'esame");
-        System.out.println("3. Gestisci voti proposti");
-        System.out.println("4. Logout");
-        // Qui potrai inserire la logica di navigazione specifica dello studente
-    }
 
     public void calcolaImportoTasse(ICalcoloTasseStrategy strategy, double tassaBaseCorso, boolean isFuoriCorso) {
         this.totaleTasse = strategy.calcolaTasse(tassaBaseCorso, isFuoriCorso);

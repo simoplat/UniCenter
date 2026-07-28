@@ -19,9 +19,6 @@ public abstract class Utente {
         this.codiceFiscale = codiceFiscale;
     }
 
-
-    public abstract void menuPersonale();
-
     // Getter e Setter
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
