@@ -52,7 +52,7 @@ public class GestioneAppelliController {;
     }
 
     public boolean iscriviStudente(Studente currentUser, String codiceAppello) {
-        Appello appello = trovAppelloById(codiceAppello);
+        Appello appello = trovAppelloByIdAppello(codiceAppello);
         
         if (this.validatorChain == null) {
             this.validatorChain = ValidationChainBuilder.buildDefaultChain();
@@ -82,7 +82,7 @@ public class GestioneAppelliController {;
 
     }
 
-    public List<Appello> trovaAppelliDisponibili(List<String> codiciMaterie) {
+    public List<Appello> trovaAppelliByIdMateria(List<String> codiciMaterie) {
         if (appelli == null || appelli.isEmpty()) {
             return null;
         }
@@ -97,7 +97,7 @@ public class GestioneAppelliController {;
         return appelliDisponibili;
     }
 
-    public Appello trovAppelloById(String codiceAppello) {
+    public Appello trovAppelloByIdAppello(String codiceAppello) {
         for (Appello app : appelli) {
             if (app.getCodiceAppello().equals(codiceAppello)) {
                 return app;
@@ -109,4 +109,10 @@ public class GestioneAppelliController {;
     public String generaCodiceAppello() {
         return codiceAppelloGenerator.generateCodice();
     }
+
+    public List<Studente> trovaIscrittiByIdAppello(String codiceAppello){
+        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        return appello.getIscritti();
+    }
+
 }

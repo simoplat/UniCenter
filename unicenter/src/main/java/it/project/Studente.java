@@ -13,27 +13,13 @@ public class Studente extends Utente implements ObserverAppello{
     private PianoDiStudi pianoStudi;
     private List<Notifica> notifiche;
 
-    public Studente(String matricola, String nome, String cognome, String email, String password,
-            String corsoDiLaurea) {
-        super(nome, cognome, email, password, null); // Passa null per il codice fiscale
-        this.setNome(nome);
-        this.setCognome(cognome);
-        this.setEmail(email);
-
-        this.matricola = matricola;
-        this.corsoDiLaurea = corsoDiLaurea;
-        this.tassePagate = false;
-        this.pianoStudi = new PianoDiStudi();
-        this.notifiche = new ArrayList<>();
-    }
 
     public Studente(String matricola, String nome, String cognome, String email, String password, String codiceFiscale,
             String corsoDiLaurea) {
         super(nome, cognome, email, password, codiceFiscale);
         this.setNome(nome);
         this.setCognome(cognome);
-        this.setEmail(email);
-
+        this.setEmail(email);        
         this.matricola = matricola;
         this.corsoDiLaurea = corsoDiLaurea;
         this.tassePagate = false;
@@ -86,5 +72,12 @@ public class Studente extends Utente implements ObserverAppello{
         notifiche.add(notifica);
     }
 
+    @Override
+    public String toString() {
+        return "Studente [matricola=" + matricola + ", corsoDiLaurea=" + corsoDiLaurea + ", tassePagate=" + tassePagate
+                + ", totaleTasse=" + totaleTasse + ", pianoStudi=" + pianoStudi + ", notifiche=" + notifiche + "]";
+    }
+
+    
 
 }

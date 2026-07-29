@@ -68,7 +68,7 @@ public class MenuController {
                 case 1 -> {
                     console.mostraMessaggio("\n--- Iscrizione Appello ---");
                     // Invocazione della catena di validazione e iscrizione
-                    List<Appello> appelliDisponibili = unicenter.visualizzaAppelliDisponibili();
+                    List<Appello> appelliDisponibili = unicenter.visualizzaAppelliStudente();
                     if (appelliDisponibili == null || appelliDisponibili.isEmpty()) {
                         console.mostraMessaggio("Nessun appello disponibile al momento.");
                         break;
@@ -113,7 +113,8 @@ public class MenuController {
             console.mostraMessaggio("------------------------------------------");
             console.mostraMessaggio("1. Crea nuovo appello d'esame");
             console.mostraMessaggio("2. Visualizza iscritti ad un appello");
-            console.mostraMessaggio("3. Elimina appello d'esame");
+            console.mostraMessaggio("3. Modifica appello.");
+            console.mostraMessaggio("4. Elimina appello d'esame");
             console.mostraMessaggio("0. Torna al menu principale");
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
@@ -124,34 +125,38 @@ public class MenuController {
                     console.mostraMessaggio("------------------------------------------");
                     List<Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
                     StampaMaterie(materieDelProfessore);
-                    String codiceMateria = console.leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
+                    String codiceMateria = console
+                            .leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
                     if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
                         console.mostraMessaggio("Il codice inserito non è valido. Riprova.");
                         break;
                     }
 
-                    String dataOraStr = console.leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
+                    String dataOraStr = console
+                            .leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
                     LocalDateTime dataOra = null;
                     // 2. Esegui il parsing (gestendo eventuali errori di input dell'utente)
                     try {
                         dataOra = LocalDateTime.parse(dataOraStr, formatterInput);
                         console.mostraMessaggio("Data e ora convertite con successo: " + dataOra);
                     } catch (DateTimeParseException e) {
-                        console.mostraErrore("Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd HH:mm (es. 2026-06-15 09:30).");
+                        console.mostraErrore(
+                                "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd HH:mm (es. 2026-06-15 09:30).");
                         break;
                     }
 
-
                     String aula = console.leggiStringa("Inserisci l'aula dell'appello: ");
                     int posti = console.leggiIntero("Inserisci il numero di posti disponibili: ");
-                    String vincoloCognome = console.leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
+                    String vincoloCognome = console
+                            .leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
                     String codiceAppello = unicenter.generaCodiceAppello();
-                    Appello nuovoAppello = new Appello(codiceAppello, codiceMateria, dataOra, aula, posti,vincoloCognome);
+                    Appello nuovoAppello = new Appello(codiceAppello, codiceMateria, dataOra, aula, posti,
+                            vincoloCognome);
 
                     try {
                         unicenter.creaNuovoAppello(nuovoAppello);
                         console.mostraMessaggio("Appello creato con successo! Codice Appello: " + codiceAppello);
-                        
+
                     } catch (DataNonValidaException e) {
                         console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
                         break;
@@ -167,6 +172,17 @@ public class MenuController {
                 }
                 case 2 -> {
                     console.mostraMessaggio("\n--- Lista Iscritti ---");
+                    console.mostraMessaggio("I tuoi appelli:");
+                    StampaAppelli(unicenter.visualizzaAppelliProfessore());
+                    String app = console.leggiStringa("Seleziona il codice dell'appello di cui vuoi gli iscritti: ");
+                    List<Studente> iscritti = unicenter.visualizzaIscrittiByAppello(app);
+
+                    if (iscritti == null || iscritti.size() == 0){
+                        console.mostraMessaggio("Non ci sono iscritti a questo appello.");
+                    } else {
+                        stampaStudenti(iscritti);
+                    }
+                    break;
 
                 }
                 case 3 -> {
@@ -240,5 +256,13 @@ public class MenuController {
                             "----------------------------------------");
         }
     }
+
+    public void stampaStudenti(List<Studente> studenti){
+        for (Studente studente : studenti ){
+            console.mostraMessaggio(studente.getNome() +  " - " +  studente.getCognome() + " - " + studente.getCodiceFiscale() + "\n" +
+             "----------------------------------------");
+        }
+    }
+
 
 }
