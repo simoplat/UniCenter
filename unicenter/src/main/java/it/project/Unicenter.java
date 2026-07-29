@@ -72,7 +72,7 @@ public class Unicenter {
     }
 
     // Inserire Appello d'Esame
-    public boolean creaNuovoAppello(Appello appello) {
+    public boolean creaNuovoAppello(Appello appello) throws Exception {
         return gestioneAppelliController.creaNuovoAppello(appello);
     }
 

@@ -2,6 +2,10 @@ package it.project;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import it.project.exceptions.DataNonValidaException;
+import it.project.exceptions.PostiNonValidi;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -108,10 +112,9 @@ public class MenuController {
                     console.mostraMessaggio("------------------------------------------");
                     List<Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
                     StampaMaterie(materieDelProfessore);
-                    String codiceMateria = console
-                            .leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
+                    String codiceMateria = console.leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
                     if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
-                        console.mostraMessaggio("Non sei abilitato a creare appelli per questa materia. Riprova.");
+                        console.mostraMessaggio("Il codice inserito non è valido. Riprova.");
                         break;
                     }
 
@@ -132,12 +135,22 @@ public class MenuController {
                     String vincoloCognome = console.leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
                     String codiceAppello = unicenter.generaCodiceAppello();
                     Appello nuovoAppello = new Appello(codiceAppello, codiceMateria, dataOra, aula, posti,vincoloCognome);
-                    Boolean successo = unicenter.creaNuovoAppello(nuovoAppello);
-                    if (successo) {
-                        console.mostraMessaggio("Appello creato con successo!");
-                    } else {
-                        console.mostraMessaggio("Errore nella creazione dell'appello. Controlla i dati inseriti.");
+
+                    try {
+                        unicenter.creaNuovoAppello(nuovoAppello);
+                        console.mostraMessaggio("Appello creato con successo! Codice Appello: " + codiceAppello);
+                        
+                    } catch (DataNonValidaException e) {
+                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
+                        break;
+                    } catch (PostiNonValidi e) {
+                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
+                        break;
+                    } catch (Exception e) {
+                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] Errore imprevisto: " + e.getMessage());
+                        break;
                     }
+
                     break;
                 }
                 case 2 -> {

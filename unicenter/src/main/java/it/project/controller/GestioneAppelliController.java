@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import it.project.ConsoleUI;
 import it.project.Unicenter;
+import it.project.exceptions.DataNonValidaException;
+import it.project.exceptions.PostiNonValidi;
 import it.project.generator.CodiceAppelloGenerator;
 import it.project.validation.IscrizioneValidator;
 import it.project.validation.ValidationChainBuilder;
@@ -27,20 +29,21 @@ public class GestioneAppelliController {
         this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
     }
 
-    public boolean creaNuovoAppello(Appello appello) {
+    public boolean creaNuovoAppello(Appello appello) throws Exception {
         
         LocalDateTime dataOra = appello.getDataOra();
         int postiDisponibili = appello.getPostiDisponibili();
         if (dataOra == null) {
-            return false; 
+            throw new DataNonValidaException("La data e ora non valide.");
+            
         }
-
+        
         if (dataOra.isBefore(LocalDateTime.now())) {
-            return false;
+            throw new DataNonValidaException("La data e ora non valide.");
         }
 
         if (postiDisponibili <= 0) {
-            return false;
+            throw new PostiNonValidi("Il numero di posti disponibili deve essere maggiore di zero.");
         }
 
         appelli.add(appello);
