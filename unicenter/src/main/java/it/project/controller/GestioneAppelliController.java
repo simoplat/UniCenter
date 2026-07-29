@@ -2,11 +2,11 @@ package it.project.controller;
 
 import it.project.Appello;
 import it.project.Studente;
-import it.project.notification.INotificaService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import it.project.ConsoleUI;
+import it.project.Notifica;
 import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
@@ -14,16 +14,14 @@ import it.project.generator.CodiceAppelloGenerator;
 import it.project.validation.IscrizioneValidator;
 import it.project.validation.ValidationChainBuilder;
 
-public class GestioneAppelliController {
-    private final INotificaService notificaService;
+public class GestioneAppelliController {;
     private IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
     Unicenter unicenter = Unicenter.getInstance();
     ConsoleUI console = ConsoleUI.getInstance();
 
-    public GestioneAppelliController(INotificaService notificaService) {
-        this.notificaService = notificaService;
+    public GestioneAppelliController() {
         this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         this.appelli = new ArrayList<>();
         this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
@@ -69,11 +67,12 @@ public class GestioneAppelliController {
 
             // Se la validazione passa, registra l'iscritto
             appello.aggiungiIscritto(currentUser);
+            String messaggio = "Ti sei iscritto all'appello: " + appello.toString();
+            Notifica nuovaNotifica = new Notifica("Iscrizione Appello", messaggio, LocalDateTime.now());
 
-            // Invia la notifica via adapter
-            notificaService.inviaNotifica(
-                    currentUser.getEmail(),
-                    "Iscrizione confermata per l'appello " + appello.getCodiceAppello());
+            // Invia la notifica allo studente
+            currentUser.riceviNotifica(nuovaNotifica);
+                
 
             return true;
         } catch (Exception e) {

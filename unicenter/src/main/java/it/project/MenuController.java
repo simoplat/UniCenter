@@ -58,6 +58,7 @@ public class MenuController {
             console.mostraMessaggio("            AREA STUDENTE                 ");
             console.mostraMessaggio("------------------------------------------");
             console.mostraMessaggio("1. Iscriviti ad un appello d'esame");
+            console.mostraMessaggio("2. Visualizza notifiche");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -82,6 +83,17 @@ public class MenuController {
                         console.mostraMessaggio("Iscrizione avvenuta con successo all'appello " + codiceAppello);
                     }
 
+                }
+                case 2 -> {
+                    console.mostraMessaggio("\n--- Notifiche ---");
+                    List<Notifica> notifiche = unicenter.getNotifichePerStudente();
+                    if (notifiche == null || notifiche.isEmpty()) {
+                        console.mostraMessaggio("Nessuna notifica disponibile.");
+                    } else {
+                        for (Notifica notifica : notifiche) {
+                            console.mostraMessaggio(notifica.toString());
+                        }
+                    }
                 }
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");

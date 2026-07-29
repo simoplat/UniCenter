@@ -1,7 +1,5 @@
 package it.project;
 
-import it.project.notification.EmailServiceAdapter;
-import it.project.notification.INotificaService;
 import it.project.controller.*;
 import it.project.validation.*;
 
@@ -15,7 +13,6 @@ import java.util.Optional;
 public class Unicenter {
 
     private final List<Utente> utenti;
-    private final INotificaService notificaService;
     private final ImmatricolazioneController immatricolazioneController;
     private final GestioneAppelliController gestioneAppelliController;
     private final GestoreMaterie gestoreMaterie;
@@ -29,13 +26,13 @@ public class Unicenter {
         this.menuController = new MenuController(this);
         
         // Inizializzazione Adapter Notifiche
-        this.notificaService = new EmailServiceAdapter();
+   
 
         // 1. Inizializzazione Controller UC8 (Immatricolazione)
         this.immatricolazioneController = new ImmatricolazioneController();
 
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
-        this.gestioneAppelliController = new GestioneAppelliController(this.notificaService);
+        this.gestioneAppelliController = new GestioneAppelliController();
 
         this.gestoreMaterie = new GestoreMaterie();
 
@@ -153,6 +150,9 @@ public void popolaDataBase() {
         Appello app2 = new Appello("APP2", "BD01", dataAppello2, "Aula 101", 10, "A-Z");
         this.gestioneAppelliController.creaNuovoAppello(app2);
 
+        Notifica notifica = new Notifica("Ciao", "ti sei iscritto", LocalDateTime.now());
+        st1.aggiungiNotifica(notifica);
+
   
 
     } catch (Exception e) {
@@ -225,6 +225,14 @@ public Utente effettuaLogin(String email, String password) throws UtenteNonTrova
 
     public String generaCodiceAppello() {
         return gestioneAppelliController.generaCodiceAppello();
+    }
+
+    public List<Notifica> getNotifichePerStudente() {
+        if (currentUser instanceof Studente) {
+            Studente studente = (Studente) currentUser;
+            return studente.getNotifiche();
+        }
+        return null;
     }
 
 }
