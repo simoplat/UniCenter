@@ -13,10 +13,10 @@ public class Appello {
     private String vincoloLetteraCognome;
     private List<Studente> iscritti;
 
-    public Appello(String codiceAppello, String codiceMateria, LocalDateTime dataOra, String aula, int postiDisponibili, String vincoloLetteraCognome) {
+    public Appello(String codiceAppello, String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome) {
         this.codiceAppello = codiceAppello;
         this.codiceMateria = codiceMateria;
-        this.dataOra = dataOra;
+        this.dataOra = dataOraStr;
         this.aula = aula;
         this.postiDisponibili = postiDisponibili;
         this.vincoloLetteraCognome = vincoloLetteraCognome;

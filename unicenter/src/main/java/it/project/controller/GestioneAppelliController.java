@@ -1,7 +1,6 @@
 package it.project.controller;
 
 import it.project.Appello;
-import it.project.Materia;
 import it.project.Studente;
 import it.project.notification.INotificaService;
 import java.time.LocalDateTime;
@@ -9,19 +8,22 @@ import java.util.ArrayList;
 import java.util.List;
 import it.project.ConsoleUI;
 import it.project.Unicenter;
+import it.project.generator.CodiceAppelloGenerator;
 import it.project.validation.IscrizioneValidator;
 
 public class GestioneAppelliController {
     private final INotificaService notificaService;
     private final IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
+    private final CodiceAppelloGenerator codiceAppelloGenerator;
     Unicenter unicenter = Unicenter.getInstance();
     ConsoleUI console = ConsoleUI.getInstance();
 
-    public GestioneAppelliController(INotificaService notificaService, IscrizioneValidator validatorChain) {
+    public GestioneAppelliController(INotificaService notificaService) {
         this.notificaService = notificaService;
-        this.validatorChain = validatorChain;
+        this.validatorChain;
         this.appelli = new ArrayList<>();
+        this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
     }
 
     public boolean creaNuovoAppello(Appello appello) {
@@ -97,4 +99,7 @@ public class GestioneAppelliController {
         return null;
     }
 
+    public String generaCodiceAppello() {
+        return codiceAppelloGenerator.generateCodice();
+    }
 }

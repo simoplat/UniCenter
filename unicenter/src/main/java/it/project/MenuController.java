@@ -1,13 +1,17 @@
 package it.project;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class MenuController {
 
     private final ConsoleUI console = ConsoleUI.getInstance();
     private Unicenter unicenter;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'alle' HH:mm");
+    DateTimeFormatter formatterStampa = DateTimeFormatter.ofPattern("dd/MM/yyyy 'alle' HH:mm");
+    DateTimeFormatter formatterInput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public MenuController(Unicenter unicenter) {
         this.unicenter = unicenter;
@@ -103,17 +107,30 @@ public class MenuController {
                     console.mostraMessaggio("------------------------------------------");
                     List<Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
                     StampaMaterie(materieDelProfessore);
-                    String codiceMateria = console.leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
+                    String codiceMateria = console
+                            .leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
                     if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
                         console.mostraMessaggio("Non sei abilitato a creare appelli per questa materia. Riprova.");
                         break;
                     }
 
                     String dataOraStr = console.leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
+                    LocalDateTime dataOra = null;
+                    // 2. Esegui il parsing (gestendo eventuali errori di input dell'utente)
+                    try {
+                        dataOra = LocalDateTime.parse(dataOraStr, formatterInput);
+                        console.mostraMessaggio("Data e ora convertite con successo: " + dataOra);
+                    } catch (DateTimeParseException e) {
+                        console.mostraErrore("Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd HH:mm (es. 2026-06-15 09:30).");
+                        break;
+                    }
+
+
                     String aula = console.leggiStringa("Inserisci l'aula dell'appello: ");
                     int posti = console.leggiIntero("Inserisci il numero di posti disponibili: ");
                     String vincoloCognome = console.leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
-                    Appello nuovoAppello = new Appello(dataOraStr, codiceMateria, null, aula, posti, vincoloCognome);
+                    String codiceAppello = unicenter.generaCodiceAppello();
+                    Appello nuovoAppello = new Appello(codiceAppello, codiceMateria, dataOra, aula, posti,vincoloCognome);
                     Boolean successo = unicenter.creaNuovoAppello(nuovoAppello);
                     if (successo) {
                         console.mostraMessaggio("Appello creato con successo!");
@@ -169,7 +186,7 @@ public class MenuController {
     public void StampaAppelli(List<Appello> appelliDisponibili) {
         for (Appello appello : appelliDisponibili) {
             // Formatta la data
-            String dataOraFormattata = appello.getDataOra().format(formatter);
+            String dataOraFormattata = appello.getDataOra().format(formatterStampa);
 
             console.mostraMessaggio(
                     "Codice Appello: " + appello.getCodiceAppello() + "\n" +

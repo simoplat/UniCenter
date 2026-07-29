@@ -9,7 +9,6 @@ import it.project.exceptions.UtenteNonTrovatoException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -222,6 +221,10 @@ public Utente effettuaLogin(String email, String password) throws UtenteNonTrova
     public boolean isProfessoreAbilitatoAMateria(String codiceMateria) {
         Professore professore = (Professore) getCurrentUser();
         return gestoreMaterie.isProfessoreAbilitatoAMateria(professore.getIdProfessore(), codiceMateria);
+    }
+
+    public String generaCodiceAppello() {
+        return gestioneAppelliController.generaCodiceAppello();
     }
 
 }
