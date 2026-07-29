@@ -20,8 +20,15 @@ public class GestoreMaterie {
         this.professoriDellaMateria = new HashMap<>();
     }
 
+    public void addMateria(Materia materia) {
+        materie.put(materia.getCodiceMateria(), materia);
+    }
+
     public void associaProfessoreAMateria(String idProfessore, String idMateria) {
 
+        if (isProfessoreAbilitatoAMateria(idProfessore, idMateria)) {
+            return;
+        }
         materieDelProfessore
                 .computeIfAbsent(idProfessore, k -> new ArrayList<>())
                 .add(idMateria);

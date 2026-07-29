@@ -99,6 +99,8 @@ public class MenuController {
             switch (scelta) {
                 case 1 -> {
                     console.mostraMessaggio("\n--- Creazione Appello ---");
+                    console.mostraMessaggio("Materie di cui sei professore:");
+                    console.mostraMessaggio("------------------------------------------");
                     List<Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
                     StampaMaterie(materieDelProfessore);
                     String codiceMateria = console.leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");

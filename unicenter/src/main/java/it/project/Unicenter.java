@@ -104,23 +104,26 @@ public void popolaDataBase() {
         Materia ingSoftware = new Materia("IS01", "Ingegneria del Software", 9);
         Materia basiDati = new Materia("BD01", "Basi di Dati", 6);
         Materia architetture = new Materia("AR01", "Architettura dei Calcolatori", 6);
+        this.gestoreMaterie.addMateria(ingSoftware);
+        this.gestoreMaterie.addMateria(basiDati);
+        this.gestoreMaterie.addMateria(architetture);
 
-        this.gestoreMaterie.associaProfessoreAMateria("1", "IS01");
-        this.gestoreMaterie.associaProfessoreAMateria("1", "BD01");
-        this.gestoreMaterie.associaProfessoreAMateria("2", "AR01");
-
+        
         // INSERIMENTO PROFESSORI
         Professore profRossi = new Professore(
-                "1", "Mario", "Rossi", "mario.rossi@unicenter.it", "pass123", "RSSMRA80A01H501U"
+            "1", "Mario", "Rossi", "mario.rossi@unicenter.it", "pass123", "RSSMRA80A01H501U"
         );
         Professore profVerdi = new Professore(
-                "2", "Giuseppe", "Verdi", "giuseppe.verdi@unicenter.it", "pass123", "VRDGPP75B02F205X"
+            "2", "Giuseppe", "Verdi", "giuseppe.verdi@unicenter.it", "pass123", "VRDGPP75B02F205X"
         );
-
+        
         this.utenti.add(profRossi);
         this.utenti.add(profVerdi);
-
-        gestoreMaterie.associaProfessoreAMateria("1", "IS01");
+        this.gestoreMaterie.associaProfessoreAMateria("1", "IS01");
+        this.gestoreMaterie.associaProfessoreAMateria("1", "BD01");
+        this.gestoreMaterie.associaProfessoreAMateria("1", "AR01");
+        this.gestoreMaterie.associaProfessoreAMateria("2", "AR01");
+        this.gestoreMaterie.associaProfessoreAMateria("2", "IS01");
 
         // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
