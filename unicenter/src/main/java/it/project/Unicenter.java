@@ -35,7 +35,7 @@ public class Unicenter {
         this.immatricolazioneController = new ImmatricolazioneController();
 
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
-        this.gestioneAppelliController = new GestioneAppelliController(this.notificaService, null);
+        this.gestioneAppelliController = new GestioneAppelliController(this.notificaService);
 
         this.gestoreMaterie = new GestoreMaterie();
 

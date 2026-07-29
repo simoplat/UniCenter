@@ -97,6 +97,7 @@ public class MenuController {
             console.mostraMessaggio("------------------------------------------");
             console.mostraMessaggio("1. Crea nuovo appello d'esame");
             console.mostraMessaggio("2. Visualizza iscritti ad un appello");
+            console.mostraMessaggio("3. Elimina appello d'esame");
             console.mostraMessaggio("0. Torna al menu principale");
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
@@ -141,6 +142,10 @@ public class MenuController {
                 }
                 case 2 -> {
                     console.mostraMessaggio("\n--- Lista Iscritti ---");
+
+                }
+                case 3 -> {
+                    console.mostraMessaggio("\n--- Elimina Appello ---");
 
                 }
                 case 0 -> back = true;

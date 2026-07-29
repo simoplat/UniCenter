@@ -20,4 +20,19 @@ public class ValidationChainBuilder {
         }
         return validators.get(0);
     }
+
+    public static IscrizioneValidator buildDefaultChain() {
+        IscrizioneValidator pianoStudi = new PianoStudiValidator();
+        IscrizioneValidator posti = new PostiDisponibiliValidator();
+        IscrizioneValidator tasse = new TassaPaidValidator();
+        IscrizioneValidator cognome = new CognomeFasciaValidator();
+
+        // Collega i validatori in sequenza
+        pianoStudi.setNext(posti);
+        posti.setNext(tasse);
+        tasse.setNext(cognome);
+
+        // Restituisce il primo anello della catena
+        return pianoStudi;
+    }
 }

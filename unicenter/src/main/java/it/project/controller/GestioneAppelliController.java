@@ -10,10 +10,11 @@ import it.project.ConsoleUI;
 import it.project.Unicenter;
 import it.project.generator.CodiceAppelloGenerator;
 import it.project.validation.IscrizioneValidator;
+import it.project.validation.ValidationChainBuilder;
 
 public class GestioneAppelliController {
     private final INotificaService notificaService;
-    private final IscrizioneValidator validatorChain;
+    private IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
     Unicenter unicenter = Unicenter.getInstance();
@@ -21,38 +22,41 @@ public class GestioneAppelliController {
 
     public GestioneAppelliController(INotificaService notificaService) {
         this.notificaService = notificaService;
-        this.validatorChain;
+        this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         this.appelli = new ArrayList<>();
         this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
     }
 
     public boolean creaNuovoAppello(Appello appello) {
-        // VERIFICA DELLA DATA (UC1 - Controllo Dati Invalidi)
-        String codiceMateria = appello.getCodiceMateria();
+        
         LocalDateTime dataOra = appello.getDataOra();
-        String aula = appello.getAula();
         int postiDisponibili = appello.getPostiDisponibili();
-        String vincoloLetteraCognome = appello.getVincoloLetteraCognome();
-
         if (dataOra == null) {
-            return false; // Data non valida
+            return false; 
         }
 
         if (dataOra.isBefore(LocalDateTime.now())) {
             return false;
         }
 
-        // Creazione dell'appello mediante Factory Method dell'entità Materia
+        if (postiDisponibili <= 0) {
+            return false;
+        }
+
         appelli.add(appello);
 
-        // Pattern Observer: Invio notifiche agli studenti iscritti al corso
-        // da fare le notifiche
+        // Pattern Observer: Invio notifiche agli studenti iscritti al corso, da fare le notifiche
 
         return true;
     }
 
     public boolean iscriviStudente(Studente currentUser, String codiceAppello) {
         Appello appello = trovAppelloById(codiceAppello);
+        
+        if (this.validatorChain == null) {
+            this.validatorChain = ValidationChainBuilder.buildDefaultChain();
+        }
+        
         if (appello == null) {
             return false; // Appello non trovato
         }
@@ -73,6 +77,7 @@ public class GestioneAppelliController {
             console.mostraErrore("[ERRORE ISCRIZIONE] " + e.getMessage());
             return false;
         }
+
     }
 
     public List<Appello> trovaAppelliDisponibili(List<String> codiciMaterie) {
