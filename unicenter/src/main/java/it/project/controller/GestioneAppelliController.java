@@ -122,6 +122,16 @@ public class GestioneAppelliController {;
                         a.setAula(aula);
                         a.setPostiDisponibili(postiDisponibili);
                         a.setVincoloLetteraCognome(vincolo);
+                   
+                        String oggetto = "Modifica appello : " + codiceAppello;
+                        String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" + 
+                                            "Orario: " + dataOra + "\n" +
+                                            "Aula: " + aula+ "\n" + 
+                                            "Posti disponibili" + postiDisponibili + "\n" +
+                                            "Vincolo cognome" + vincolo + "\n";
+                        LocalDateTime ora = LocalDateTime.now();
+                        Notifica notifica = new Notifica(oggetto, contenuto , ora);
+                        a.notifica(notifica);
                         return true;
                         }
         }
@@ -131,6 +141,11 @@ public class GestioneAppelliController {;
     public boolean eliminaAppello(String codiceAppello) {
     for (Appello a : appelli) {
         if (a.getCodiceAppello().equals(codiceAppello)) {
+
+            String oggetto = " Eliminazione appello " + codiceAppello ;
+            String contenuto = "L'appello " + codiceAppello + " è stato eliminato. "; 
+            Notifica notifica = new Notifica(oggetto, contenuto , LocalDateTime.now());
+            a.notifica(notifica);
             appelli.remove(a); 
             return true;       
         }

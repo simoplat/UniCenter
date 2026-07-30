@@ -1,11 +1,13 @@
 package it.project;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Notifica {
     private String oggetto;
     private String messaggio;
     private LocalDateTime dataOra;
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy");
 
     public Notifica(String oggetto, String messaggio, LocalDateTime dataOra) {
         this.oggetto = oggetto;
@@ -39,9 +41,8 @@ public class Notifica {
 
     @Override
     public String toString() {
-        return "Notifica: [oggetto=" + oggetto + "]\n" +
-                "[Messaggio=" + messaggio + "]\n" +  
-                "[Data e ora=" + dataOra + "]\n";
+        return "\nOggetto: " + oggetto +
+                "\n" + messaggio +  "[" + dataOra.format(formatter) + "]";
     }
 
     

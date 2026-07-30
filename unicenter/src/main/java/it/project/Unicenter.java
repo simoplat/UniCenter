@@ -256,4 +256,5 @@ public class Unicenter {
     public boolean eliminaAppello(String codiceAppello){
         return gestioneAppelliController.eliminaAppello(codiceAppello);        
     }
+
 }

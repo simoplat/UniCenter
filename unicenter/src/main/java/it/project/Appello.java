@@ -68,5 +68,10 @@ public class Appello {
                 + vincoloLetteraCognome + "]";
     }
 
+    public void notifica(Notifica notifica){
+        for (Studente s : iscritti){
+            s.aggiungiNotifica(notifica);   
+        }
+    }
     
 }
