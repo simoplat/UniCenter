@@ -14,8 +14,10 @@ public class Studente extends Utente implements ObserverAppello{
     private List<Notifica> notifiche;
 
 
-    public Studente(String matricola, String nome, String cognome, String email, String password, String codiceFiscale,
-            String corsoDiLaurea) {
+    public Studente(String matricola, String nome, 
+                    String cognome, String email, 
+                    String password, String codiceFiscale, 
+                    String corsoDiLaurea) {
         super(nome, cognome, email, password, codiceFiscale);
         this.setNome(nome);
         this.setCognome(cognome);

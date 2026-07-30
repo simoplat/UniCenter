@@ -9,6 +9,7 @@ public class StudenteBuilder {
     private String email;
     private String password = "pass123"; // Password predefinita se non impostata
     private String corsoDiLaurea;
+    private String codiceFiscale;
 
     public StudenteBuilder setNome(String nome) {
         this.nome = nome;
@@ -42,6 +43,6 @@ public class StudenteBuilder {
         String matricola = MatricolaGenerator.getInstance().generateMatricola();
         
         // Passa la password al costruttore di Studente
-        return new Studente(matricola, nome, cognome, email, password, corsoDiLaurea);
+        return new Studente(matricola, nome, cognome, email, password, corsoDiLaurea, codiceFiscale);
     }
 }

@@ -115,4 +115,26 @@ public class GestioneAppelliController {;
         return appello.getIscritti();
     }
 
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo){
+        for (Appello a : appelli){
+            if (a.getCodiceAppello().equals(codiceAppello)) {
+                        a.setDataOra(dataOra);
+                        a.setAula(aula);
+                        a.setPostiDisponibili(postiDisponibili);
+                        a.setVincoloLetteraCognome(vincolo);
+                        return true;
+                        }
+        }
+        return false;
+    }
+
+    public boolean eliminaAppello(String codiceAppello) {
+    for (Appello a : appelli) {
+        if (a.getCodiceAppello().equals(codiceAppello)) {
+            appelli.remove(a); 
+            return true;       
+        }
+    }
+    return false;
+    }
 }

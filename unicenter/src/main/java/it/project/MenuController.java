@@ -186,13 +186,120 @@ public class MenuController {
 
                 }
                 case 3 -> {
-                    console.mostraMessaggio("\n--- Elimina Appello ---");
+                    console.mostraMessaggio("\n--- Sezione di modifica appelli ---");
+                    console.mostraMessaggio("------------------------------------------");
+                    
+                    List<Appello> appelliProfessore = unicenter.visualizzaAppelliProfessore();
+                    
+                    console.mostraMessaggio("I tuoi appelli:");
+                    
+                    if (appelliProfessore == null || appelliProfessore.isEmpty()) {
+                    console.mostraMessaggio("Non hai appelli da modificare.");
+                    break;
+                    } else {
+                        StampaAppelli(appelliProfessore);
+                    }
 
-                }
+                    Appello appelloTrovato = null;
+
+                    while (appelloTrovato == null){
+                    String idApp = console.leggiStringa("Seleziona il codice dell'appello da modificare (inserisci 0 per annullare): "); 
+
+                    if ("0".equals(idApp)) {
+                        console.mostraMessaggio("Operazione annullata.");
+                        break; 
+                    }
+
+                    for (Appello a : appelliProfessore) {
+                        if (a.getCodiceAppello().equals(idApp)) {
+                        appelloTrovato = a;
+                        break;
+                        }
+                    }
+                    if (appelloTrovato == null) {
+                        console.mostraErrore(" Codice appello non valido o non trovato. Riprova.");
+                     }
+
+                    }
+
+                    if (appelloTrovato != null) {
+                        String nuovaDataOraStr = console.leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
+                        LocalDateTime nuovaDataOra = null;
+                        try {
+                            nuovaDataOra = LocalDateTime.parse(nuovaDataOraStr, formatterInput);
+                            console.mostraMessaggio("Data e ora convertite con successo: " + nuovaDataOra);
+                        } catch (DateTimeParseException e) {
+                            console.mostraErrore(
+                                    "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd HH:mm (es. 2026-06-15 09:30).");
+                            break;
+                        }
+    
+                        String nuovaAula = console.leggiStringa("Inserisci aula dell'appello: ");
+                        int nuoviPosti = console.leggiIntero("Inserisci posti disponibili: ");
+                        String nuovoVincolo = console.leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
+
+                        if (unicenter.modificaAppello(appelloTrovato.getCodiceAppello(), nuovaDataOra, nuovaAula, nuoviPosti, nuovoVincolo)){
+                            console.mostraMessaggio("Appello modificato con successo.");
+                            break;
+                        } else {
+                            console.mostraMessaggio("Qualcosa è andato storto. Riprova.");
+                            break;
+                        }
+                    }
+            }
+                case 4 -> {
+                        console.mostraMessaggio("\n--- Sezione di modifica appelli ---");
+                        console.mostraMessaggio("------------------------------------------");
+                    
+                        List<Appello> appelliProfessore = unicenter.visualizzaAppelliProfessore();
+                    
+                        console.mostraMessaggio("I tuoi appelli:");
+                    
+                        if (appelliProfessore == null || appelliProfessore.isEmpty()) {
+                        console.mostraMessaggio("Non hai appelli da modificare.");
+                        break;
+                        } else {
+                            StampaAppelli(appelliProfessore);
+                        }
+
+                        Appello appelloTrovato = null;
+
+
+                        while (appelloTrovato == null){
+                        
+                            String idApp = console.leggiStringa("Seleziona il codice dell'appello da eliminare (inserisci 0 per annullare): "); 
+
+                        if ("0".equals(idApp)) {
+                            console.mostraMessaggio("Operazione annullata.");
+                            break; 
+                        }
+
+                        for (Appello a : appelliProfessore) {
+                            if (a.getCodiceAppello().equals(idApp)) {
+                            appelloTrovato = a;
+                            break;
+                            }
+                        }
+                        if (appelloTrovato == null) {
+                            console.mostraErrore(" Codice appello non valido o non trovato. Riprova.");
+                        }
+                        }
+
+                         if (appelloTrovato != null) {
+                            if (unicenter.eliminaAppello(appelloTrovato.getCodiceAppello())){
+                                console.mostraMessaggio("Appello eliminato con successo.");
+                                break;
+                            } else {
+                                console.mostraMessaggio("Errore durante l'eliminazione, riprovare.");
+                                break;
+                            }
+                         }
+                } 
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
         }
+
     }
 
     // ==========================================
@@ -257,12 +364,12 @@ public class MenuController {
         }
     }
 
-    public void stampaStudenti(List<Studente> studenti){
-        for (Studente studente : studenti ){
-            console.mostraMessaggio(studente.getNome() +  " - " +  studente.getCognome() + " - " + studente.getCodiceFiscale() + "\n" +
-             "----------------------------------------");
+    public void stampaStudenti(List<Studente> studenti) {
+        for (Studente studente : studenti) {
+            console.mostraMessaggio(
+                    studente.getNome() + " - " + studente.getCognome() + " - " + studente.getCodiceFiscale() + "\n" +
+                            "----------------------------------------");
         }
     }
-
 
 }

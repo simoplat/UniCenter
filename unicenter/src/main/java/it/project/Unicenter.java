@@ -60,7 +60,7 @@ public class Unicenter {
 
     // Immatricolazione
     public Studente immatricolaStudente(String nome, String cognome, String email, String corso, double tassaBase, String codiceFiscale) {
-        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, tassaBase, codiceFiscale, corso);
+        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, corso, tassaBase, codiceFiscale);
         utenti.add(nuovoStudente);
         console.mostraMessaggio(
                 "[UNICENTER] Immatricolato studente: " + nuovoStudente.getNome() + " " + nuovoStudente.getCognome()
@@ -249,4 +249,11 @@ public class Unicenter {
         return null;
     }
 
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo){ 
+        return gestioneAppelliController.modificaAppello(codiceAppello, dataOra, aula, postiDisponibili, vincolo);
+    }
+
+    public boolean eliminaAppello(String codiceAppello){
+        return gestioneAppelliController.eliminaAppello(codiceAppello);        
+    }
 }

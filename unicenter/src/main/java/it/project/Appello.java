@@ -39,6 +39,28 @@ public class Appello {
     public String getVincoloLetteraCognome() { return vincoloLetteraCognome; }
     public List<Studente> getIscritti() { return iscritti; }
 
+    
+
+    public void setCodiceMateria(String codiceMateria) {
+        this.codiceMateria = codiceMateria;
+    }
+
+    public void setDataOra(LocalDateTime dataOra) {
+        this.dataOra = dataOra;
+    }
+
+    public void setAula(String aula) {
+        this.aula = aula;
+    }
+
+    public void setPostiDisponibili(int postiDisponibili) {
+        this.postiDisponibili = postiDisponibili;
+    }
+
+    public void setVincoloLetteraCognome(String vincoloLetteraCognome) {
+        this.vincoloLetteraCognome = vincoloLetteraCognome;
+    }
+
     @Override
     public String toString() {
         return "Appello [codiceAppello=" + codiceAppello + ", codiceMateria=" + codiceMateria + ", dataOra=" + dataOra
