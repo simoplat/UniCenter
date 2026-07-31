@@ -69,7 +69,7 @@ public class MenuController {
                 case 1 -> {
                     console.mostraMessaggio("\n--- Iscrizione Appello ---");
                     // Invocazione della catena di validazione e iscrizione
-                    List<Appello> appelliDisponibili = unicenter.visualizzaAppelliStudente();
+                    List<Appello> appelliDisponibili = unicenter.trovaAppelliStudentePrenotabili();
                     if (appelliDisponibili == null || appelliDisponibili.isEmpty()) {
                         console.mostraMessaggio("Nessun appello disponibile al momento.");
                         break;
@@ -88,7 +88,7 @@ public class MenuController {
 
                 case 2 -> {
                     console.mostraMessaggio("\n--- I tuoi Appelli Prenotati ---");
-                    List<Appello> appelliPrenotati = unicenter.visualizzaAppelliPrenotatiDalloStudente();
+                    List<Appello> appelliPrenotati = unicenter.trovaAppelliPrenotatiDalloStudente();
                     if (appelliPrenotati == null || appelliPrenotati.isEmpty()) {
                         console.mostraMessaggio("Non sei iscritto a nessun appello.");
                         break;
@@ -206,9 +206,9 @@ public class MenuController {
                 case 2 -> {
                     console.mostraMessaggio("\n--- Lista Iscritti ---");
                     console.mostraMessaggio("I tuoi appelli:");
-                    StampaAppelli(unicenter.visualizzaAppelliProfessore());
+                    StampaAppelli(unicenter.trovaAppelliProfessore());
                     String app = console.leggiStringa("Seleziona il codice dell'appello di cui vuoi gli iscritti: ");
-                    List<Studente> iscritti = unicenter.visualizzaIscrittiByAppello(app);
+                    List<Studente> iscritti = unicenter.trovaIscrittiByAppello(app);
 
                     if (iscritti == null || iscritti.size() == 0) {
                         console.mostraMessaggio("Non ci sono iscritti a questo appello.");
@@ -222,7 +222,7 @@ public class MenuController {
                     console.mostraMessaggio("\n--- Sezione di modifica appelli ---");
                     console.mostraMessaggio("------------------------------------------");
 
-                    List<Appello> appelliProfessore = unicenter.visualizzaAppelliProfessore();
+                    List<Appello> appelliProfessore = unicenter.trovaAppelliProfessore();
 
                     console.mostraMessaggio("I tuoi appelli:");
 
@@ -288,7 +288,7 @@ public class MenuController {
                     console.mostraMessaggio("\n--- Sezione di modifica appelli ---");
                     console.mostraMessaggio("------------------------------------------");
 
-                    List<Appello> appelliProfessore = unicenter.visualizzaAppelliProfessore();
+                    List<Appello> appelliProfessore = unicenter.trovaAppelliProfessore();
 
                     console.mostraMessaggio("I tuoi appelli:");
 

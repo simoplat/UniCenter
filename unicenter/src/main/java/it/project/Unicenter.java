@@ -75,7 +75,7 @@ public class Unicenter {
     }
 
     // iscriviStudenteAdAppello , iscrizione appello
-    public List<Appello> visualizzaAppelliStudente() {
+    public List<Appello> trovaAppelliStudentePrenotabili() {
         Studente studente = (Studente) this.currentUser;
 
         PianoDiStudi pianoDiStudi = studente.getPianoStudi();
@@ -87,19 +87,19 @@ public class Unicenter {
         return gestioneAppelliController.trovaAppelliByIdMateria(pianoDiStudi.getCodiciMaterie());
     }
 
-    public List <Appello> visualizzaAppelliPrenotatiDalloStudente (){
+    public List <Appello> trovaAppelliPrenotatiDalloStudente (){
         Studente studente = (Studente) this.currentUser;
         return gestioneAppelliController.appelliPrenotatiByStudente(studente);
         
     }
 
-    public List<Appello> visualizzaAppelliProfessore() {
+    public List<Appello> trovaAppelliProfessore() {
         Professore professore = (Professore) currentUser;
         List<String> idMaterie = gestoreMaterie.trovaIdMaterieDiProfessore(professore.getIdProfessore());
         return gestioneAppelliController.trovaAppelliByIdMateria(idMaterie);
     }
 
-    public List<Studente> visualizzaIscrittiByAppello(String codiceAppello){
+    public List<Studente> trovaIscrittiByAppello(String codiceAppello){
        return gestioneAppelliController.trovaIscrittiByIdAppello(codiceAppello);
     }
 
