@@ -58,8 +58,8 @@ public class GestioneAppelliController {;
             this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         }
         
-        if (appello == null) {
-            return false; // Appello non trovato
+        if (appello == null || appello.getIscritti().contains(studente)) {
+            return false; // Appello non trovato o studente già iscritto
         }
         try {
             // Esegue i controlli della Chain of Responsibility
@@ -111,6 +111,17 @@ public class GestioneAppelliController {;
             }
         }
         return appelliDisponibili;
+    }
+
+    public List <Appello> trovaAppelliPrenotabiliByStudente(Studente studente, List<String> codiciMaterie) {
+        List<Appello> appelliById = trovaAppelliByIdMateria(codiciMaterie);
+        List <Appello> appelliPrenotabili = new ArrayList<>();
+        for (Appello app: appelliById) {
+            if (!app.getIscritti().contains(studente)) {
+                appelliPrenotabili.add(app);
+            }
+        }
+        return appelliPrenotabili;
     }
 
     public Appello trovAppelloByIdAppello(String codiceAppello) {

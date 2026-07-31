@@ -84,7 +84,7 @@ public class Unicenter {
                     "[UNICENTER] Impossibile iscrivere lo studente: il piano di studi non è approvato.");
             return null;
         }
-        return gestioneAppelliController.trovaAppelliByIdMateria(pianoDiStudi.getCodiciMaterie());
+        return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getCodiciMaterie());
     }
 
     public List <Appello> trovaAppelliPrenotatiDalloStudente (){

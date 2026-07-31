@@ -96,7 +96,7 @@ public class MenuController {
                     StampaAppelli(appelliPrenotati);
 
                     console.mostraMessaggio("1. Eliminare una prenotazione.");
-                    console.mostraMessaggio("Premi un altro tasto per uscire.");
+                    console.mostraMessaggio("Inserisci altro valore intero per uscire.");
 
                     switch (console.leggiIntero("Seleziona un'opzione: ")) {
                         case 1 -> {
