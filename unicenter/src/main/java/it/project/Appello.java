@@ -31,6 +31,12 @@ public class Appello {
         postiDisponibili--;
     }
 
+    public synchronized void rimuoviIscritto(Studente studente) {
+        if (iscritti.remove(studente)) {
+            postiDisponibili++;
+        }
+    }
+
     public String getCodiceAppello() { return codiceAppello; }
     public String getCodiceMateria() { return codiceMateria; }
     public LocalDateTime getDataOra() { return dataOra; }

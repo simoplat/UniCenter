@@ -51,7 +51,7 @@ public class GestioneAppelliController {;
         return true;
     }
 
-    public boolean iscriviStudente(Studente currentUser, String codiceAppello) {
+    public boolean iscriviStudente(Studente studente, String codiceAppello) {
         Appello appello = trovAppelloByIdAppello(codiceAppello);
         
         if (this.validatorChain == null) {
@@ -63,15 +63,15 @@ public class GestioneAppelliController {;
         }
         try {
             // Esegue i controlli della Chain of Responsibility
-            validatorChain.validate(currentUser, appello);
+            validatorChain.validate(studente, appello);
 
             // Se la validazione passa, registra l'iscritto
-            appello.aggiungiIscritto(currentUser);
+            appello.aggiungiIscritto(studente);
             String messaggio = "Ti sei iscritto all'appello: " + appello.toString();
             Notifica nuovaNotifica = new Notifica("Iscrizione Appello", messaggio, LocalDateTime.now());
 
             // Invia la notifica allo studente
-            currentUser.riceviNotifica(nuovaNotifica);
+            studente.riceviNotifica(nuovaNotifica);
                 
 
             return true;
@@ -80,6 +80,22 @@ public class GestioneAppelliController {;
             return false;
         }
 
+    }
+
+    public boolean disiscriviStudente(Studente studente, String codiceAppello) {
+        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        if (appello == null) {
+            return false; // Appello non trovato
+        }
+        if (appello.getIscritti().contains(studente)) {
+            appello.rimuoviIscritto(studente);
+            String messaggio = "Ti sei disiscritto dall'appello: " + appello.toString();
+            Notifica nuovaNotifica = new Notifica("[Disiscrizione Appello]", messaggio, LocalDateTime.now());
+            studente.riceviNotifica(nuovaNotifica);
+            return true;
+        } else {
+            return false; // Studente non iscritto all'appello
+        }
     }
 
     public List<Appello> trovaAppelliByIdMateria(List<String> codiciMaterie) {
@@ -152,4 +168,20 @@ public class GestioneAppelliController {;
     }
     return false;
     }
+
+    public List<Appello> appelliPrenotatiByStudente(Studente studente) {
+        List<Appello> appelliPrenotati = new ArrayList<>();
+        for (Appello appello : appelli) {
+            if (appello.getIscritti().contains(studente)) {
+                appelliPrenotati.add(appello);
+            }
+        }
+        return appelliPrenotati;
+    }
+
+
+
+
+
+
 }

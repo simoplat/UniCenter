@@ -87,6 +87,12 @@ public class Unicenter {
         return gestioneAppelliController.trovaAppelliByIdMateria(pianoDiStudi.getCodiciMaterie());
     }
 
+    public List <Appello> visualizzaAppelliPrenotatiDalloStudente (){
+        Studente studente = (Studente) this.currentUser;
+        return gestioneAppelliController.appelliPrenotatiByStudente(studente);
+        
+    }
+
     public List<Appello> visualizzaAppelliProfessore() {
         Professore professore = (Professore) currentUser;
         List<String> idMaterie = gestoreMaterie.trovaIdMaterieDiProfessore(professore.getIdProfessore());
@@ -103,6 +109,14 @@ public class Unicenter {
         }
         return false;
     }
+
+    public boolean disiscriviStudenteDaAppello(String codiceAppello) {
+        if (gestioneAppelliController.disiscriviStudente((Studente) this.currentUser, codiceAppello)) {
+            return true;
+        }
+        return false;
+    }
+
 
     public void popolaDataBase() {
         try {
