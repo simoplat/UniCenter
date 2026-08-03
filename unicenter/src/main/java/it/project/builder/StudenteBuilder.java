@@ -7,7 +7,7 @@ public class StudenteBuilder {
     private String nome;
     private String cognome;
     private String email;
-    private String password = "pass123"; // Password predefinita se non impostata
+    private String password; // Password predefinita se non impostata
     private String corsoDiLaurea;
     private String codiceFiscale;
 
@@ -36,10 +36,16 @@ public class StudenteBuilder {
         return this;
     }
 
+    public StudenteBuilder setCodiceFiscale(String codiceFiscale) {
+        this.codiceFiscale = codiceFiscale;
+        return this;
+    }
+
     public Studente build() {
-        if (nome == null || cognome == null || email == null) {
+        if (nome == null || cognome == null || email == null || password == null || corsoDiLaurea == null || codiceFiscale == null) {
             throw new IllegalArgumentException("Dati studente incompleti per l'immatricolazione.");
         }
+
         String matricola = MatricolaGenerator.getInstance().generateMatricola();
         
         // Passa la password al costruttore di Studente

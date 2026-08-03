@@ -12,12 +12,14 @@ public class ImmatricolazioneController {
         this.calcoloTasseStrategy = new CalcoloTasseStandardStrategy();
     }
 
-    public Studente immatricolaStudente(String nome, String cognome, String email, String corso, double tassaBaseCorso, String codiceFisale) {
+    public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, double tassaBaseCorso, String codiceFisale) {
         Studente studente = new StudenteBuilder()
                 .setNome(nome)
                 .setCognome(cognome)
                 .setEmail(email)
                 .setCorsoDiLaurea(corso)
+                .setPassword(password)
+                .setCodiceFiscale(codiceFisale)
                 .build();
 
         studente.calcolaImportoTasse(calcoloTasseStrategy, tassaBaseCorso, false);

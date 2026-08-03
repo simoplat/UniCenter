@@ -59,13 +59,9 @@ public class Unicenter {
     }
 
     // Immatricolazione
-    public Studente immatricolaStudente(String nome, String cognome, String email, String corso, double tassaBase, String codiceFiscale) {
-        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, corso, tassaBase, codiceFiscale);
+    public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, double tassaBase, String codiceFiscale) {
+        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password,corso, tassaBase, codiceFiscale);
         utenti.add(nuovoStudente);
-        console.mostraMessaggio(
-                "[UNICENTER] Immatricolato studente: " + nuovoStudente.getNome() + " " + nuovoStudente.getCognome()
-                        + " con Matricola: " + nuovoStudente.getMatricola() + " - Tasse calcolate: €"
-                        + nuovoStudente.getTotaleTasse());
         return nuovoStudente;
     }
 
@@ -147,7 +143,7 @@ public class Unicenter {
             // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
             // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
-            Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it",
+            Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "pass123", 
                     "Ingegneria Informatica", 500.0, "CODICEFISCALEMARIOROSSI");
             st1.getPianoStudi().aggiungiMateria("IS01");
             st1.getPianoStudi().aggiungiMateria("BD01");
@@ -155,18 +151,18 @@ public class Unicenter {
 
             // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei
             // validatori)
-            Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it",
+            Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "pass123",
                     "Ingegneria Informatica", 500.0, "CODICEFISCALELUIGIVERDI");
             st2.getPianoStudi().aggiungiMateria("IS01");
             st2.setTassePagate(false); // Tasse NON Saldate
 
             // Studente 3: Anna Bianchi (Piano di studi limitato)
-            Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it",
+            Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "pass123",
                     "Ingegneria Informatica", 500.0 , "CODICEFISCALEANNABIANCHI");
             st3.getPianoStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
             st3.setTassePagate(true);
 
-            Studente st4 = this.immatricolaStudente("Simo", "plata", "email", "ing.", 500, "SIMO");
+            Studente st4 = this.immatricolaStudente("Simo", "plata", "email", "pass123", "Ingegneria Informatica", 500, "SIMO");
             console.mostraMessaggio(st4.toString());
 
             // CREAZIONE APPELLI D'ESAME (UC1 + Factory Method + CodiceAppelloGenerator)
