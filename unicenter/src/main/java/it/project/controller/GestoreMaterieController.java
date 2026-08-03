@@ -9,12 +9,12 @@ import it.project.Materia;
 
 import java.util.Collections;
 
-public class GestoreMaterie {
+public class GestoreMaterieController {
     private Map<String, Materia> materie;
     private Map<String, List<String>> materieDelProfessore = new HashMap<>();
     private Map<String, List<String>> professoriDellaMateria = new HashMap<>();
 
-    public GestoreMaterie() {
+    public GestoreMaterieController() {
         this.materie = new HashMap<>();
         this.materieDelProfessore = new HashMap<>();
         this.professoriDellaMateria = new HashMap<>();

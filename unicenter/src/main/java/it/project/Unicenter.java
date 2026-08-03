@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class Unicenter {
-
     private final List<Utente> utenti;
     private final ImmatricolazioneController immatricolazioneController;
     private final GestioneAppelliController gestioneAppelliController;
-    private final GestoreMaterie gestoreMaterie;
+    private final GestoreMaterieController gestoreMaterie;
+    private final CorsoDiLaureaController corsoDiLaureaController;
     private final MenuController menuController;
     private Utente currentUser = null;
 
@@ -33,7 +33,8 @@ public class Unicenter {
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
         this.gestioneAppelliController = new GestioneAppelliController();
 
-        this.gestoreMaterie = new GestoreMaterie();
+        this.gestoreMaterie = new GestoreMaterieController();
+        this.corsoDiLaureaController = new CorsoDiLaureaController();
 
         // 3. Inizializzazione Controller UC2 (Iscrizione Appelli con Chain of
         // Responsibility)
@@ -130,7 +131,7 @@ public class Unicenter {
             Professore profRossi = new Professore(
                     "1", "Mario", "Rossi", "mario.rossi@unicenter.it", "pass123", "RSSMRA80A01H501U");
             Professore profVerdi = new Professore(
-                    "2", "Giuseppe", "Verdi", "giuseppe.verdi@unicenter.it", "pass123", "VRDGPP75B02F205X");
+                    "2", "Giuseppe", "Verdi", "giuseppeverdi@unicenter.it", "pass123", "VRDGPP75B02F205X");
 
             this.utenti.add(profRossi);
             this.utenti.add(profVerdi);
@@ -139,6 +140,13 @@ public class Unicenter {
             this.gestoreMaterie.associaProfessoreAMateria("1", "AR01");
             this.gestoreMaterie.associaProfessoreAMateria("2", "AR01");
             this.gestoreMaterie.associaProfessoreAMateria("2", "IS01");
+
+            CorsoDiLaurea ingInformatica = new CorsoDiLaurea("ING-INF", "Ingegneria Informatica");
+            ingInformatica.aggiungiMateria(ingSoftware);
+            ingInformatica.aggiungiMateria(basiDati);
+            ingInformatica.aggiungiMateria(architetture);
+            this.corsoDiLaureaController.addCorsoDiLaurea(ingInformatica);
+
 
             // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
@@ -162,7 +170,7 @@ public class Unicenter {
             st3.getPianoStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
             st3.setTassePagate(true);
 
-            Studente st4 = this.immatricolaStudente("Simo", "plata", "email", "pass123", "Ingegneria Informatica", 500, "SIMO");
+            Studente st4 = this.immatricolaStudente("Simo", "plata", "simo.plata@studenti.it", "pass123", "Ingegneria Informatica", 500, "SIMO");
             console.mostraMessaggio(st4.toString());
 
             // CREAZIONE APPELLI D'ESAME (UC1 + Factory Method + CodiceAppelloGenerator)
@@ -180,6 +188,8 @@ public class Unicenter {
 
             Notifica notifica = new Notifica("Ciao", "ti sei iscritto", LocalDateTime.now());
             st1.aggiungiNotifica(notifica);
+
+        
 
         } catch (Exception e) {
             console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
@@ -265,6 +275,10 @@ public class Unicenter {
 
     public boolean eliminaAppello(String codiceAppello){
         return gestioneAppelliController.eliminaAppello(codiceAppello);        
+    }
+
+    public CorsoDiLaurea trovaCorsoDiLaureaByNome(String nomeCorsoDiLaurea) {
+        return corsoDiLaureaController.trovaCorsoDiLaureaByNome(nomeCorsoDiLaurea);
     }
 
 }

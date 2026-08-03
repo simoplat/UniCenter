@@ -7,48 +7,62 @@ public class StudenteBuilder {
     private String nome;
     private String cognome;
     private String email;
-    private String password; // Password predefinita se non impostata
+    private String password;
     private String corsoDiLaurea;
     private String codiceFiscale;
 
     public StudenteBuilder setNome(String nome) {
-        this.nome = nome;
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Il nome non può essere vuoto.");
+        }
+        this.nome = nome.trim();
         return this;
     }
 
     public StudenteBuilder setCognome(String cognome) {
-        this.cognome = cognome;
+        if (cognome == null || cognome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Il cognome non può essere vuoto.");
+        }
+        this.cognome = cognome.trim();
         return this;
     }
 
     public StudenteBuilder setEmail(String email) {
-        this.email = email;
+        if (email == null || !email.contains("@")) {
+            throw new IllegalArgumentException("Formato email non valido.");
+        }
+        this.email = email.trim().toLowerCase();
         return this;
     }
 
+
     public StudenteBuilder setPassword(String password) {
+        if (password == null || password.length() < 4) {
+            throw new IllegalArgumentException("La password deve contenere almeno 4 caratteri.");
+        }
         this.password = password;
         return this;
     }
 
-    public StudenteBuilder setCorsoDiLaurea(String corsoDiLaurea) {
-        this.corsoDiLaurea = corsoDiLaurea;
+
+    public StudenteBuilder setCorsoDiLaurea(String corso) {
+        if (corso == null || corso.trim().isEmpty()) {
+            throw new IllegalArgumentException("Il corso di laurea è obbligatorio.");
+        }
+        this.corsoDiLaurea = corso.trim();
         return this;
     }
 
     public StudenteBuilder setCodiceFiscale(String codiceFiscale) {
+         if (codiceFiscale == null || codiceFiscale.trim().isEmpty()) {
+            throw new IllegalArgumentException("Il codice fiscale è obbligatorio.");
+        }
         this.codiceFiscale = codiceFiscale;
         return this;
     }
 
     public Studente build() {
-        if (nome == null || cognome == null || email == null || password == null || corsoDiLaurea == null || codiceFiscale == null) {
-            throw new IllegalArgumentException("Dati studente incompleti per l'immatricolazione.");
-        }
-
         String matricola = MatricolaGenerator.getInstance().generateMatricola();
-        
-        // Passa la password al costruttore di Studente
         return new Studente(matricola, nome, cognome, email, password, corsoDiLaurea, codiceFiscale);
     }
 }

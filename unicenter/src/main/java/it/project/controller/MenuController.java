@@ -1,8 +1,15 @@
-package it.project;
+package it.project.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import it.project.Appello;
+import it.project.ConsoleUI;
+import it.project.CorsoDiLaurea;
+import it.project.Materia;
+import it.project.Notifica;
+import it.project.Professore;
+import it.project.Studente;
+import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
 
@@ -349,10 +356,18 @@ public class MenuController {
         String nome = console.leggiStringa("Inserisci il nome dello studente: ");
         String cognome = console.leggiStringa("Inserisci il cognome dello studente: ");
         String email = console.leggiStringa("Inserisci l'email dello studente: ");
-        String password = console.leggiStringa("Inserisci la password: ");
+        String password = console.leggiStringa("Inserisci la password di almeno 4 caratteri: ");
         String corsoDiLaurea = console.leggiStringa("Inserisci il corso di laurea : ");
+        
+        CorsoDiLaurea corso = unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
+       
+        if (corso == null) {
+            console.mostraMessaggio("Corso di laurea non trovato.");
+            return;
+        }
+
         String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
-        double tassaBaseCorso = 500.0; // Tassa base per il corso di laurea
+        double tassaBaseCorso = 500.0; 
 
         Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, tassaBaseCorso, codiceFiscale);
 
