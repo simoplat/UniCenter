@@ -347,6 +347,20 @@ public class MenuController {
         console.mostraMessaggio("      IMMATRICOLAZIONE NUOVO STUDENTE     ");
         console.mostraMessaggio("------------------------------------------");
         // immatricolazioneController.immatricolaStudente();
+        String nome = console.leggiStringa("Inserisci il nome dello studente: ");
+        String cognome = console.leggiStringa("Inserisci il cognome dello studente: ");
+        String email = console.leggiStringa("Inserisci l'email dello studente: ");
+        String corsoDiLaurea = console.leggiStringa("Inserisci il corso di laurea : ");
+        String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
+        double tassaBaseCorso = 500.0; // Tassa base per il corso di laurea
+
+        Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, corsoDiLaurea, tassaBaseCorso, codiceFiscale);
+
+        console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
+        console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
+        console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse());
+
+        ;
     }
 
     public void loginUtente() {
