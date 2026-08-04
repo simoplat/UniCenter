@@ -1,14 +1,21 @@
 package it.project;
 
-import it.project.controller.*;
-import it.project.validation.*;
-
-import it.project.exceptions.UtenteNonTrovatoException;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import it.project.controller.CorsoDiLaureaController;
+import it.project.controller.GestioneAppelliController;
+import it.project.controller.GestoreMaterieController;
+import it.project.controller.ImmatricolazioneController;
+import it.project.controller.MenuController;
+import it.project.exceptions.UtenteNonTrovatoException;
+import it.project.validation.CognomeFasciaValidator;
+import it.project.validation.IscrizioneValidator;
+import it.project.validation.PostiDisponibiliValidator;
+import it.project.validation.TassaPaidValidator;
+import it.project.validation.ValidationChainBuilder;
 
 public class Unicenter {
     private final List<Utente> utenti;
@@ -61,6 +68,19 @@ public class Unicenter {
 
     // Immatricolazione
     public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, double tassaBase, String codiceFiscale) {
+
+        boolean emailEsiste = esisteUtente(email);
+        boolean cfEsiste = esisteCodiceFiscale(codiceFiscale);
+
+        //controllo 3 casistiche 
+        if(emailEsiste && cfEsiste){
+            throw new IllegalArgumentException("Attenzione: Email e Codice Fiscale già inseriti!");
+        } else if (emailEsiste){
+            throw new IllegalArgumentException("Attennzione: Email già inserita!");
+        } else if (cfEsiste){
+            throw new IllegalArgumentException("Attenzione: Codice Fiscale già inserito!");
+        }
+
         Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password,corso, tassaBase, codiceFiscale);
         utenti.add(nuovoStudente);
         return nuovoStudente;
@@ -226,6 +246,15 @@ public class Unicenter {
     public boolean esisteUtente(String email) {
         for (Utente u : utenti) {
             if (u.getEmail().equalsIgnoreCase(email)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean esisteCodiceFiscale(String codiceFiscale){
+        for (Utente u : utenti){
+            if(u.getCodiceFiscale().equalsIgnoreCase(codiceFiscale)){
                 return true;
             }
         }

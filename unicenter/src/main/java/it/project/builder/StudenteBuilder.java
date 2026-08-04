@@ -63,6 +63,6 @@ public class StudenteBuilder {
 
     public Studente build() {
         String matricola = MatricolaGenerator.getInstance().generateMatricola();
-        return new Studente(matricola, nome, cognome, email, password, corsoDiLaurea, codiceFiscale);
+        return new Studente(matricola, nome, cognome, email, password, codiceFiscale, corsoDiLaurea);
     }
 }

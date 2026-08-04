@@ -1,5 +1,8 @@
 package it.project.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import it.project.Appello;
@@ -12,10 +15,6 @@ import it.project.Studente;
 import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 public class MenuController {
 
@@ -369,11 +368,16 @@ public class MenuController {
         String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
         double tassaBaseCorso = 500.0; 
 
-        Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, tassaBaseCorso, codiceFiscale);
+
+        try {
+           Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, tassaBaseCorso, codiceFiscale);
 
         console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
         console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
-        console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse());
+        console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse()); 
+        } catch (IllegalArgumentException e) {
+            console.mostraErrore("immatricolazione fallita. " + e.getMessage());
+        }
     }
 
     public void loginUtente() {
