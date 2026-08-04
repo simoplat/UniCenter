@@ -375,6 +375,7 @@ public class MenuController {
         console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
         console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
         console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse()); 
+        console.mostraMessaggio("Il tuo codice fiscale è: " + codiceFiscale);
         } catch (IllegalArgumentException e) {
             console.mostraErrore("immatricolazione fallita. " + e.getMessage());
         }

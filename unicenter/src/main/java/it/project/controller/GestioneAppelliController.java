@@ -11,8 +11,7 @@ import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
 import it.project.generator.CodiceAppelloGenerator;
-import it.project.validation.IscrizioneValidator;
-import it.project.validation.ValidationChainBuilder;
+import it.project.validation.*;
 
 public class GestioneAppelliController {;
     private IscrizioneValidator validatorChain;

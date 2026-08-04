@@ -10,7 +10,6 @@ public abstract class Utente {
     public Utente() {
     }
 
-    // Costruttore a 5 parametri con la password e il codice fiscale
     public Utente(String nome, String cognome, String email, String password, String codiceFiscale) {
         this.nome = nome;
         this.cognome = cognome;
