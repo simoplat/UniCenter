@@ -5,17 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import it.project.controller.CorsoDiLaureaController;
-import it.project.controller.GestioneAppelliController;
-import it.project.controller.GestoreMaterieController;
-import it.project.controller.ImmatricolazioneController;
-import it.project.controller.MenuController;
+import it.project.controller.*;
 import it.project.exceptions.UtenteNonTrovatoException;
-import it.project.validation.CognomeFasciaValidator;
-import it.project.validation.IscrizioneValidator;
-import it.project.validation.PostiDisponibiliValidator;
-import it.project.validation.TassaPaidValidator;
-import it.project.validation.ValidationChainBuilder;
+import it.project.validation.*;
 
 public class Unicenter {
     private final List<Utente> utenti;
@@ -177,12 +169,11 @@ public class Unicenter {
             st1.getPianoStudi().aggiungiMateria("BD01");
             st1.setTassePagate(true); // Tasse Saldate
 
-            // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei
-            // validatori)
+            // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei validatori)
             Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "pass123",
                     "Ingegneria Informatica", 500.0, "CODICEFISCALELUIGIVERDI");
             st2.getPianoStudi().aggiungiMateria("IS01");
-            st2.setTassePagate(false); // Tasse NON Saldate
+            st2.setTassePagate(false); 
 
             // Studente 3: Anna Bianchi (Piano di studi limitato)
             Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "pass123",
