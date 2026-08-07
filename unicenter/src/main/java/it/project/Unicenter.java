@@ -1,11 +1,13 @@
 package it.project;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import it.project.controller.*;
+import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.UtenteNonTrovatoException;
 
 public class Unicenter {
@@ -52,20 +54,19 @@ public class Unicenter {
 
     // Immatricolazione
     public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, double tassaBase, String codiceFiscale) {
-
         boolean emailEsiste = esisteUtente(email);
         boolean cfEsiste = esisteCodiceFiscale(codiceFiscale);
 
-        //controllo 3 casistiche 
-        if(emailEsiste && cfEsiste){
+        // controllo 3 casistiche
+        if (emailEsiste && cfEsiste) {
             throw new IllegalArgumentException("Attenzione: Email e Codice Fiscale già inseriti!");
-        } else if (emailEsiste){
+        } else if (emailEsiste) {
             throw new IllegalArgumentException("Attennzione: Email già inserita!");
-        } else if (cfEsiste){
+        } else if (cfEsiste) {
             throw new IllegalArgumentException("Attenzione: Codice Fiscale già inserito!");
         }
 
-        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password,corso, tassaBase, codiceFiscale);
+        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso, tassaBase, codiceFiscale);
         utenti.add(nuovoStudente);
         return nuovoStudente;
     }
@@ -88,10 +89,10 @@ public class Unicenter {
         return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getCodiciMaterie());
     }
 
-    public List <Appello> trovaAppelliPrenotatiDalloStudente (){
+    public List<Appello> trovaAppelliPrenotatiDalloStudente() {
         Studente studente = (Studente) this.currentUser;
         return gestioneAppelliController.appelliPrenotatiByStudente(studente);
-        
+
     }
 
     public List<Appello> trovaAppelliProfessore() {
@@ -100,8 +101,8 @@ public class Unicenter {
         return gestioneAppelliController.trovaAppelliByIdMateria(idMaterie);
     }
 
-    public List<Studente> trovaIscrittiByAppello(String codiceAppello){
-       return gestioneAppelliController.trovaIscrittiByIdAppello(codiceAppello);
+    public List<Studente> trovaIscrittiByAppello(String codiceAppello) {
+        return gestioneAppelliController.trovaIscrittiByIdAppello(codiceAppello);
     }
 
     public boolean iscriviStudenteAdAppello(String codiceAppello) {
@@ -117,7 +118,6 @@ public class Unicenter {
         }
         return false;
     }
-
 
     public void popolaDataBase() {
         try {
@@ -151,29 +151,30 @@ public class Unicenter {
             ingInformatica.aggiungiMateria(architetture);
             this.corsoDiLaureaController.addCorsoDiLaurea(ingInformatica);
 
-
             // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
             // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
-            Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "pass123", 
+            Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "pass123",
                     "Ingegneria Informatica", 500.0, "CODICEFISCALEMARIOROSSI");
             st1.getPianoStudi().aggiungiMateria("IS01");
             st1.getPianoStudi().aggiungiMateria("BD01");
             st1.setTassePagate(true); // Tasse Saldate
 
-            // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei validatori)
+            // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei
+            // validatori)
             Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "pass123",
                     "Ingegneria Informatica", 500.0, "CODICEFISCALELUIGIVERDI");
             st2.getPianoStudi().aggiungiMateria("IS01");
-            st2.setTassePagate(false); 
+            st2.setTassePagate(false);
 
             // Studente 3: Anna Bianchi (Piano di studi limitato)
             Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "pass123",
-                    "Ingegneria Informatica", 500.0 , "CODICEFISCALEANNABIANCHI");
+                    "Ingegneria Informatica", 500.0, "CODICEFISCALEANNABIANCHI");
             st3.getPianoStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
             st3.setTassePagate(true);
 
-            Studente st4 = this.immatricolaStudente("Simo", "plata", "simo.plata@studenti.it", "pass123", "Ingegneria Informatica", 500, "SIMO");
+            Studente st4 = this.immatricolaStudente("Simo", "plata", "simo.plata@studenti.it", "pass123",
+                    "Ingegneria Informatica", 500, "SIMO");
             console.mostraMessaggio(st4.toString());
 
             // CREAZIONE APPELLI D'ESAME (UC1 + Factory Method + CodiceAppelloGenerator)
@@ -181,18 +182,19 @@ public class Unicenter {
             LocalDateTime dataAppello2 = LocalDateTime.now().plusDays(20).withHour(14).withMinute(30);
 
             // Appello 1: Ingegneria del Software (IS01) - 15 posti, fascia cognome R-Z
-            Appello app1 = new Appello("APP1", "IS01", dataAppello1, "Aula Magna", 15, "A-Z");
+            Appello app1 = new Appello("APP1", "IS01", dataAppello1, "Aula Magna", 15, "A-Z", LocalDate.now().plusDays(10));
             this.gestioneAppelliController.creaNuovoAppello(app1);
 
-            Appello app2 = new Appello("APP2", "BD01", dataAppello2, "Aula 101", 10, "A-Z");
+            Appello app2 = new Appello("APP2", "BD01", dataAppello2, "Aula 101", 10, "A-Z", LocalDate.now().plusDays(10));
             this.gestioneAppelliController.creaNuovoAppello(app2);
+
+            Appello app3 = new Appello("APP3", "BD01", dataAppello2, "Aula 102", 20, "A-Z", LocalDate.of(2026, 7, 30 ));
+            this.gestioneAppelliController.creaNuovoAppello(app3);
 
             gestioneAppelliController.iscriviStudente(st1, "APP1");
 
             Notifica notifica = new Notifica("Ciao", "ti sei iscritto", LocalDateTime.now());
             st1.aggiungiNotifica(notifica);
-
-        
 
         } catch (Exception e) {
             console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
@@ -235,9 +237,9 @@ public class Unicenter {
         return false;
     }
 
-    public boolean esisteCodiceFiscale(String codiceFiscale){
-        for (Utente u : utenti){
-            if(u.getCodiceFiscale().equalsIgnoreCase(codiceFiscale)){
+    public boolean esisteCodiceFiscale(String codiceFiscale) {
+        for (Utente u : utenti) {
+            if (u.getCodiceFiscale().equalsIgnoreCase(codiceFiscale)) {
                 return true;
             }
         }
@@ -281,16 +283,24 @@ public class Unicenter {
         return null;
     }
 
-    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo){ 
-        return gestioneAppelliController.modificaAppello(codiceAppello, dataOra, aula, postiDisponibili, vincolo);
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione) {
+        return gestioneAppelliController.modificaAppello(codiceAppello, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione);
     }
 
-    public boolean eliminaAppello(String codiceAppello){
-        return gestioneAppelliController.eliminaAppello(codiceAppello);        
+    public boolean eliminaAppello(String codiceAppello) {
+        return gestioneAppelliController.eliminaAppello(codiceAppello);
     }
 
     public CorsoDiLaurea trovaCorsoDiLaureaByNome(String nomeCorsoDiLaurea) {
         return corsoDiLaureaController.trovaCorsoDiLaureaByNome(nomeCorsoDiLaurea);
+    }
+
+    public boolean validaDataImmatricolazione() throws DataNonValidaException {
+        return immatricolazioneController.validaDataImmatricolazione();
+    }
+
+    public boolean validaTermineIscrizioneAppello(String codiceAppello) {
+        return gestioneAppelliController.validaTermineIscrizioneAppello(codiceAppello);
     }
 
 }

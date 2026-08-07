@@ -2,6 +2,8 @@ package it.project.controller;
 
 import it.project.Appello;
 import it.project.Studente;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -141,20 +143,21 @@ public class GestioneAppelliController {;
         return appello.getIscritti();
     }
 
-    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo){
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione){
         for (Appello a : appelli){
             if (a.getCodiceAppello().equals(codiceAppello)) {
                         a.setDataOra(dataOra);
                         a.setAula(aula);
                         a.setPostiDisponibili(postiDisponibili);
                         a.setVincoloLetteraCognome(vincolo);
-                   
+                        a.setTermineIscrizione(dataTermineIscrizione);
                         String oggetto = "Modifica appello : " + codiceAppello;
                         String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" + 
                                             "Orario: " + dataOra + "\n" +
                                             "Aula: " + aula+ "\n" + 
-                                            "Posti disponibili" + postiDisponibili + "\n" +
-                                            "Vincolo cognome" + vincolo + "\n";
+                                            "Posti disponibili " + postiDisponibili + "\n" +
+                                            "Vincolo cognome " + vincolo + "\n" +
+                                            "Data termine iscrizione: " + dataTermineIscrizione + "\n";
                         LocalDateTime ora = LocalDateTime.now();
                         Notifica notifica = new Notifica(oggetto, contenuto , ora);
                         a.notifica(notifica);
@@ -189,9 +192,16 @@ public class GestioneAppelliController {;
         return appelliPrenotati;
     }
 
-
-
-
-
-
+    public boolean validaTermineIscrizioneAppello(String codiceAppello) {
+        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        if (appello == null) {
+            return false; // Appello non trovato
+        }
+        LocalDate oggi = LocalDate.now();
+        LocalDate termineIscrizione = appello.getTermineIscrizione();
+        if (termineIscrizione == null) {
+            return false; 
+        }
+        return oggi.isAfter(termineIscrizione);
+    }
 }

@@ -80,7 +80,4 @@ public class Studente extends Utente implements ObserverAppello{
                 + ", totaleTasse=" + totaleTasse + ", pianoStudi=" + pianoStudi + ", notifiche=" + notifiche + "]";
     }
 
-    
-    
-
 }

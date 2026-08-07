@@ -26,13 +26,14 @@ public class ValidationChainBuilder {
         IscrizioneValidator posti = new PostiDisponibiliValidator();
         IscrizioneValidator tasse = new TassaPaidValidator();
         IscrizioneValidator cognome = new CognomeFasciaValidator();
+        IscrizioneValidator dataTermine = new DataTermineIscrizioneValidator();
 
         // Collega i validatori in sequenza
         pianoStudi.setNext(posti);
         posti.setNext(tasse);
         tasse.setNext(cognome);
+        cognome.setNext(dataTermine);
 
-        // Restituisce il primo anello della catena
         return pianoStudi;
     }
 }

@@ -1,6 +1,7 @@
 package it.project;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,15 +12,17 @@ public class Appello {
     private String aula;
     private int postiDisponibili;
     private String vincoloLetteraCognome;
+    private LocalDate termineIscrizione;
     private List<Studente> iscritti;
 
-    public Appello(String codiceAppello, String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome) {
+    public Appello(String codiceAppello, String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) {
         this.codiceAppello = codiceAppello;
         this.codiceMateria = codiceMateria;
         this.dataOra = dataOraStr;
         this.aula = aula;
         this.postiDisponibili = postiDisponibili;
         this.vincoloLetteraCognome = vincoloLetteraCognome;
+        this.termineIscrizione = termineIscrizione;
         this.iscritti = new ArrayList<>();
     }
 
@@ -43,7 +46,9 @@ public class Appello {
     public String getAula() { return aula; }
     public int getPostiDisponibili() { return postiDisponibili; }
     public String getVincoloLetteraCognome() { return vincoloLetteraCognome; }
+    public LocalDate getTermineIscrizione() { return termineIscrizione; }
     public List<Studente> getIscritti() { return iscritti; }
+    
 
     
 
@@ -65,6 +70,15 @@ public class Appello {
 
     public void setVincoloLetteraCognome(String vincoloLetteraCognome) {
         this.vincoloLetteraCognome = vincoloLetteraCognome;
+    }
+
+    public void setTermineIscrizione(LocalDate termineIscrizione) {
+        this.termineIscrizione = termineIscrizione;
+    }
+    
+    public boolean isIscrizioneAperta() {
+        LocalDate oggi = LocalDate.now();
+        return termineIscrizione != null && !oggi.isAfter(termineIscrizione);
     }
 
     @Override

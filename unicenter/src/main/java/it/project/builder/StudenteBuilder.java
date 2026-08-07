@@ -10,6 +10,7 @@ public class StudenteBuilder {
     private String password;
     private String corsoDiLaurea;
     private String codiceFiscale;
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
     public StudenteBuilder setNome(String nome) {
         if (nome == null || nome.trim().isEmpty()) {
@@ -28,13 +29,18 @@ public class StudenteBuilder {
     }
 
     public StudenteBuilder setEmail(String email) {
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Formato email non valido.");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("L'email è obbligatoria e non può essere vuota.");
         }
-        this.email = email.trim().toLowerCase();
+        String emailPulita = email.trim().toLowerCase();
+
+        if (!emailPulita.matches(EMAIL_REGEX)) {
+            throw new IllegalArgumentException("Formato email non valido: " + email);
+        }
+
+        this.email = emailPulita;
         return this;
     }
-
 
     public StudenteBuilder setPassword(String password) {
         if (password == null || password.length() < 4) {
@@ -43,7 +49,6 @@ public class StudenteBuilder {
         this.password = password;
         return this;
     }
-
 
     public StudenteBuilder setCorsoDiLaurea(String corso) {
         if (corso == null || corso.trim().isEmpty()) {
@@ -54,7 +59,7 @@ public class StudenteBuilder {
     }
 
     public StudenteBuilder setCodiceFiscale(String codiceFiscale) {
-         if (codiceFiscale == null || codiceFiscale.trim().isEmpty()) {
+        if (codiceFiscale == null || codiceFiscale.trim().isEmpty()) {
             throw new IllegalArgumentException("Il codice fiscale è obbligatorio.");
         }
         this.codiceFiscale = codiceFiscale;

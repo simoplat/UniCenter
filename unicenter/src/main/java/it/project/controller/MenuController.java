@@ -1,5 +1,6 @@
 package it.project.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,6 +23,7 @@ public class MenuController {
     private Unicenter unicenter;
     DateTimeFormatter formatterStampa = DateTimeFormatter.ofPattern("dd/MM/yyyy 'alle' HH:mm");
     DateTimeFormatter formatterInput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    DateTimeFormatter formatterInputData = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public MenuController(Unicenter unicenter) {
         this.unicenter = unicenter;
@@ -81,8 +83,13 @@ public class MenuController {
                         break;
                     }
                     StampaAppelli(appelliDisponibili);
-                    String codiceAppello = console
-                            .leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti: ");
+                    String codiceAppello = console.leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti: ");
+
+                    if (!unicenter.validaTermineIscrizioneAppello(codiceAppello)) {
+                        console.mostraMessaggio("Il termine di iscrizione per questo appello è scaduto. Non puoi iscriverti.");
+                        break;
+                    }
+
                     if (!unicenter.iscriviStudenteAdAppello(codiceAppello)) {
                         console.mostraMessaggio("Codice appello non valido. Riprova.");
                         break;
@@ -174,7 +181,6 @@ public class MenuController {
                     String dataOraStr = console
                             .leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
                     LocalDateTime dataOra = null;
-                    // 2. Esegui il parsing (gestendo eventuali errori di input dell'utente)
                     try {
                         dataOra = LocalDateTime.parse(dataOraStr, formatterInput);
                         console.mostraMessaggio("Data e ora convertite con successo: " + dataOra);
@@ -188,9 +194,23 @@ public class MenuController {
                     int posti = console.leggiIntero("Inserisci il numero di posti disponibili: ");
                     String vincoloCognome = console
                             .leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
+
+                    String termineIscrizione = console
+                            .leggiStringa("Inserisci la data di termine iscrizione (formato: yyyy-MM-dd): ");
+                    LocalDate dataTermineIscrizione = null;
+                    try {
+                        dataTermineIscrizione = LocalDate.parse(termineIscrizione, formatterInput);
+                        console.mostraMessaggio(
+                                "Data di termine iscrizione convertita con successo: " + dataTermineIscrizione);
+                    } catch (DateTimeParseException e) {
+                        console.mostraErrore(
+                                "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd (es. 2026-06-15).");
+                        break;
+                    }
+
                     String codiceAppello = unicenter.generaCodiceAppello();
                     Appello nuovoAppello = new Appello(codiceAppello, codiceMateria, dataOra, aula, posti,
-                            vincoloCognome);
+                            vincoloCognome, dataTermineIscrizione);
 
                     try {
                         unicenter.creaNuovoAppello(nuovoAppello);
@@ -280,14 +300,29 @@ public class MenuController {
                         String nuovoVincolo = console.leggiStringa(
                                 "Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
 
+                        String nuovoTermineIscrizioneStr = console
+                                .leggiStringa("Inserisci la nuova data di termine iscrizione (formato: yyyy-MM-dd): ");
+                        LocalDate nuovoTermineIscrizione = null;
+                        try {
+                            nuovoTermineIscrizione = LocalDate.parse(nuovoTermineIscrizioneStr, formatterInputData);
+                            console.mostraMessaggio("Data di termine iscrizione convertita      con successo: "
+                                    + nuovoTermineIscrizione);
+
+                        } catch (DateTimeParseException e) {
+                            console.mostraErrore(
+                                    "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd (es. 2026-06-15).");
+                            break;
+                        }
+
                         if (unicenter.modificaAppello(appelloTrovato.getCodiceAppello(), nuovaDataOra, nuovaAula,
-                                nuoviPosti, nuovoVincolo)) {
+                                nuoviPosti, nuovoVincolo, nuovoTermineIscrizione)) {
                             console.mostraMessaggio("Appello modificato con successo.");
                             break;
                         } else {
                             console.mostraMessaggio("Qualcosa è andato storto. Riprova.");
                             break;
                         }
+
                     }
                 }
                 case 4 -> {
@@ -346,36 +381,47 @@ public class MenuController {
     }
 
     // ==========================================
-    //  IMMATRICOLAZIONE
+    // IMMATRICOLAZIONE
     // ==========================================
     private void gestisciImmatricolazione() {
         console.mostraMessaggio("\n------------------------------------------");
         console.mostraMessaggio("      IMMATRICOLAZIONE NUOVO STUDENTE     ");
         console.mostraMessaggio("------------------------------------------");
+
+        try {
+            if (unicenter.validaDataImmatricolazione()) {
+                console.mostraMessaggio(
+                        "Finestra temporale per l'immatricolazione aperta. Procedi con l'immatricolazione.");
+            }
+        } catch (DataNonValidaException e) {
+            console.mostraErrore(e.getMessage());
+            return;
+        }
+
         String nome = console.leggiStringa("Inserisci il nome dello studente: ");
         String cognome = console.leggiStringa("Inserisci il cognome dello studente: ");
         String email = console.leggiStringa("Inserisci l'email dello studente: ");
         String password = console.leggiStringa("Inserisci la password di almeno 4 caratteri: ");
         String corsoDiLaurea = console.leggiStringa("Inserisci il corso di laurea : ");
-        
+
         CorsoDiLaurea corso = unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
-       
+
         if (corso == null) {
             console.mostraMessaggio("Corso di laurea non trovato.");
             return;
         }
 
         String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
-        double tassaBaseCorso = 500.0; 
-
+        double tassaBaseCorso = 500.0;
 
         try {
-           Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, tassaBaseCorso, codiceFiscale);
+            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea,
+                    tassaBaseCorso, codiceFiscale);
 
-        console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
-        console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
-        console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse()); 
-        console.mostraMessaggio("Il tuo codice fiscale è: " + codiceFiscale);
+            console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
+            console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
+            console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse());
+            console.mostraMessaggio("Il tuo codice fiscale è: " + codiceFiscale);
         } catch (IllegalArgumentException e) {
             console.mostraErrore("immatricolazione fallita. " + e.getMessage());
         }
@@ -418,7 +464,8 @@ public class MenuController {
                             "Posti Disponibili: " + appello.getPostiDisponibili() + "\n" +
                             "Vincolo Cognome: "
                             + (appello.getVincoloLetteraCognome() != null ? appello.getVincoloLetteraCognome()
-                                    : "Nessuno")
+                                    : "Nessuno") + "\n" +
+                            "Data Termine Iscrizione: " + appello.getTermineIscrizione().format(formatterInputData)
                             + "\n" +
                             "----------------------------------------");
         }
