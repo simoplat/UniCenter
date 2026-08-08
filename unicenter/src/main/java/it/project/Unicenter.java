@@ -299,8 +299,4 @@ public class Unicenter {
         return immatricolazioneController.validaDataImmatricolazione();
     }
 
-    public boolean validaTermineIscrizioneAppello(String codiceAppello) {
-        return gestioneAppelliController.validaTermineIscrizioneAppello(codiceAppello);
-    }
-
 }

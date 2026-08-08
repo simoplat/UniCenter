@@ -77,7 +77,7 @@ public class GestioneAppelliController {;
 
             return true;
         } catch (Exception e) {
-            console.mostraErrore("[ERRORE ISCRIZIONE] " + e.getMessage());
+            console.mostraErrore(e.getMessage());
             return false;
         }
 
@@ -95,7 +95,7 @@ public class GestioneAppelliController {;
             studente.riceviNotifica(nuovaNotifica);
             return true;
         } else {
-            return false; // Studente non iscritto all'appello
+            return false; 
         }
     }
 
@@ -190,18 +190,5 @@ public class GestioneAppelliController {;
             }
         }
         return appelliPrenotati;
-    }
-
-    public boolean validaTermineIscrizioneAppello(String codiceAppello) {
-        Appello appello = trovAppelloByIdAppello(codiceAppello);
-        if (appello == null) {
-            return false; // Appello non trovato
-        }
-        LocalDate oggi = LocalDate.now();
-        LocalDate termineIscrizione = appello.getTermineIscrizione();
-        if (termineIscrizione == null) {
-            return false; 
-        }
-        return oggi.isAfter(termineIscrizione);
     }
 }

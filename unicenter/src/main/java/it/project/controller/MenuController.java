@@ -22,8 +22,8 @@ public class MenuController {
     private final ConsoleUI console = ConsoleUI.getInstance();
     private Unicenter unicenter;
     DateTimeFormatter formatterStampa = DateTimeFormatter.ofPattern("dd/MM/yyyy 'alle' HH:mm");
-    DateTimeFormatter formatterInput = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    DateTimeFormatter formatterInputData = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    DateTimeFormatter formatterInput = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    DateTimeFormatter formatterInputData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public MenuController(Unicenter unicenter) {
         this.unicenter = unicenter;
@@ -85,20 +85,12 @@ public class MenuController {
                     StampaAppelli(appelliDisponibili);
                     String codiceAppello = console.leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti: ");
 
-                    if (!unicenter.validaTermineIscrizioneAppello(codiceAppello)) {
-                        console.mostraMessaggio("Il termine di iscrizione per questo appello è scaduto. Non puoi iscriverti.");
-                        break;
-                    }
-
                     if (!unicenter.iscriviStudenteAdAppello(codiceAppello)) {
-                        console.mostraMessaggio("Codice appello non valido. Riprova.");
                         break;
-                    } else {
+                        } else {
                         console.mostraMessaggio("Iscrizione avvenuta con successo all'appello " + codiceAppello);
-                    }
-
-                }
-
+                        }
+                    } 
                 case 2 -> {
                     console.mostraMessaggio("\n--- I tuoi Appelli Prenotati ---");
                     List<Appello> appelliPrenotati = unicenter.trovaAppelliPrenotatiDalloStudente();
@@ -147,9 +139,9 @@ public class MenuController {
         }
     }
 
-    // ==========================================
-    // MENU AREA PROFESSORE / DOCENTE
-    // ==========================================
+    // =====================
+    // MENU AREA PROFESSORE 
+    // =====================
     private void menuProfessore() {
         boolean back = false;
 
@@ -464,7 +456,8 @@ public class MenuController {
                             "Posti Disponibili: " + appello.getPostiDisponibili() + "\n" +
                             "Vincolo Cognome: "
                             + (appello.getVincoloLetteraCognome() != null ? appello.getVincoloLetteraCognome()
-                                    : "Nessuno") + "\n" +
+                                    : "Nessuno")
+                            + "\n" +
                             "Data Termine Iscrizione: " + appello.getTermineIscrizione().format(formatterInputData)
                             + "\n" +
                             "----------------------------------------");
