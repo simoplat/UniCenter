@@ -171,14 +171,14 @@ public class MenuController {
                     }
 
                     String dataOraStr = console
-                            .leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
+                            .leggiStringa("Inserisci la data e ora dell'appello (formato: dd/MM/yyyy HH:mm): ");
                     LocalDateTime dataOra = null;
                     try {
                         dataOra = LocalDateTime.parse(dataOraStr, formatterInput);
                         console.mostraMessaggio("Data e ora convertite con successo: " + dataOra);
                     } catch (DateTimeParseException e) {
                         console.mostraErrore(
-                                "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd HH:mm (es. 2026-06-15 09:30).");
+                                "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
                         break;
                     }
 
@@ -188,7 +188,7 @@ public class MenuController {
                             .leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
 
                     String termineIscrizione = console
-                            .leggiStringa("Inserisci la data di termine iscrizione (formato: yyyy-MM-dd): ");
+                            .leggiStringa("Inserisci la data di termine iscrizione (formato: dd/MM/yyyy): ");
                     LocalDate dataTermineIscrizione = null;
                     try {
                         dataTermineIscrizione = LocalDate.parse(termineIscrizione, formatterInput);
@@ -196,7 +196,7 @@ public class MenuController {
                                 "Data di termine iscrizione convertita con successo: " + dataTermineIscrizione);
                     } catch (DateTimeParseException e) {
                         console.mostraErrore(
-                                "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd (es. 2026-06-15).");
+                                "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
                         break;
                     }
 
@@ -215,7 +215,7 @@ public class MenuController {
                         console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
                         break;
                     } catch (Exception e) {
-                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] Errore imprevisto: " + e.getMessage());
+                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
                         break;
                     }
 
@@ -276,14 +276,14 @@ public class MenuController {
 
                     if (appelloTrovato != null) {
                         String nuovaDataOraStr = console
-                                .leggiStringa("Inserisci la data e ora dell'appello (formato: yyyy-MM-dd HH:mm): ");
+                                .leggiStringa("Inserisci la data e ora dell'appello (formato: dd/MM/yyyy HH:mm): ");
                         LocalDateTime nuovaDataOra = null;
                         try {
                             nuovaDataOra = LocalDateTime.parse(nuovaDataOraStr, formatterInput);
                             console.mostraMessaggio("Data e ora convertite con successo: " + nuovaDataOra);
                         } catch (DateTimeParseException e) {
                             console.mostraErrore(
-                                    "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd HH:mm (es. 2026-06-15 09:30).");
+                                    "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
                             break;
                         }
 
@@ -293,7 +293,7 @@ public class MenuController {
                                 "Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
 
                         String nuovoTermineIscrizioneStr = console
-                                .leggiStringa("Inserisci la nuova data di termine iscrizione (formato: yyyy-MM-dd): ");
+                                .leggiStringa("Inserisci la nuova data di termine iscrizione (formato: dd/MM/yyyy): ");
                         LocalDate nuovoTermineIscrizione = null;
                         try {
                             nuovoTermineIscrizione = LocalDate.parse(nuovoTermineIscrizioneStr, formatterInputData);
@@ -302,7 +302,7 @@ public class MenuController {
 
                         } catch (DateTimeParseException e) {
                             console.mostraErrore(
-                                    "Errore: Formato data non valido! Assicurati di usare il formato yyyy-MM-dd (es. 2026-06-15).");
+                                    "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
                             break;
                         }
 
