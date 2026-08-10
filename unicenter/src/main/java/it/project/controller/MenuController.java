@@ -191,7 +191,7 @@ public class MenuController {
                             .leggiStringa("Inserisci la data di termine iscrizione (formato: dd/MM/yyyy): ");
                     LocalDate dataTermineIscrizione = null;
                     try {
-                        dataTermineIscrizione = LocalDate.parse(termineIscrizione, formatterInput);
+                        dataTermineIscrizione = LocalDate.parse(termineIscrizione, formatterInputData);
                         console.mostraMessaggio(
                                 "Data di termine iscrizione convertita con successo: " + dataTermineIscrizione);
                     } catch (DateTimeParseException e) {
@@ -200,13 +200,12 @@ public class MenuController {
                         break;
                     }
 
-                    String codiceAppello = unicenter.generaCodiceAppello();
-                    Appello nuovoAppello = new Appello(codiceAppello, codiceMateria, dataOra, aula, posti,
-                            vincoloCognome, dataTermineIscrizione);
+
+
 
                     try {
-                        unicenter.creaNuovoAppello(nuovoAppello);
-                        console.mostraMessaggio("Appello creato con successo! Codice Appello: " + codiceAppello);
+                        unicenter.creaNuovoAppello(codiceMateria, dataOra, aula, posti, vincoloCognome, dataTermineIscrizione);
+                        console.mostraMessaggio("Appello creato con successo!");
 
                     } catch (DataNonValidaException e) {
                         console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
@@ -224,6 +223,10 @@ public class MenuController {
                 case 2 -> {
                     console.mostraMessaggio("\n--- Lista Iscritti ---");
                     console.mostraMessaggio("I tuoi appelli:");
+                    if(unicenter.trovaAppelliProfessore() == null || unicenter.trovaAppelliProfessore().isEmpty()) {
+                        console.mostraMessaggio("Non hai appelli disponibili.");
+                        break;
+                    }
                     StampaAppelli(unicenter.trovaAppelliProfessore());
                     String app = console.leggiStringa("Seleziona il codice dell'appello di cui vuoi gli iscritti: ");
                     List<Studente> iscritti = unicenter.trovaIscrittiByAppello(app);

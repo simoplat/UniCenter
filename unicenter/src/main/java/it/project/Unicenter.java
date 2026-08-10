@@ -31,7 +31,7 @@ public class Unicenter {
         this.immatricolazioneController = new ImmatricolazioneController();
 
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
-        this.gestioneAppelliController = new GestioneAppelliController();
+        this.gestioneAppelliController = new GestioneAppelliController(this);
 
         this.gestoreMaterie = new GestoreMaterieController();
         this.corsoDiLaureaController = new CorsoDiLaureaController();
@@ -72,8 +72,9 @@ public class Unicenter {
     }
 
     // Inserire Appello d'Esame
-    public boolean creaNuovoAppello(Appello appello) throws Exception {
-        return gestioneAppelliController.creaNuovoAppello(appello);
+    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
+
+        return gestioneAppelliController.creaNuovoAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione);
     }
 
     // iscriviStudenteAdAppello , iscrizione appello
@@ -182,16 +183,14 @@ public class Unicenter {
             LocalDateTime dataAppello2 = LocalDateTime.now().plusDays(20).withHour(14).withMinute(30);
 
             // Appello 1: Ingegneria del Software (IS01) - 15 posti, fascia cognome R-Z
-            Appello app1 = new Appello("APP1", "IS01", dataAppello1, "Aula Magna", 15, "A-Z", LocalDate.now().plusDays(10));
-            this.gestioneAppelliController.creaNuovoAppello(app1);
+            //String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione
+            this.gestioneAppelliController.creaNuovoAppello("IS01", dataAppello1, "Aula Magna", 15, "A-Z", LocalDate.now().plusDays(10));
 
-            Appello app2 = new Appello("APP2", "BD01", dataAppello2, "Aula 101", 10, "A-Z", LocalDate.now().plusDays(10));
-            this.gestioneAppelliController.creaNuovoAppello(app2);
+            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 101", 10, "A-Z", LocalDate.now().plusDays(10));
 
-            Appello app3 = new Appello("APP3", "BD01", dataAppello2, "Aula 102", 20, "A-Z", LocalDate.of(2026, 7, 30 ));
-            this.gestioneAppelliController.creaNuovoAppello(app3);
+            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 102", 20, "A-Z", LocalDate.of(2026, 7, 30 ));
 
-            gestioneAppelliController.iscriviStudente(st1, "APP1");
+            this.gestioneAppelliController.iscriviStudente(st1, "APP-00001");
 
             Notifica notifica = new Notifica("Ciao", "ti sei iscritto", LocalDateTime.now());
             st1.aggiungiNotifica(notifica);

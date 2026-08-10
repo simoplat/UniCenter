@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import it.project.ConsoleUI;
 import it.project.Notifica;
+import it.project.Professore;
 import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
@@ -19,37 +20,51 @@ public class GestioneAppelliController {;
     private IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
-    Unicenter unicenter = Unicenter.getInstance();
+    Unicenter unicenter;
     ConsoleUI console = ConsoleUI.getInstance();
 
-    public GestioneAppelliController() {
+    public GestioneAppelliController(Unicenter unicenter) {
+        this.unicenter = unicenter;
         this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         this.appelli = new ArrayList<>();
         this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
     }
 
-    public boolean creaNuovoAppello(Appello appello) throws Exception {
+    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
         
-        LocalDateTime dataOra = appello.getDataOra();
-        int postiDisponibili = appello.getPostiDisponibili();
-        if (dataOra == null) {
-            throw new DataNonValidaException("La data e ora non valide.");
-            
+        
+        
+        
+        if(!validateAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione)) {
+            return false;
         }
         
-        if (dataOra.isBefore(LocalDateTime.now())) {
-            throw new DataNonValidaException("La data e ora non valide.");
-        }
-
-        if (postiDisponibili <= 0) {
-            throw new PostiNonValidi("Il numero di posti disponibili deve essere maggiore di zero.");
-        }
-
+        String codiceAppello = codiceAppelloGenerator.generateCodice();
+        Appello appello = new Appello(codiceAppello, codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione);
         appelli.add(appello);
-
+        
         // Pattern Observer: Invio notifiche agli studenti iscritti al corso, da fare le notifiche
 
         return true;
+    }
+
+    public boolean validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) {
+        if (dataOraStr == null || dataOraStr.isBefore(LocalDateTime.now()) || termineIscrizione.isAfter(dataOraStr.toLocalDate())) {
+            return false;
+        }
+        
+        if (postiDisponibili <= 0) {
+            return false;
+        }
+
+
+        if (unicenter.getCurrentUser() != null && unicenter.getCurrentUser() instanceof Professore) {
+            if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
+                return false;
+            }
+        }
+        return true;
+
     }
 
     public boolean iscriviStudente(Studente studente, String codiceAppello) {
@@ -144,8 +159,14 @@ public class GestioneAppelliController {;
     }
 
     public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione){
+        
+        
         for (Appello a : appelli){
             if (a.getCodiceAppello().equals(codiceAppello)) {
+                        String codiceMateria = a.getCodiceMateria();
+                        if(!validateAppello(codiceMateria, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione)) {
+                            return false;
+                        }
                         a.setDataOra(dataOra);
                         a.setAula(aula);
                         a.setPostiDisponibili(postiDisponibili);
