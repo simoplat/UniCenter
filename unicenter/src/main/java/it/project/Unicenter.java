@@ -73,7 +73,6 @@ public class Unicenter {
 
     // Inserire Appello d'Esame
     public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
-
         return gestioneAppelliController.creaNuovoAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione);
     }
 

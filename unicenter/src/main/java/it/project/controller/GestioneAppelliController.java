@@ -16,7 +16,8 @@ import it.project.exceptions.PostiNonValidi;
 import it.project.generator.CodiceAppelloGenerator;
 import it.project.validation.*;
 
-public class GestioneAppelliController {;
+public class GestioneAppelliController {
+    ;
     private IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
@@ -30,50 +31,51 @@ public class GestioneAppelliController {;
         this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
     }
 
-    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
-        
-        
-        
-        
-        if(!validateAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione)) {
+    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili,
+        String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
+
+        if (!validateAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome,
+                termineIscrizione)) {
             return false;
         }
-        
-        String codiceAppello = codiceAppelloGenerator.generateCodice();
-        Appello appello = new Appello(codiceAppello, codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione);
-        appelli.add(appello);
-        
-        // Pattern Observer: Invio notifiche agli studenti iscritti al corso, da fare le notifiche
 
+        String codiceAppello = codiceAppelloGenerator.generateCodice();
+        Appello appello = new Appello(codiceAppello, codiceMateria, dataOraStr, aula, postiDisponibili,
+                vincoloLetteraCognome, termineIscrizione);
+        appelli.add(appello);
         return true;
     }
 
-    public boolean validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) {
-        if (dataOraStr == null || dataOraStr.isBefore(LocalDateTime.now()) || termineIscrizione.isAfter(dataOraStr.toLocalDate())) {
-            return false;
-        }
+    public boolean validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, 
+                int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception, DataNonValidaException, PostiNonValidi {
         
-        if (postiDisponibili <= 0) {
-            return false;
+        if (dataOraStr == null || dataOraStr.isBefore(LocalDateTime.now())) {
+            throw new DataNonValidaException("La data e l'ora dell'appello non sono valide.");
         }
 
+        if( termineIscrizione == null || termineIscrizione.isAfter(dataOraStr.toLocalDate()) || termineIscrizione.isBefore(LocalDate.now())) {
+            throw new DataNonValidaException("La data di termine iscrizione non è valida.");
+        }
+
+        if (postiDisponibili <= 0) {
+            throw new PostiNonValidi("Il numero di posti disponibili deve essere maggiore di zero.");
+        }
 
         if (unicenter.getCurrentUser() != null && unicenter.getCurrentUser() instanceof Professore) {
             if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
-                return false;
+                throw new IllegalArgumentException("Il professore non è abilitato a gestire questa materia.");
             }
         }
         return true;
-
     }
 
     public boolean iscriviStudente(Studente studente, String codiceAppello) {
         Appello appello = trovAppelloByIdAppello(codiceAppello);
-        
+
         if (this.validatorChain == null) {
             this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         }
-        
+
         if (appello == null || appello.getIscritti().contains(studente)) {
             return false; // Appello non trovato o studente già iscritto
         }
@@ -88,7 +90,6 @@ public class GestioneAppelliController {;
 
             // Invia la notifica allo studente
             studente.riceviNotifica(nuovaNotifica);
-                
 
             return true;
         } catch (Exception e) {
@@ -110,7 +111,7 @@ public class GestioneAppelliController {;
             studente.riceviNotifica(nuovaNotifica);
             return true;
         } else {
-            return false; 
+            return false;
         }
     }
 
@@ -129,10 +130,10 @@ public class GestioneAppelliController {;
         return appelliDisponibili;
     }
 
-    public List <Appello> trovaAppelliPrenotabiliByStudente(Studente studente, List<String> codiciMaterie) {
+    public List<Appello> trovaAppelliPrenotabiliByStudente(Studente studente, List<String> codiciMaterie) {
         List<Appello> appelliById = trovaAppelliByIdMateria(codiciMaterie);
-        List <Appello> appelliPrenotabili = new ArrayList<>();
-        for (Appello app: appelliById) {
+        List<Appello> appelliPrenotabili = new ArrayList<>();
+        for (Appello app : appelliById) {
             if (!app.getIscritti().contains(studente)) {
                 appelliPrenotabili.add(app);
             }
@@ -153,54 +154,59 @@ public class GestioneAppelliController {;
         return codiceAppelloGenerator.generateCodice();
     }
 
-    public List<Studente> trovaIscrittiByIdAppello(String codiceAppello){
+    public List<Studente> trovaIscrittiByIdAppello(String codiceAppello) {
         Appello appello = trovAppelloByIdAppello(codiceAppello);
         return appello.getIscritti();
     }
 
-    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione){
-        
-        
-        for (Appello a : appelli){
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili,
+            String vincolo, LocalDate dataTermineIscrizione) {
+
+        for (Appello a : appelli) {
             if (a.getCodiceAppello().equals(codiceAppello)) {
-                        String codiceMateria = a.getCodiceMateria();
-                        if(!validateAppello(codiceMateria, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione)) {
-                            return false;
-                        }
-                        a.setDataOra(dataOra);
-                        a.setAula(aula);
-                        a.setPostiDisponibili(postiDisponibili);
-                        a.setVincoloLetteraCognome(vincolo);
-                        a.setTermineIscrizione(dataTermineIscrizione);
-                        String oggetto = "Modifica appello : " + codiceAppello;
-                        String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" + 
-                                            "Orario: " + dataOra + "\n" +
-                                            "Aula: " + aula+ "\n" + 
-                                            "Posti disponibili " + postiDisponibili + "\n" +
-                                            "Vincolo cognome " + vincolo + "\n" +
-                                            "Data termine iscrizione: " + dataTermineIscrizione + "\n";
-                        LocalDateTime ora = LocalDateTime.now();
-                        Notifica notifica = new Notifica(oggetto, contenuto , ora);
-                        a.notifica(notifica);
-                        return true;
-                        }
+                String codiceMateria = a.getCodiceMateria();
+                try {
+                    if (!validateAppello(codiceMateria, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione)) {
+                        return false;
+                    }
+                } catch (Exception e) {
+                    console.mostraErrore(e.getMessage());
+                    return false;
+                }
+                a.setDataOra(dataOra);
+                a.setAula(aula);
+                a.setPostiDisponibili(postiDisponibili);
+                a.setVincoloLetteraCognome(vincolo);
+                a.setTermineIscrizione(dataTermineIscrizione);
+                String oggetto = "Modifica appello : " + codiceAppello;
+                String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" +
+                        "Orario: " + dataOra + "\n" +
+                        "Aula: " + aula + "\n" +
+                        "Posti disponibili " + postiDisponibili + "\n" +
+                        "Vincolo cognome " + vincolo + "\n" +
+                        "Data termine iscrizione: " + dataTermineIscrizione + "\n";
+                LocalDateTime ora = LocalDateTime.now();
+                Notifica notifica = new Notifica(oggetto, contenuto, ora);
+                a.notifica(notifica);
+                return true;
+            }
         }
         return false;
     }
 
     public boolean eliminaAppello(String codiceAppello) {
-    for (Appello a : appelli) {
-        if (a.getCodiceAppello().equals(codiceAppello)) {
+        for (Appello a : appelli) {
+            if (a.getCodiceAppello().equals(codiceAppello)) {
 
-            String oggetto = " Eliminazione appello " + codiceAppello ;
-            String contenuto = "L'appello " + codiceAppello + " è stato eliminato. "; 
-            Notifica notifica = new Notifica(oggetto, contenuto , LocalDateTime.now());
-            a.notifica(notifica);
-            appelli.remove(a); 
-            return true;       
+                String oggetto = " Eliminazione appello " + codiceAppello;
+                String contenuto = "L'appello " + codiceAppello + " è stato eliminato. ";
+                Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());
+                a.notifica(notifica);
+                appelli.remove(a);
+                return true;
+            }
         }
-    }
-    return false;
+        return false;
     }
 
     public List<Appello> appelliPrenotatiByStudente(Studente studente) {

@@ -175,7 +175,6 @@ public class MenuController {
                     LocalDateTime dataOra = null;
                     try {
                         dataOra = LocalDateTime.parse(dataOraStr, formatterInput);
-                        console.mostraMessaggio("Data e ora convertite con successo: " + dataOra);
                     } catch (DateTimeParseException e) {
                         console.mostraErrore(
                                 "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
@@ -192,8 +191,6 @@ public class MenuController {
                     LocalDate dataTermineIscrizione = null;
                     try {
                         dataTermineIscrizione = LocalDate.parse(termineIscrizione, formatterInputData);
-                        console.mostraMessaggio(
-                                "Data di termine iscrizione convertita con successo: " + dataTermineIscrizione);
                     } catch (DateTimeParseException e) {
                         console.mostraErrore(
                                 "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
@@ -208,13 +205,13 @@ public class MenuController {
                         console.mostraMessaggio("Appello creato con successo!");
 
                     } catch (DataNonValidaException e) {
-                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
+                        console.mostraErrore(e.getMessage());
                         break;
                     } catch (PostiNonValidi e) {
-                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
+                        console.mostraErrore(e.getMessage());
                         break;
                     } catch (Exception e) {
-                        console.mostraErrore("[ERRORE CREAZIONE APPELLO] " + e.getMessage());
+                        console.mostraErrore(e.getMessage());
                         break;
                     }
 
@@ -283,7 +280,6 @@ public class MenuController {
                         LocalDateTime nuovaDataOra = null;
                         try {
                             nuovaDataOra = LocalDateTime.parse(nuovaDataOraStr, formatterInput);
-                            console.mostraMessaggio("Data e ora convertite con successo: " + nuovaDataOra);
                         } catch (DateTimeParseException e) {
                             console.mostraErrore(
                                     "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
@@ -300,9 +296,6 @@ public class MenuController {
                         LocalDate nuovoTermineIscrizione = null;
                         try {
                             nuovoTermineIscrizione = LocalDate.parse(nuovoTermineIscrizioneStr, formatterInputData);
-                            console.mostraMessaggio("Data di termine iscrizione convertita      con successo: "
-                                    + nuovoTermineIscrizione);
-
                         } catch (DateTimeParseException e) {
                             console.mostraErrore(
                                     "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
