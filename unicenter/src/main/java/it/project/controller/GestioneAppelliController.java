@@ -6,6 +6,7 @@ import it.project.Studente;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import it.project.ConsoleUI;
 import it.project.Notifica;
@@ -117,7 +118,10 @@ public class GestioneAppelliController {
 
     public List<Appello> trovaAppelliByIdMateria(List<String> codiciMaterie) {
         if (appelli == null || appelli.isEmpty()) {
-            return null;
+            return Collections.emptyList(); // Nessun appello disponibile
+        }
+        if(codiciMaterie == null || codiciMaterie.isEmpty()) {
+            return Collections.emptyList();
         }
         List<Appello> appelliDisponibili = new ArrayList<>();
         for (String codiceMateria : codiciMaterie) {
@@ -133,6 +137,9 @@ public class GestioneAppelliController {
     public List<Appello> trovaAppelliPrenotabiliByStudente(Studente studente, List<String> codiciMaterie) {
         List<Appello> appelliById = trovaAppelliByIdMateria(codiciMaterie);
         List<Appello> appelliPrenotabili = new ArrayList<>();
+        if (appelliById == null || appelliById.isEmpty()) {
+            return Collections.emptyList(); // Nessun appello disponibile per le materie specificate
+        }
         for (Appello app : appelliById) {
             if (!app.getIscritti().contains(studente)) {
                 appelliPrenotabili.add(app);
@@ -156,11 +163,19 @@ public class GestioneAppelliController {
 
     public List<Studente> trovaIscrittiByIdAppello(String codiceAppello) {
         Appello appello = trovAppelloByIdAppello(codiceAppello);
+        if (appello == null) {
+            return Collections.emptyList(); // Appello non trovato
+        }
         return appello.getIscritti();
     }
 
     public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili,
             String vincolo, LocalDate dataTermineIscrizione) {
+
+        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        if (appello == null) {
+            return false; // Appello non trovato
+        }
 
         for (Appello a : appelli) {
             if (a.getCodiceAppello().equals(codiceAppello)) {
@@ -195,6 +210,10 @@ public class GestioneAppelliController {
     }
 
     public boolean eliminaAppello(String codiceAppello) {
+        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        if (appello == null) {
+            return false; // Appello non trovato
+        }
         for (Appello a : appelli) {
             if (a.getCodiceAppello().equals(codiceAppello)) {
 
@@ -211,6 +230,9 @@ public class GestioneAppelliController {
 
     public List<Appello> appelliPrenotatiByStudente(Studente studente) {
         List<Appello> appelliPrenotati = new ArrayList<>();
+        if (appelli == null || appelli.isEmpty() || studente == null) {
+            return Collections.emptyList(); // Nessun appello disponibile
+        }
         for (Appello appello : appelli) {
             if (appello.getIscritti().contains(studente)) {
                 appelliPrenotati.add(appello);

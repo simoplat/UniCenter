@@ -162,6 +162,10 @@ public class MenuController {
                     console.mostraMessaggio("Materie di cui sei professore:");
                     console.mostraMessaggio("------------------------------------------");
                     List<Materia> materieDelProfessore = unicenter.getMaterieDelProfessore();
+                    if (materieDelProfessore == null || materieDelProfessore.isEmpty()) {
+                        console.mostraMessaggio("Non sei abilitato a nessuna materia. Contatta l'amministratore.");
+                        break;
+                    }
                     StampaMaterie(materieDelProfessore);
                     String codiceMateria = console
                             .leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
@@ -224,7 +228,13 @@ public class MenuController {
                         console.mostraMessaggio("Non hai appelli disponibili.");
                         break;
                     }
-                    StampaAppelli(unicenter.trovaAppelliProfessore());
+
+                    if (unicenter.trovaAppelliProfessore() != null && !unicenter.trovaAppelliProfessore().isEmpty()) {
+                        StampaAppelli(unicenter.trovaAppelliProfessore());
+                    } else {
+                        console.mostraMessaggio("Non hai appelli disponibili.");
+                        break;
+                    }
                     String app = console.leggiStringa("Seleziona il codice dell'appello di cui vuoi gli iscritti: ");
                     List<Studente> iscritti = unicenter.trovaIscrittiByAppello(app);
 

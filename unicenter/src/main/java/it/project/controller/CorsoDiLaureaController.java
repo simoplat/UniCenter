@@ -3,16 +3,17 @@ package it.project.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import it.project.ConsoleUI;
+
 import it.project.CorsoDiLaurea;
 import it.project.Unicenter;
 
 public class CorsoDiLaureaController {
     private List<CorsoDiLaurea> corsiDiLaurea;
-    Unicenter unicenter = Unicenter.getInstance();
-    ConsoleUI console = ConsoleUI.getInstance();
+    Unicenter unicenter;
 
-    public CorsoDiLaureaController() {
+
+    public CorsoDiLaureaController(Unicenter unicenter) {
+        this.unicenter = unicenter;
         this.corsiDiLaurea = new ArrayList<>();
     }
 

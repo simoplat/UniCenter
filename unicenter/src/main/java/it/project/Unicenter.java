@@ -34,7 +34,7 @@ public class Unicenter {
         this.gestioneAppelliController = new GestioneAppelliController(this);
 
         this.gestoreMaterie = new GestoreMaterieController();
-        this.corsoDiLaureaController = new CorsoDiLaureaController();
+        this.corsoDiLaureaController = new CorsoDiLaureaController(this);
 
     }
 
