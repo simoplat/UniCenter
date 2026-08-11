@@ -3,6 +3,7 @@ package it.project;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +62,7 @@ public class Unicenter {
         if (emailEsiste && cfEsiste) {
             throw new IllegalArgumentException("Attenzione: Email e Codice Fiscale già inseriti!");
         } else if (emailEsiste) {
-            throw new IllegalArgumentException("Attennzione: Email già inserita!");
+            throw new IllegalArgumentException("Attenzione: Email già inserita!");
         } else if (cfEsiste) {
             throw new IllegalArgumentException("Attenzione: Codice Fiscale già inserito!");
         }
@@ -78,38 +79,46 @@ public class Unicenter {
 
     // iscriviStudenteAdAppello , iscrizione appello
     public List<Appello> trovaAppelliStudentePrenotabili() {
-        Studente studente = (Studente) this.currentUser;
+        
+        if (!(this.currentUser instanceof Studente) || this.currentUser == null) {
+            return Collections.emptyList();
+        }
 
+        Studente studente = (Studente) this.currentUser;
         PianoDiStudi pianoDiStudi = studente.getPianoStudi();
         if (pianoDiStudi == null || pianoDiStudi.getStato().equals("IN_ATTESA")) {
             console.mostraMessaggio(
                     "[UNICENTER] Impossibile iscrivere lo studente: il piano di studi non è approvato.");
-            return null;
+            return Collections.emptyList();
         }
         return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getCodiciMaterie());
     }
 
     public List<Appello> trovaAppelliPrenotatiDalloStudente() {
+        if (!(this.currentUser instanceof Studente) || this.currentUser == null) {
+            return Collections.emptyList();
+        }
         Studente studente = (Studente) this.currentUser;
         return gestioneAppelliController.appelliPrenotatiByStudente(studente);
 
     }
 
     public List<Appello> trovaAppelliProfessore() {
+        if (!(this.currentUser instanceof Professore) || this.currentUser == null) {
+            return Collections.emptyList();
+        }
         Professore professore = (Professore) currentUser;
         List<String> idMaterie = gestoreMaterie.trovaIdMaterieDiProfessore(professore.getIdProfessore());
         return gestioneAppelliController.trovaAppelliByIdMateria(idMaterie);
     }
 
     public List<Studente> trovaIscrittiByAppello(String codiceAppello) {
+        
         return gestioneAppelliController.trovaIscrittiByIdAppello(codiceAppello);
     }
 
     public boolean iscriviStudenteAdAppello(String codiceAppello) {
-        if (gestioneAppelliController.iscriviStudente((Studente) this.currentUser, codiceAppello)) {
-            return true;
-        }
-        return false;
+        return gestioneAppelliController.iscriviStudente((Studente) this.currentUser, codiceAppello);
     }
 
     public boolean disiscriviStudenteDaAppello(String codiceAppello) {
@@ -187,16 +196,22 @@ public class Unicenter {
 
             this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 101", 10, "A-Z", LocalDate.now().plusDays(10));
 
-            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 102", 20, "A-Z", LocalDate.of(2026, 7, 30 ));
+            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 102", 20, "A-Z", LocalDate.now().plusDays(10));
 
             this.gestioneAppelliController.iscriviStudente(st1, "APP-00001");
 
             Notifica notifica = new Notifica("Ciao", "ti sei iscritto", LocalDateTime.now());
             st1.aggiungiNotifica(notifica);
 
-        } catch (Exception e) {
+        
+        } 
+        catch (DataNonValidaException e) {
             console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
         }
+        catch (Exception e) {
+            console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
+        }
+
     }
 
     public Utente effettuaLogin(String email, String password) throws UtenteNonTrovatoException {
@@ -278,10 +293,10 @@ public class Unicenter {
             Studente studente = (Studente) currentUser;
             return studente.getNotifiche();
         }
-        return null;
+        return Collections.emptyList();
     }
 
-    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione) {
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione) throws Exception {
         return gestioneAppelliController.modificaAppello(codiceAppello, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione);
     }
 

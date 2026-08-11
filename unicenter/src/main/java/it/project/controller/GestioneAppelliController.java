@@ -16,9 +16,11 @@ import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
 import it.project.generator.CodiceAppelloGenerator;
 import it.project.validation.*;
+import java.text.Normalizer;
+import java.util.regex.Pattern;
 
 public class GestioneAppelliController {
-    ;
+    private static final Pattern VINCOLO_PATTERN = Pattern.compile("^[A-Z]-[A-Z]$");
     private IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
@@ -32,29 +34,61 @@ public class GestioneAppelliController {
         this.codiceAppelloGenerator = CodiceAppelloGenerator.getInstance();
     }
 
-    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili,
-        String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
-
-        if (!validateAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome,
-                termineIscrizione)) {
-            return false;
+    private String normalizzaEValidaVincolo(String vincoloLetteraCognome) {
+        if (vincoloLetteraCognome == null || vincoloLetteraCognome.trim().isEmpty()) {
+            return "";
         }
+
+        // Rimuove spazi e normalizza eventuali varianti del trattino (– — -)
+        String pulito = vincoloLetteraCognome.trim()
+                .replaceAll("\\s+", "")
+                .replace('–', '-')
+                .replace('—', '-');
+
+        // Rimuove gli accenti: decompone il carattere (é -> e + accento e toglie i
+        // segni diacritici (categoria Unicode "Mark")
+        String senzaAccenti = Normalizer.normalize(pulito, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toUpperCase();
+
+        if (!VINCOLO_PATTERN.matcher(senzaAccenti).matches()) {
+            throw new IllegalArgumentException(
+                    "Il vincolo lettera cognome deve essere nel formato 'A-Z' (una lettera, trattino, una lettera).");
+        }
+
+        char primaLettera = senzaAccenti.charAt(0);
+        char secondaLettera = senzaAccenti.charAt(2);
+
+        // Riporta all'ordine alfabetico correnotto se invertito (es. "Z-A" -> "A-Z")
+        if (primaLettera > secondaLettera) {
+            return "" + secondaLettera + "-" + primaLettera;
+        }
+        return senzaAccenti;
+    }
+
+    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili,
+            String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
+
+        String vincoloNormalizzato = normalizzaEValidaVincolo(vincoloLetteraCognome);
+        validateAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloNormalizzato, termineIscrizione);
 
         String codiceAppello = codiceAppelloGenerator.generateCodice();
         Appello appello = new Appello(codiceAppello, codiceMateria, dataOraStr, aula, postiDisponibili,
-                vincoloLetteraCognome, termineIscrizione);
+                vincoloNormalizzato, termineIscrizione);
         appelli.add(appello);
         return true;
     }
 
-    public boolean validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, 
-                int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception, DataNonValidaException, PostiNonValidi {
-        
+    public void validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula,
+            int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione)
+            throws Exception, DataNonValidaException, PostiNonValidi {
+
         if (dataOraStr == null || dataOraStr.isBefore(LocalDateTime.now())) {
             throw new DataNonValidaException("La data e l'ora dell'appello non sono valide.");
         }
 
-        if( termineIscrizione == null || termineIscrizione.isAfter(dataOraStr.toLocalDate()) || termineIscrizione.isBefore(LocalDate.now())) {
+        if (termineIscrizione == null || termineIscrizione.isAfter(dataOraStr.toLocalDate())
+                || termineIscrizione.isBefore(LocalDate.now())) {
             throw new DataNonValidaException("La data di termine iscrizione non è valida.");
         }
 
@@ -62,16 +96,18 @@ public class GestioneAppelliController {
             throw new PostiNonValidi("Il numero di posti disponibili deve essere maggiore di zero.");
         }
 
-        if (unicenter.getCurrentUser() != null && unicenter.getCurrentUser() instanceof Professore) {
-            if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
-                throw new IllegalArgumentException("Il professore non è abilitato a gestire questa materia.");
-            }
+        // if (!(unicenter.getCurrentUser() instanceof Professore)) {
+        //    throw new IllegalArgumentException("Solo un professore autenticato può gestire gli appelli.");
+        // }
+        
+        if (unicenter.getCurrentUser() != null && !unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
+            throw new IllegalArgumentException("Il professore non è abilitato a gestire questa materia.");
         }
-        return true;
+        return;
     }
 
     public boolean iscriviStudente(Studente studente, String codiceAppello) {
-        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        Appello appello = trovaAppelloByIdAppello(codiceAppello);
 
         if (this.validatorChain == null) {
             this.validatorChain = ValidationChainBuilder.buildDefaultChain();
@@ -101,7 +137,7 @@ public class GestioneAppelliController {
     }
 
     public boolean disiscriviStudente(Studente studente, String codiceAppello) {
-        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
             return false; // Appello non trovato
         }
@@ -120,7 +156,7 @@ public class GestioneAppelliController {
         if (appelli == null || appelli.isEmpty()) {
             return Collections.emptyList(); // Nessun appello disponibile
         }
-        if(codiciMaterie == null || codiciMaterie.isEmpty()) {
+        if (codiciMaterie == null || codiciMaterie.isEmpty()) {
             return Collections.emptyList();
         }
         List<Appello> appelliDisponibili = new ArrayList<>();
@@ -148,7 +184,10 @@ public class GestioneAppelliController {
         return appelliPrenotabili;
     }
 
-    public Appello trovAppelloByIdAppello(String codiceAppello) {
+    public Appello trovaAppelloByIdAppello(String codiceAppello) {
+        if (appelli == null || appelli.isEmpty()) {
+            return null;
+        }
         for (Appello app : appelli) {
             if (app.getCodiceAppello().equals(codiceAppello)) {
                 return app;
@@ -162,70 +201,61 @@ public class GestioneAppelliController {
     }
 
     public List<Studente> trovaIscrittiByIdAppello(String codiceAppello) {
-        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
-            return Collections.emptyList(); // Appello non trovato
+            return Collections.emptyList();
         }
         return appello.getIscritti();
     }
 
     public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili,
-            String vincolo, LocalDate dataTermineIscrizione) {
+            String vincolo, LocalDate dataTermineIscrizione) throws Exception, DataNonValidaException, PostiNonValidi {
 
-        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
             return false; // Appello non trovato
         }
+        String vincoloNormalizzato = normalizzaEValidaVincolo(vincolo);
+        validateAppello(appello.getCodiceMateria(), dataOra, aula, postiDisponibili, vincoloNormalizzato,
+                dataTermineIscrizione);
 
-        for (Appello a : appelli) {
-            if (a.getCodiceAppello().equals(codiceAppello)) {
-                String codiceMateria = a.getCodiceMateria();
-                try {
-                    if (!validateAppello(codiceMateria, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione)) {
-                        return false;
-                    }
-                } catch (Exception e) {
-                    console.mostraErrore(e.getMessage());
-                    return false;
-                }
-                a.setDataOra(dataOra);
-                a.setAula(aula);
-                a.setPostiDisponibili(postiDisponibili);
-                a.setVincoloLetteraCognome(vincolo);
-                a.setTermineIscrizione(dataTermineIscrizione);
-                String oggetto = "Modifica appello : " + codiceAppello;
-                String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" +
-                        "Orario: " + dataOra + "\n" +
-                        "Aula: " + aula + "\n" +
-                        "Posti disponibili " + postiDisponibili + "\n" +
-                        "Vincolo cognome " + vincolo + "\n" +
-                        "Data termine iscrizione: " + dataTermineIscrizione + "\n";
-                LocalDateTime ora = LocalDateTime.now();
-                Notifica notifica = new Notifica(oggetto, contenuto, ora);
-                a.notifica(notifica);
-                return true;
-            }
+        if (postiDisponibili < appello.getIscritti().size()) {
+            throw new PostiNonValidi(
+                    "Il numero di posti disponibili non può essere inferiore agli iscritti già presenti ("
+                            + appello.getIscritti().size() + ").");
         }
-        return false;
+
+        appello.setDataOra(dataOra);
+        appello.setAula(aula);
+        appello.setPostiDisponibili(postiDisponibili);
+        appello.setVincoloLetteraCognome(vincoloNormalizzato);
+        appello.setTermineIscrizione(dataTermineIscrizione);
+
+        String oggetto = "Modifica appello : " + codiceAppello;
+        String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" +
+                "Orario: " + dataOra + "\n" +
+                "Aula: " + aula + "\n" +
+                "Posti disponibili " + postiDisponibili + "\n" +
+                "Vincolo cognome " + vincoloNormalizzato + "\n" +
+                "Data termine iscrizione: " + dataTermineIscrizione + "\n";
+        Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());
+        appello.notifica(notifica);
+        return true;
     }
 
     public boolean eliminaAppello(String codiceAppello) {
-        Appello appello = trovAppelloByIdAppello(codiceAppello);
+        Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
             return false; // Appello non trovato
         }
-        for (Appello a : appelli) {
-            if (a.getCodiceAppello().equals(codiceAppello)) {
 
-                String oggetto = " Eliminazione appello " + codiceAppello;
-                String contenuto = "L'appello " + codiceAppello + " è stato eliminato. ";
-                Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());
-                a.notifica(notifica);
-                appelli.remove(a);
-                return true;
-            }
-        }
-        return false;
+        String oggetto = "Eliminazione appello " + codiceAppello;
+        String contenuto = "L'appello " + codiceAppello + " è stato eliminato.";
+        Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());
+        appello.notifica(notifica);
+
+        appelli.remove(appello);
+        return true;
     }
 
     public List<Appello> appelliPrenotatiByStudente(Studente studente) {
