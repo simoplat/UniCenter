@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import it.project.CorsoDiLaurea;
 import it.project.Studente;
 import it.project.Unicenter;
 import it.project.builder.StudenteBuilder;
@@ -22,19 +21,17 @@ class ImmatricolazioneControllerTest {
 
     private Unicenter unicenter;
     private ImmatricolazioneController immatricolazioneController;
-    private CorsoDiLaurea corso;
-    private GestoreMaterieController gestoreMaterie;
-    private MatricolaGenerator matricolaGenerator;
 
     @BeforeEach
     void setUp() {
-        // Setup del System Under Test (SUT) e delle fixture
+        // Recupero istanza Singleton
         unicenter = Unicenter.getInstance();
-        immatricolazioneController = new ImmatricolazioneController();
         
-        // Creazione di un corso di laurea di test
-        corso = new CorsoDiLaurea("L-31", "Informatica");
-        gestoreMaterie = new GestoreMaterieController();
+        // Popola il DB di UniCenter inserendo "Ingegneria Informatica" 
+        // e i corsi necessari affinché la validazione del Controller vada a buon fine
+        unicenter.popolaDataBase();
+        
+        immatricolazioneController = new ImmatricolazioneController(unicenter);
     }
 
     @Test
@@ -48,6 +45,7 @@ class ImmatricolazioneControllerTest {
     void testMatricolaGenerator() {
         MatricolaGenerator generator = MatricolaGenerator.getInstance();
         assertNotNull(generator, "Il generatore di matricola Singleton non deve essere null");
+        
         String m1 = generator.generateMatricola();
         String m2 = generator.generateMatricola();
         
@@ -64,7 +62,7 @@ class ImmatricolazioneControllerTest {
         Studente studente = builder
                 .setNome("Mario")
                 .setCognome("Rossi")
-                .setCorsoDiLaurea("L-31")
+                .setCorsoDiLaurea("Ingegneria Informatica")
                 .build();
 
         assertNotNull(studente, "Lo studente costruito non deve essere null");
@@ -77,44 +75,40 @@ class ImmatricolazioneControllerTest {
     void testCalcoloTasseStrategy() {
         ICalcoloTasseStrategy strategy = new CalcoloTasseStandardStrategy();
         
-        StudenteBuilder builder = new StudenteBuilder();
-        Studente studente = builder
-                .setNome("Luigi")
-                .setCognome("Verdi")
-                .setCorsoDiLaurea("L-31")
-                .build();
-
         double importoTasse = strategy.calcolaTasse(500.0, false);
-        assertTrue(importoTasse >= 0, "L'importo delle tasse calcolato non deve essere negativo");
+        assertEquals(500.0, importoTasse, "L'importo delle tasse calcolato non deve essere negativo");
     }
 
     @Test
-    @DisplayName("Esecuzione flusso di immatricolazione tramite ImmatricolazioneController")
+    @DisplayName("Creazione studente tramite ImmatricolazioneController (Senza Persistenza)")
     void testImmatricolazioneFlussoCompleto() {
-        // Exercise
-        Studente studenteImmatricolato = immatricolazioneController.immatricolaStudente("Giuseppe", "Verdi", "email@example.com", "password", "L-31", 500.0, "VRDGSP0000A123B");
-        String codiceFiscale = studenteImmatricolato.getCodiceFiscale();
-        String email = studenteImmatricolato.getEmail();
-        String matricola = studenteImmatricolato.getMatricola();
-        // Verify
-        assertNotNull(studenteImmatricolato, "Lo studente immatricolato non deve essere null");
-        assertNotNull(matricola, "Lo studente deve avere una matricola assegnata");
-        assertEquals("Giuseppe", studenteImmatricolato.getNome());
-        assertEquals("Verdi", studenteImmatricolato.getCognome());
+        String email = "email.test@example.com";
+        String cf = "VRDGSP0000A123X";
 
-        // Verifica registrazione nell'archivio utenti di Unicenter
-        Boolean utenteTrovato = unicenter.esisteCodiceFiscale(codiceFiscale);
-        assertNotNull(utenteTrovato, "Lo studente deve essere presente nella mappa utenti di Unicenter");
-        utenteTrovato = unicenter.esisteUtente(email);
-        assertNotNull(utenteTrovato, "Lo studente deve essere presente nella mappa utenti di Unicenter");
+        // Creazione validata via Controller
+        Studente studenteImmatricolato = immatricolazioneController.immatricolaStudente(
+                "Giuseppe", "Verdi", email, "password", "Ingegneria Informatica", 500.0, cf
+        );
+
+        // Verify delle properties dell'oggetto creato
+        assertNotNull(studenteImmatricolato, "Lo studente generato dal Controller non deve essere null");
+        assertNotNull(studenteImmatricolato.getMatricola(), "Lo studente deve avere una matricola assegnata");
+        assertEquals("Giuseppe", studenteImmatricolato.getNome(), "Il nome deve coincidere");
+        assertEquals("Verdi", studenteImmatricolato.getCognome(), "Il cognome deve coincidere");
+        
+        // NOTA: Le asserzioni sull'aggiunta alla lista utenti di Unicenter sono omesse
+        // poiché l'attuale design demanda la chiamata utenti.add() a Unicenter stesso e 
+        // non al Controller.
     }
 
     @Test
     @DisplayName("Immatricolazione con codice corso non valido solleva eccezione")
     void testImmatricolazioneCorsoInesistente() {
-        // Verify Exception
-        assertThrows(RuntimeException.class, () -> {
-            immatricolazioneController.immatricolaStudente("Anna", "Bianchi", "email@example.com", "password", "CORSO_ERRATO", 500.0, "VRDGSP0000A123B");
-        }, "Il tentativo di immatricolazione ad un corso inesistente deve sollevare un'eccezione");
+        // Verifica l'eccezione esatta attesa come da implementazione del Controller
+        assertThrows(IllegalArgumentException.class, () -> {
+            immatricolazioneController.immatricolaStudente(
+                "Anna", "Bianchi", "email.errata@example.com", "password", "ingegneria elettrica", 500.0, "BNNNCK0000A123Y"
+            );
+        }, "Il tentativo di immatricolazione ad un corso inesistente deve sollevare IllegalArgumentException");
     }
 }

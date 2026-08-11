@@ -29,7 +29,7 @@ public class Unicenter {
         // Inizializzazione Adapter Notifiche
 
         // 1. Inizializzazione Controller UC8 (Immatricolazione)
-        this.immatricolazioneController = new ImmatricolazioneController();
+        this.immatricolazioneController = new ImmatricolazioneController(this);
 
         // 2. Inizializzazione Controller UC1 (Gestione Appelli)
         this.gestioneAppelliController = new GestioneAppelliController(this);
@@ -181,6 +181,8 @@ public class Unicenter {
                     "Ingegneria Informatica", 500.0, "CODICEFISCALEANNABIANCHI");
             st3.getPianoStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
             st3.setTassePagate(true);
+            console.mostraMessaggio(st3.toString());
+
 
             Studente st4 = this.immatricolaStudente("Simo", "plata", "simo.plata@studenti.it", "pass123",
                     "Ingegneria Informatica", 500, "SIMO");

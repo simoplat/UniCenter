@@ -76,7 +76,7 @@ public class Studente extends Utente implements ObserverAppello{
 
     @Override
     public String toString() {
-        return "Studente [matricola=" + matricola + ", corsoDiLaurea=" + corsoDiLaurea + ", tassePagate=" + tassePagate
+        return "Studente [matricola=" + matricola + ", nome=" + getNome() + ", cognome=" + getCognome() + ", codiceFiscale=" + getCodiceFiscale() + ", corsoDiLaurea=" + corsoDiLaurea + ", tassePagate=" + tassePagate
                 + ", totaleTasse=" + totaleTasse + ", pianoStudi=" + pianoStudi + ", notifiche=" + notifiche + "]";
     }
 

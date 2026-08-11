@@ -3,7 +3,9 @@ package it.project.controller;
 import java.time.LocalDate;
 import java.time.Month;
 
+import it.project.CorsoDiLaurea;
 import it.project.Studente;
+import it.project.Unicenter;
 import it.project.builder.StudenteBuilder;
 import it.project.exceptions.DataNonValidaException;
 import it.project.strategy.CalcoloTasseStandardStrategy;
@@ -11,13 +13,21 @@ import it.project.strategy.ICalcoloTasseStrategy;
 
 public class ImmatricolazioneController {
     private ICalcoloTasseStrategy calcoloTasseStrategy;
+    private Unicenter unicenter;
 
-    public ImmatricolazioneController() {
+    public ImmatricolazioneController(Unicenter unicenter) {
         this.calcoloTasseStrategy = new CalcoloTasseStandardStrategy();
+        this.unicenter = unicenter;
     }
 
     public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso,
             double tassaBaseCorso, String codiceFisale) {
+
+        CorsoDiLaurea corsoTrovato = unicenter.trovaCorsoDiLaureaByNome(corso);
+        if (corsoTrovato == null) {
+            throw new IllegalArgumentException("Impossibile immatricolarsi: corso non esistente (" + corso + ")");
+        } 
+
         Studente studente = new StudenteBuilder()
                 .setNome(nome)
                 .setCognome(cognome)
