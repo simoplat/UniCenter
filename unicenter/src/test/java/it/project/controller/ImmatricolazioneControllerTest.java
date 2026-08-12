@@ -1,114 +1,212 @@
 package it.project.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.lang.reflect.Field;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import it.project.CorsoDiLaurea;
 import it.project.Studente;
 import it.project.Unicenter;
-import it.project.builder.StudenteBuilder;
-import it.project.generator.MatricolaGenerator;
-import it.project.strategy.CalcoloTasseStandardStrategy;
+import it.project.exceptions.DataNonValidaException;
 import it.project.strategy.ICalcoloTasseStrategy;
 
-@DisplayName("Test Unitario - ImmatricolazioneController e Componenti Correlati")
+/**
+ * Test unitari per {@link ImmatricolazioneController}.
+ *
+ * Dipendenze Maven necessarie (oltre a junit-jupiter):
+ *   - org.mockito:mockito-core:5.x   (include l'inline mock maker, necessario per mockStatic)
+ *   - org.mockito:mockito-junit-jupiter:5.x
+ */
+@ExtendWith(MockitoExtension.class)
 class ImmatricolazioneControllerTest {
 
+    @Mock
     private Unicenter unicenter;
-    private ImmatricolazioneController immatricolazioneController;
+
+    @Mock
+    private CorsoDiLaurea corsoDiLaureaMock;
+
+    private ImmatricolazioneController controller;
+
+    private static final String NOME = "Mario";
+    private static final String COGNOME = "Rossi";
+    private static final String EMAIL = "mario.rossi@studenti.it";
+    private static final String PASSWORD = "pass123";
+    private static final String CORSO = "Ingegneria Informatica";
+    private static final double TASSA_BASE = 500.0;
+    private static final String CODICE_FISCALE = "CODICEFISCALEMARIOROSSI";
 
     @BeforeEach
     void setUp() {
-        // Recupero istanza Singleton
-        unicenter = Unicenter.getInstance();
-        
-        // Popola il DB di UniCenter inserendo "Ingegneria Informatica" 
-        // e i corsi necessari affinché la validazione del Controller vada a buon fine
-        unicenter.popolaDataBase();
-        
-        immatricolazioneController = new ImmatricolazioneController(unicenter);
+        controller = new ImmatricolazioneController(unicenter);
+    }
+
+    // ---------------------------------------------------------------
+    // immatricolaStudente
+    // ---------------------------------------------------------------
+
+    @Test
+    void immatricolaStudente_corsoTrovato_creaStudenteConDatiCorretti() {
+        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
+
+        Studente studente = controller.immatricolaStudente(
+                NOME, COGNOME, EMAIL, PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE);
+
+        assertNotNull(studente);
+        assertEquals(NOME, studente.getNome());
+        assertEquals(COGNOME, studente.getCognome());
+        assertEquals(EMAIL, studente.getEmail());
+        assertEquals(CODICE_FISCALE, studente.getCodiceFiscale());
+        assertEquals(CORSO, studente.getCorsoDiLaurea());
+        assertNotNull(studente.getMatricola());
+        assertFalse(studente.isTassePagate(), "Alla creazione le tasse non devono risultare pagate");
+
+        verify(unicenter, times(1)).trovaCorsoDiLaureaByNome(CORSO);
     }
 
     @Test
-    @DisplayName("Verifica istanziamento del Controller")
-    void testControllerNotNull() {
-        assertNotNull(immatricolazioneController, "Il controller di immatricolazione non deve essere null");
+    void immatricolaStudente_corsoNonTrovato_lanciaIllegalArgumentException() {
+        when(unicenter.trovaCorsoDiLaureaByNome("Corso Inesistente")).thenReturn(null);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.immatricolaStudente(
+                        NOME, COGNOME, EMAIL, PASSWORD, "Corso Inesistente", TASSA_BASE, CODICE_FISCALE));
+
+        assertTrue(ex.getMessage().contains("corso non esistente"));
+        assertTrue(ex.getMessage().contains("Corso Inesistente"));
+
+        // Il builder non deve nemmeno essere invocato: nessuna ulteriore interazione attesa
+        verify(unicenter, times(1)).trovaCorsoDiLaureaByNome("Corso Inesistente");
+        verifyNoMoreInteractions(unicenter);
     }
 
     @Test
-    @DisplayName("Generazione matricola univoca tramite MatricolaGenerator")
-    void testMatricolaGenerator() {
-        MatricolaGenerator generator = MatricolaGenerator.getInstance();
-        assertNotNull(generator, "Il generatore di matricola Singleton non deve essere null");
-        
-        String m1 = generator.generateMatricola();
-        String m2 = generator.generateMatricola();
-        
-        assertNotNull(m1, "La matricola m1 non deve essere null");
-        assertNotNull(m2, "La matricola m2 non deve essere null");
-        assertTrue(!m1.equals(m2), "Le matricole generate devono essere univoche");
+    void immatricolaStudente_nomeNonValido_propagaEccezioneDalBuilder() {
+        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> controller.immatricolaStudente(
+                        "   ", COGNOME, EMAIL, PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE));
+
+        assertEquals("Il nome non può essere vuoto.", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Costruzione corretta dell'oggetto Studente tramite StudenteBuilder")
-    void testStudenteBuilder() {
-        StudenteBuilder builder = new StudenteBuilder();
-        
-        Studente studente = builder
-                .setNome("Mario")
-                .setCognome("Rossi")
-                .setCorsoDiLaurea("Ingegneria Informatica")
-                .build();
+    void immatricolaStudente_emailNonValida_propagaEccezioneDalBuilder() {
+        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
-        assertNotNull(studente, "Lo studente costruito non deve essere null");
-        assertEquals("Mario", studente.getNome(), "Il nome dello studente deve corrispondere");
-        assertEquals("Rossi", studente.getCognome(), "Il cognome dello studente deve corrispondere");
+        assertThrows(IllegalArgumentException.class,
+                () -> controller.immatricolaStudente(
+                        NOME, COGNOME, "email-non-valida", PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE));
     }
 
     @Test
-    @DisplayName("Calcolo tasse tramite CalcoloTasseStandardStrategy")
-    void testCalcoloTasseStrategy() {
-        ICalcoloTasseStrategy strategy = new CalcoloTasseStandardStrategy();
-        
-        double importoTasse = strategy.calcolaTasse(500.0, false);
-        assertEquals(500.0, importoTasse, "L'importo delle tasse calcolato non deve essere negativo");
+    void immatricolaStudente_passwordTroppoCorta_propagaEccezioneDalBuilder() {
+        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> controller.immatricolaStudente(
+                        NOME, COGNOME, EMAIL, "123", CORSO, TASSA_BASE, CODICE_FISCALE));
     }
 
     @Test
-    @DisplayName("Creazione studente tramite ImmatricolazioneController (Senza Persistenza)")
-    void testImmatricolazioneFlussoCompleto() {
-        String email = "email.test@example.com";
-        String cf = "VRDGSP0000A123X";
+    void immatricolaStudente_usaStrategyPerCalcolareTotaleTasse_conMockIniettataViaReflection() throws Exception {
+        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
-        // Creazione validata via Controller
-        Studente studenteImmatricolato = immatricolazioneController.immatricolaStudente(
-                "Giuseppe", "Verdi", email, "password", "Ingegneria Informatica", 500.0, cf
-        );
+        // La strategy è istanziata internamente dal controller (new CalcoloTasseStandardStrategy()),
+        // quindi la sostituiamo via reflection per isolare il test dalla logica di calcolo reale
+        // e verificare solo l'interazione.
+        ICalcoloTasseStrategy strategyMock = mock(ICalcoloTasseStrategy.class);
+        when(strategyMock.calcolaTasse(TASSA_BASE, false)).thenReturn(1234.56);
 
-        // Verify delle properties dell'oggetto creato
-        assertNotNull(studenteImmatricolato, "Lo studente generato dal Controller non deve essere null");
-        assertNotNull(studenteImmatricolato.getMatricola(), "Lo studente deve avere una matricola assegnata");
-        assertEquals("Giuseppe", studenteImmatricolato.getNome(), "Il nome deve coincidere");
-        assertEquals("Verdi", studenteImmatricolato.getCognome(), "Il cognome deve coincidere");
-        
-        // NOTA: Le asserzioni sull'aggiunta alla lista utenti di Unicenter sono omesse
-        // poiché l'attuale design demanda la chiamata utenti.add() a Unicenter stesso e 
-        // non al Controller.
+        Field strategyField = ImmatricolazioneController.class.getDeclaredField("calcoloTasseStrategy");
+        strategyField.setAccessible(true);
+        strategyField.set(controller, strategyMock);
+
+        Studente studente = controller.immatricolaStudente(
+                NOME, COGNOME, EMAIL, PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE);
+
+        assertEquals(1234.56, studente.getTotaleTasse(), 0.0001);
+        verify(strategyMock, times(1)).calcolaTasse(TASSA_BASE, false);
+    }
+
+    // ---------------------------------------------------------------
+    // validaDataImmatricolazione
+    // ---------------------------------------------------------------
+
+    @Test
+    void validaDataImmatricolazione_meseAgosto_ritornaTrue() {
+        // IMPORTANTE: costruire la data PRIMA di aprire mockStatic. Se si costruisce
+        // dentro when(...).thenReturn(LocalDate.of(...)), la chiamata a LocalDate.of()
+        // viene valutata come argomento mentre LocalDate è già mockata staticamente e
+        // lo stub precedente non è ancora completato -> UnfinishedStubbingException.
+        LocalDate dataFissata = LocalDate.of(2026, 8, 1);
+        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
+
+            assertDoesNotThrow(() -> {
+                boolean risultato = controller.validaDataImmatricolazione();
+                assertTrue(risultato);
+            });
+        }
     }
 
     @Test
-    @DisplayName("Immatricolazione con codice corso non valido solleva eccezione")
-    void testImmatricolazioneCorsoInesistente() {
-        // Verifica l'eccezione esatta attesa come da implementazione del Controller
-        assertThrows(IllegalArgumentException.class, () -> {
-            immatricolazioneController.immatricolaStudente(
-                "Anna", "Bianchi", "email.errata@example.com", "password", "ingegneria elettrica", 500.0, "BNNNCK0000A123Y"
-            );
-        }, "Il tentativo di immatricolazione ad un corso inesistente deve sollevare IllegalArgumentException");
+    void validaDataImmatricolazione_meseSettembre_ritornaTrue() {
+        LocalDate dataFissata = LocalDate.of(2026, 9, 30);
+        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
+
+            assertDoesNotThrow(() -> {
+                boolean risultato = controller.validaDataImmatricolazione();
+                assertTrue(risultato);
+            });
+        }
+    }
+
+    @Test
+    void validaDataImmatricolazione_meseFuoriFinestra_lanciaDataNonValidaException() {
+        LocalDate dataFissata = LocalDate.of(2026, 1, 15);
+        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
+
+            DataNonValidaException ex = assertThrows(DataNonValidaException.class,
+                    () -> controller.validaDataImmatricolazione());
+
+            assertTrue(ex.getMessage().contains("1° agosto al 30 settembre"));
+        }
+    }
+
+    @Test
+    void validaDataImmatricolazione_primoOttobre_lanciaDataNonValidaException() {
+        // caso limite: il giorno subito dopo la chiusura della finestra
+        LocalDate dataFissata = LocalDate.of(2026, 10, 1);
+        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
+
+            assertThrows(DataNonValidaException.class,
+                    () -> controller.validaDataImmatricolazione());
+        }
+    }
+
+    @Test
+    void validaDataImmatricolazione_trentunoLuglio_lanciaDataNonValidaException() {
+        // caso limite: il giorno subito prima dell'apertura della finestra
+        LocalDate dataFissata = LocalDate.of(2026, 7, 31);
+        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
+            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
+
+            assertThrows(DataNonValidaException.class,
+                    () -> controller.validaDataImmatricolazione());
+        }
     }
 }

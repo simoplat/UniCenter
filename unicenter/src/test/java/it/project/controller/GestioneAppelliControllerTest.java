@@ -1,39 +1,5 @@
 package it.project.controller;
 
-/*
- * ==========================================================================
- * ASSUNZIONI su classi/interfacce non fornite (dedotte dall'uso nel
- * controller). Se le firme reali differiscono, adattare di conseguenza:
- *
- * - Unicenter:
- *      Utente getCurrentUser();
- *      boolean isProfessoreAbilitatoAMateria(String codiceMateria);
- *   (mockata con Mockito, la classe non deve essere final)
- *
- * - it.project.validation.IscrizioneValidator:
- *      void validate(Studente studente, Appello appello) throws Exception;
- *   (interfaccia -> facilmente mockabile)
- *
- * - it.project.validation.ValidationChainBuilder:
- *      static IscrizioneValidator buildDefaultChain();
- *   (usata solo indirettamente: nei test di iscrizione sostituiamo la
- *    chain reale con un mock via reflection, per non dipendere dalle
- *    regole di business reali, non note)
- *
- * - it.project.generator.CodiceAppelloGenerator: singleton reale,
- *   non mockato; verifichiamo solo che generi codici non nulli/non vuoti.
- *
- * - it.project.ConsoleUI: singleton reale con mostraErrore(String);
- *   lasciata reale (assumibilmente stampa solo su stdout/log).
- *
- * - DataNonValidaException, PostiNonValidi: eccezioni checked con
- *   costruttore (String message).
- *
- * - Utente: costruttore (nome, cognome, email, password, codiceFiscale),
- *   usato indirettamente tramite Studente/Professore.
- * ==========================================================================
- */
-
 import it.project.*;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
