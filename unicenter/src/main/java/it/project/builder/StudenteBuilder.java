@@ -13,16 +13,16 @@ public class StudenteBuilder {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
     public StudenteBuilder setNome(String nome) {
-        if (nome == null || nome.trim().isEmpty()) {
-            throw new IllegalArgumentException("Il nome non può essere vuoto.");
+        if (nome == null || nome.trim().isEmpty() || !nome.matches("^[A-Za-z\\s]+$")) {
+            throw new IllegalArgumentException("Il nome non può essere vuoto e deve contenere solo lettere.");
         }
         this.nome = nome.trim();
         return this;
     }
 
     public StudenteBuilder setCognome(String cognome) {
-        if (cognome == null || cognome.trim().isEmpty()) {
-            throw new IllegalArgumentException("Il cognome non può essere vuoto.");
+        if (cognome == null || cognome.trim().isEmpty() || !cognome.matches("^[A-Za-z\\s]+$")) {
+            throw new IllegalArgumentException("Il cognome non può essere vuoto e deve contenere solo lettere.");
         }
         this.cognome = cognome.trim();
         return this;

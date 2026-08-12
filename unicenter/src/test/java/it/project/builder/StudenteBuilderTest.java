@@ -91,7 +91,14 @@ class StudenteBuilderTest {
     void setNome_null_lanciaIllegalArgumentException() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> new StudenteBuilder().setNome(null));
-        assertEquals("Il nome non può essere vuoto.", ex.getMessage());
+        assertEquals("Il nome non può essere vuoto e deve contenere solo lettere.", ex.getMessage());
+    }
+
+    @Test
+    void setCognome_null_lanciaIllegalArgumentException1() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> new StudenteBuilder().setCognome(null));
+        assertEquals("Il cognome non può essere vuoto e deve contenere solo lettere.", ex.getMessage());
     }
 
     @Test
