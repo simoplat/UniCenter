@@ -170,7 +170,7 @@ public class MenuController {
                         console.mostraMessaggio("Non sei abilitato a nessuna materia. Contatta l'amministratore.");
                         break;
                     }
-                    StampaMaterie(materieDelProfessore);
+                    stampaMaterie(materieDelProfessore);
                     String codiceMateria = console
                             .leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
                     if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
@@ -406,6 +406,14 @@ public class MenuController {
             if (unicenter.validaDataImmatricolazione()) {
                 console.mostraMessaggio(
                         "Finestra temporale per l'immatricolazione aperta. Procedi con l'immatricolazione.");
+                
+                List<CorsoDiLaurea> corsi = unicenter.getCorsiDiLaurea();
+                if (corsi == null || corsi.isEmpty()) {
+                    console.mostraMessaggio("Nessun corso di laurea disponibile al momento.");
+                    return;
+                }
+                console.mostraMessaggio("Corsi di laurea disponibili:");
+                stampaCorsiDiLaurea(corsi);
             }
         } catch (DataNonValidaException e) {
             console.mostraErrore(e.getMessage());
@@ -490,7 +498,7 @@ public class MenuController {
         }
     }
 
-    public void StampaMaterie(List<Materia> materie) {
+    public void stampaMaterie(List<Materia> materie) {
         for (Materia materia : materie) {
             console.mostraMessaggio(
                     "Codice Materia: " + materia.getCodiceMateria() + "\n" +
@@ -503,6 +511,14 @@ public class MenuController {
         for (Studente studente : studenti) {
             console.mostraMessaggio(
                     studente.getNome() + " - " + studente.getCognome() + " - " + studente.getCodiceFiscale() + "\n" +
+                            "----------------------------------------");
+        }
+    }
+
+    public void stampaCorsiDiLaurea(List<CorsoDiLaurea> corsi) {
+        for (CorsoDiLaurea corso : corsi) {
+            console.mostraMessaggio(
+                    "Nome Corso: " + corso.getNome() + "\n" +
                             "----------------------------------------");
         }
     }

@@ -155,10 +155,17 @@ public class Unicenter {
             this.gestoreMaterie.associaProfessoreAMateria("2", "IS01");
 
             CorsoDiLaurea ingInformatica = new CorsoDiLaurea("ING-INF", "Ingegneria Informatica");
+            CorsoDiLaurea ingGestionale = new CorsoDiLaurea("ING-GES", "Ingegneria Gestionale");
+            CorsoDiLaurea ingElettronica = new CorsoDiLaurea("ING-ELE", "Ingegneria Elettronica");
+            CorsoDiLaurea ingMeccanica = new CorsoDiLaurea("ING-MEC", "Ingegneria Meccanica");
+
             ingInformatica.aggiungiMateria(ingSoftware);
             ingInformatica.aggiungiMateria(basiDati);
             ingInformatica.aggiungiMateria(architetture);
             this.corsoDiLaureaController.addCorsoDiLaurea(ingInformatica);
+            this.corsoDiLaureaController.addCorsoDiLaurea(ingGestionale);
+            this.corsoDiLaureaController.addCorsoDiLaurea(ingElettronica);
+            this.corsoDiLaureaController.addCorsoDiLaurea(ingMeccanica);    
 
             // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
@@ -312,6 +319,10 @@ public class Unicenter {
 
     public boolean validaDataImmatricolazione() throws DataNonValidaException {
         return immatricolazioneController.validaDataImmatricolazione();
+    }
+
+    public List<CorsoDiLaurea> getCorsiDiLaurea() {
+        return corsoDiLaureaController.getCorsiDiLaurea();
     }
 
 }
