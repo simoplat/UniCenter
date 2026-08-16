@@ -37,7 +37,7 @@ class PianoStudiValidatorTest {
 
     @Test
     void validate_materiaPresenteSenzaNext_ritornaTrue() throws Exception {
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         when(pianoDiStudi.contieneMateria("IS01")).thenReturn(true);
         when(appello.getCodiceMateria()).thenReturn("IS01");
 
@@ -46,7 +46,7 @@ class PianoStudiValidatorTest {
 
     @Test
     void validate_materiaPresenteConNext_delegaAlProssimoValidator() throws Exception {
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         when(pianoDiStudi.contieneMateria("IS01")).thenReturn(true);
         when(appello.getCodiceMateria()).thenReturn("IS01");
         when(nextValidator.validate(studente, appello)).thenReturn(true);
@@ -58,7 +58,7 @@ class PianoStudiValidatorTest {
 
     @Test
     void validate_materiaAssenteNelPianoStudi_lanciaIllegalStateException() {
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         when(pianoDiStudi.contieneMateria("BD01")).thenReturn(false);
         when(appello.getCodiceMateria()).thenReturn("BD01");
 
@@ -69,14 +69,14 @@ class PianoStudiValidatorTest {
 
     @Test
     void validate_pianoStudiNullo_lanciaIllegalStateException() {
-        studente.setPianoStudi(null);
+        studente.setPianoDiStudi(null);
 
         assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
     }
 
     @Test
     void validate_materiaAssente_nonDelegaAlProssimoValidator() {
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         when(pianoDiStudi.contieneMateria("BD01")).thenReturn(false);
         when(appello.getCodiceMateria()).thenReturn("BD01");
         validator.setNext(nextValidator);

@@ -5,19 +5,19 @@ import java.util.List;
 
 public class PianoDiStudi {
     private String stato; // es. "APPROVATO", "IN_ATTESA"
-    private List<String> codiciMaterie;
+    private List<String> idMaterie;
 
     public PianoDiStudi() {
         this.stato = "APPROVATO";
-        this.codiciMaterie = new ArrayList<>();
+        this.idMaterie = new ArrayList<>();
     }
 
     public void aggiungiMateria(String codiceMateria) {
-        this.codiciMaterie.add(codiceMateria);
+        this.idMaterie.add(codiceMateria);
     }
 
     public boolean contieneMateria(String codiceMateria) {
-        return codiciMaterie.contains(codiceMateria);
+        return idMaterie.contains(codiceMateria);
     }
 
     public String getStato() {
@@ -28,7 +28,7 @@ public class PianoDiStudi {
         this.stato = stato;
     }
 
-    public List<String> getCodiciMaterie() {
-        return codiciMaterie;
+    public List<String> getIdMaterie() {
+        return idMaterie;
     }
 }

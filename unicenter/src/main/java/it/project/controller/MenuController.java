@@ -434,15 +434,13 @@ public class MenuController {
         }
 
         String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
-        double tassaBaseCorso = 500.0;
 
         try {
-            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea,
-                    tassaBaseCorso, codiceFiscale);
+            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, codiceFiscale);
 
             console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
             console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
-            console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTotaleTasse());
+            console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTasse());
             console.mostraMessaggio("Il tuo codice fiscale è: " + codiceFiscale);
         } catch (IllegalArgumentException e) {
             console.mostraErrore("immatricolazione fallita. " + e.getMessage());

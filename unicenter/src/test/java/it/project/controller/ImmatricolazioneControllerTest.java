@@ -23,8 +23,9 @@ import it.project.strategy.ICalcoloTasseStrategy;
  * Test unitari per {@link ImmatricolazioneController}.
  *
  * Dipendenze Maven necessarie (oltre a junit-jupiter):
- *   - org.mockito:mockito-core:5.x   (include l'inline mock maker, necessario per mockStatic)
- *   - org.mockito:mockito-junit-jupiter:5.x
+ * - org.mockito:mockito-core:5.x (include l'inline mock maker, necessario per
+ * mockStatic)
+ * - org.mockito:mockito-junit-jupiter:5.x
  */
 @ExtendWith(MockitoExtension.class)
 class ImmatricolazioneControllerTest {
@@ -59,14 +60,14 @@ class ImmatricolazioneControllerTest {
         when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
         Studente studente = controller.immatricolaStudente(
-                NOME, COGNOME, EMAIL, PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE);
+                NOME, COGNOME, EMAIL, PASSWORD, CORSO, CODICE_FISCALE);
 
         assertNotNull(studente);
         assertEquals(NOME, studente.getNome());
         assertEquals(COGNOME, studente.getCognome());
         assertEquals(EMAIL, studente.getEmail());
         assertEquals(CODICE_FISCALE, studente.getCodiceFiscale());
-        assertEquals(CORSO, studente.getCorsoDiLaurea());
+        assertEquals(CORSO, studente.getIdCorsoDiLaurea());
         assertNotNull(studente.getMatricola());
         assertFalse(studente.isTassePagate(), "Alla creazione le tasse non devono risultare pagate");
 
@@ -79,12 +80,13 @@ class ImmatricolazioneControllerTest {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
-                        NOME, COGNOME, EMAIL, PASSWORD, "Corso Inesistente", TASSA_BASE, CODICE_FISCALE));
+                        NOME, COGNOME, EMAIL, PASSWORD, "Corso Inesistente", CODICE_FISCALE));
 
         assertTrue(ex.getMessage().contains("corso non esistente"));
         assertTrue(ex.getMessage().contains("Corso Inesistente"));
 
-        // Il builder non deve nemmeno essere invocato: nessuna ulteriore interazione attesa
+        // Il builder non deve nemmeno essere invocato: nessuna ulteriore interazione
+        // attesa
         verify(unicenter, times(1)).trovaCorsoDiLaureaByNome("Corso Inesistente");
         verifyNoMoreInteractions(unicenter);
     }
@@ -95,9 +97,9 @@ class ImmatricolazioneControllerTest {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
-                        "   ", COGNOME, EMAIL, PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE));
+                        "   ", COGNOME, EMAIL, PASSWORD, CORSO, CODICE_FISCALE));
 
-        assertEquals("Il nome non può essere vuoto.", ex.getMessage());
+        assertEquals("Il nome non può essere vuoto e deve contenere solo lettere.", ex.getMessage());
     }
 
     @Test
@@ -106,7 +108,7 @@ class ImmatricolazioneControllerTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
-                        NOME, COGNOME, "email-non-valida", PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE));
+                        NOME, COGNOME, "email-non-valida", PASSWORD, CORSO, CODICE_FISCALE));
     }
 
     @Test
@@ -115,28 +117,32 @@ class ImmatricolazioneControllerTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
-                        NOME, COGNOME, EMAIL, "123", CORSO, TASSA_BASE, CODICE_FISCALE));
+                        NOME, COGNOME, EMAIL, "123", CORSO, CODICE_FISCALE));
     }
 
     @Test
     void immatricolaStudente_usaStrategyPerCalcolareTotaleTasse_conMockIniettataViaReflection() throws Exception {
         when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
-        // La strategy è istanziata internamente dal controller (new CalcoloTasseStandardStrategy()),
-        // quindi la sostituiamo via reflection per isolare il test dalla logica di calcolo reale
+        // La strategy è istanziata internamente dal controller (new
+        // CalcoloTasseStandardStrategy()),
+        // quindi la sostituiamo via reflection per isolare il test dalla logica di
+        // calcolo reale
         // e verificare solo l'interazione.
         ICalcoloTasseStrategy strategyMock = mock(ICalcoloTasseStrategy.class);
-        when(strategyMock.calcolaTasse(TASSA_BASE, false)).thenReturn(1234.56);
+        when(strategyMock.calcolaTasse(ImmatricolazioneController.TASSA_IMMATRICOLAZIONE, false))
+                .thenReturn(1234.56);
 
         Field strategyField = ImmatricolazioneController.class.getDeclaredField("calcoloTasseStrategy");
         strategyField.setAccessible(true);
         strategyField.set(controller, strategyMock);
 
         Studente studente = controller.immatricolaStudente(
-                NOME, COGNOME, EMAIL, PASSWORD, CORSO, TASSA_BASE, CODICE_FISCALE);
+                NOME, COGNOME, EMAIL, PASSWORD, CORSO, CODICE_FISCALE);
 
-        assertEquals(1234.56, studente.getTotaleTasse(), 0.0001);
-        verify(strategyMock, times(1)).calcolaTasse(TASSA_BASE, false);
+        assertEquals(1234.56, studente.getTasse(), 0.0001);
+        verify(strategyMock, times(1))
+                .calcolaTasse(ImmatricolazioneController.TASSA_IMMATRICOLAZIONE, false);
     }
 
     // ---------------------------------------------------------------

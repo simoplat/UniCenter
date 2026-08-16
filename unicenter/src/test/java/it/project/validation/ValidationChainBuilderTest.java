@@ -98,7 +98,7 @@ class ValidationChainBuilderTest {
         Studente studente = creaStudente();
         PianoDiStudi pianoDiStudi = mock(PianoDiStudi.class);
         when(pianoDiStudi.contieneMateria("IS01")).thenReturn(true);
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         studente.setTassePagate(false);
 
         Appello appello = mock(Appello.class);
@@ -122,7 +122,7 @@ class ValidationChainBuilderTest {
         Studente studente = creaStudente();
         PianoDiStudi pianoDiStudi = mock(PianoDiStudi.class);
         when(pianoDiStudi.contieneMateria("IS01")).thenReturn(true);
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         studente.setTassePagate(true);
 
         Appello appello = mock(Appello.class);
@@ -143,7 +143,7 @@ class ValidationChainBuilderTest {
         Studente studente = creaStudente();
         PianoDiStudi pianoDiStudi = mock(PianoDiStudi.class);
         when(pianoDiStudi.contieneMateria("IS01")).thenReturn(true);
-        studente.setPianoStudi(pianoDiStudi);
+        studente.setPianoDiStudi(pianoDiStudi);
         studente.setTassePagate(true);
 
         Appello appello = mock(Appello.class);

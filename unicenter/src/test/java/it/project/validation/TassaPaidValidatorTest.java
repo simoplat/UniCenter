@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import it.project.Appello;
+import it.project.Carriera;
 import it.project.Studente;
 
 @ExtendWith(MockitoExtension.class)
@@ -17,6 +18,9 @@ class TassaPaidValidatorTest {
 
     @Mock
     private Appello appello;
+
+    @Mock
+    private Carriera carriera;
 
     @Mock
     private IscrizioneValidator nextValidator;

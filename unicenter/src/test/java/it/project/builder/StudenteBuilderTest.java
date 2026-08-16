@@ -26,7 +26,7 @@ class StudenteBuilderTest {
         assertEquals("Mario", studente.getNome());
         assertEquals("Rossi", studente.getCognome());
         assertEquals("mario.rossi@studenti.it", studente.getEmail(), "L'email deve essere normalizzata in minuscolo");
-        assertEquals("Ingegneria Informatica", studente.getCorsoDiLaurea());
+        assertEquals("Ingegneria Informatica", studente.getIdCorsoDiLaurea());
         assertEquals("CODICEFISCALEMARIOROSSI", studente.getCodiceFiscale());
         assertNotNull(studente.getMatricola());
         assertFalse(studente.getMatricola().isBlank());
@@ -46,7 +46,7 @@ class StudenteBuilderTest {
         assertEquals("Mario", studente.getNome());
         assertEquals("Rossi", studente.getCognome());
         assertEquals("mario.rossi@studenti.it", studente.getEmail());
-        assertEquals("Ingegneria Informatica", studente.getCorsoDiLaurea());
+        assertEquals("Ingegneria Informatica", studente.getIdCorsoDiLaurea());
     }
 
     @Test
@@ -243,7 +243,7 @@ class StudenteBuilderTest {
         assertNull(studente.getNome());
         assertNull(studente.getCognome());
         assertNull(studente.getEmail());
-        assertNull(studente.getCorsoDiLaurea());
+        assertNull(studente.getIdCorsoDiLaurea());
         assertNull(studente.getCodiceFiscale());
         assertNotNull(studente.getMatricola(), "La matricola viene generata comunque da MatricolaGenerator");
     }

@@ -54,7 +54,7 @@ public class Unicenter {
     }
 
     // Immatricolazione
-    public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, double tassaBase, String codiceFiscale) {
+    public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, String codiceFiscale) {
         boolean emailEsiste = esisteUtente(email);
         boolean cfEsiste = esisteCodiceFiscale(codiceFiscale);
 
@@ -67,7 +67,7 @@ public class Unicenter {
             throw new IllegalArgumentException("Attenzione: Codice Fiscale già inserito!");
         }
 
-        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso, tassaBase, codiceFiscale);
+        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso, codiceFiscale);
         utenti.add(nuovoStudente);
         return nuovoStudente;
     }
@@ -85,13 +85,13 @@ public class Unicenter {
         }
 
         Studente studente = (Studente) this.currentUser;
-        PianoDiStudi pianoDiStudi = studente.getPianoStudi();
+        PianoDiStudi pianoDiStudi = studente.getPianoDiStudi();
         if (pianoDiStudi == null || pianoDiStudi.getStato().equals("IN_ATTESA")) {
             console.mostraMessaggio(
                     "[UNICENTER] Impossibile iscrivere lo studente: il piano di studi non è approvato.");
             return Collections.emptyList();
         }
-        return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getCodiciMaterie());
+        return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getIdMaterie());
     }
 
     public List<Appello> trovaAppelliPrenotatiDalloStudente() {
@@ -154,10 +154,10 @@ public class Unicenter {
             this.gestoreMaterie.associaProfessoreAMateria("2", "AR01");
             this.gestoreMaterie.associaProfessoreAMateria("2", "IS01");
 
-            CorsoDiLaurea ingInformatica = new CorsoDiLaurea("ING-INF", "Ingegneria Informatica");
-            CorsoDiLaurea ingGestionale = new CorsoDiLaurea("ING-GES", "Ingegneria Gestionale");
-            CorsoDiLaurea ingElettronica = new CorsoDiLaurea("ING-ELE", "Ingegneria Elettronica");
-            CorsoDiLaurea ingMeccanica = new CorsoDiLaurea("ING-MEC", "Ingegneria Meccanica");
+            CorsoDiLaurea ingInformatica = new CorsoDiLaurea("ING-INF", "Ingegneria Informatica", 3);
+            CorsoDiLaurea ingGestionale = new CorsoDiLaurea("ING-GES", "Ingegneria Gestionale", 3);
+            CorsoDiLaurea ingElettronica = new CorsoDiLaurea("ING-ELE", "Ingegneria Elettronica", 3);
+            CorsoDiLaurea ingMeccanica = new CorsoDiLaurea("ING-MEC", "Ingegneria Meccanica", 3);
 
             ingInformatica.aggiungiMateria(ingSoftware);
             ingInformatica.aggiungiMateria(basiDati);
@@ -171,28 +171,28 @@ public class Unicenter {
 
             // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
             Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "pass123",
-                    "Ingegneria Informatica", 500.0, "CODICEFISCALEMARIOROSSI");
-            st1.getPianoStudi().aggiungiMateria("IS01");
-            st1.getPianoStudi().aggiungiMateria("BD01");
+                    "Ingegneria Informatica",  "CODICEFISCALEMARIOROSSI");
+            st1.getPianoDiStudi().aggiungiMateria("IS01");
+            st1.getPianoDiStudi().aggiungiMateria("BD01");
             st1.setTassePagate(true); // Tasse Saldate
 
             // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei
             // validatori)
             Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "pass123",
-                    "Ingegneria Informatica", 500.0, "CODICEFISCALELUIGIVERDI");
-            st2.getPianoStudi().aggiungiMateria("IS01");
+                    "Ingegneria Informatica", "CODICEFISCALELUIGIVERDI");
+            st2.getPianoDiStudi().aggiungiMateria("IS01");
             st2.setTassePagate(false);
 
             // Studente 3: Anna Bianchi (Piano di studi limitato)
             Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "pass123",
-                    "Ingegneria Informatica", 500.0, "CODICEFISCALEANNABIANCHI");
-            st3.getPianoStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
+                    "Ingegneria Informatica", "CODICEFISCALEANNABIANCHI");
+            st3.getPianoDiStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
             st3.setTassePagate(true);
             console.mostraMessaggio(st3.toString());
 
 
             Studente st4 = this.immatricolaStudente("Simo", "plata", "simo.plata@studenti.it", "pass123",
-                    "Ingegneria Informatica", 500, "SIMO");
+                    "Ingegneria Informatica","SIMO");
             console.mostraMessaggio(st4.toString());
 
             // CREAZIONE APPELLI D'ESAME (UC1 + Factory Method + CodiceAppelloGenerator)

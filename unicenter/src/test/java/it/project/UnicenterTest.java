@@ -15,31 +15,7 @@ import org.mockito.MockedStatic;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.UtenteNonTrovatoException;
 
-/**
- * Test per {@link Unicenter}.
- *
- * NOTA SUL DESIGN: Unicenter è un singleton (Holder pattern, costruttore
- * privato) che istanzia internamente tutti i suoi controller senza alcuna
- * dependency injection. Di conseguenza:
- *   - non è possibile passare mock ai controller interni;
- *   - lo stato (utenti, corsi, appelli) è condiviso da TUTTI i test che
- *     girano nella stessa JVM, quindi questi test non sono isolati tra loro
- *     come ci si aspetterebbe da veri unit test.
- *
- * Per rendere la suite affidabile:
- *   - il database viene popolato UNA SOLA VOLTA con @BeforeAll, tramite
- *     popolaDataBase() (unico modo pubblico per inserire un CorsoDiLaurea,
- *     dato che corsoDiLaureaController non è esposto da alcun getter);
- *   - i test che leggono dati "noti" si appoggiano ai dati seminati da
- *     popolaDataBase() (Mario Rossi, Luigi Verdi, Anna Bianchi, professori,
- *     corso "Ingegneria Informatica", materie IS01/BD01/AR01);
- *   - i test che CREANO nuovi dati usano email/codici fiscali generati con
- *     UUID per non collidere fra loro né con i dati seminati.
- *
- * Se il progetto evolve, consiglio di rifattorizzare Unicenter con
- * dependency injection dei controller per renderlo testabile in isolamento
- * e per poter azzerare lo stato tra un test e l'altro.
- */
+
 class UnicenterTest {
 
     private static Unicenter unicenter;
@@ -182,7 +158,7 @@ class UnicenterTest {
     void immatricolaStudente_emailGiaRegistrata_lanciaIllegalArgumentException() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> unicenter.immatricolaStudente("Test", "Test", "mario.rossi@studenti.it", "pass123",
-                        "Ingegneria Informatica", 500.0, "CF-" + UUID.randomUUID()));
+                        "Ingegneria Informatica", "CF-" + UUID.randomUUID()));
 
         assertTrue(ex.getMessage().contains("Email già inserita"));
     }
@@ -191,7 +167,7 @@ class UnicenterTest {
     void immatricolaStudente_codiceFiscaleGiaRegistrato_lanciaIllegalArgumentException() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> unicenter.immatricolaStudente("Test", "Test", "unico-" + UUID.randomUUID() + "@studenti.it",
-                        "pass123", "Ingegneria Informatica", 500.0, "CODICEFISCALEMARIOROSSI"));
+                        "pass123", "Ingegneria Informatica", "CODICEFISCALEMARIOROSSI"));
 
         assertTrue(ex.getMessage().contains("Codice Fiscale già inserito"));
     }
@@ -200,7 +176,7 @@ class UnicenterTest {
     void immatricolaStudente_emailECodiceFiscaleGiaRegistrati_lanciaIllegalArgumentException() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> unicenter.immatricolaStudente("Test", "Test", "mario.rossi@studenti.it", "pass123",
-                        "Ingegneria Informatica", 500.0, "CODICEFISCALEMARIOROSSI"));
+                        "Ingegneria Informatica", "CODICEFISCALEMARIOROSSI"));
 
         assertTrue(ex.getMessage().contains("Email e Codice Fiscale già inseriti"));
     }
@@ -211,7 +187,7 @@ class UnicenterTest {
         String cf = "CF-" + UUID.randomUUID();
 
         Studente nuovo = unicenter.immatricolaStudente("Nuovo", "Studente", email, "pass123",
-                "Ingegneria Informatica", 500.0, cf);
+                "Ingegneria Informatica",cf);
 
         assertNotNull(nuovo);
         assertNotNull(nuovo.getMatricola());
@@ -227,7 +203,7 @@ class UnicenterTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> unicenter.immatricolaStudente("Nuovo", "Studente", email, "pass123",
-                        "Corso Inesistente " + UUID.randomUUID(), 500.0, cf));
+                        "Corso Inesistente " + UUID.randomUUID(), cf));
     }
 
     // ---------------------------------------------------------------

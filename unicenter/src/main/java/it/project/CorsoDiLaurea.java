@@ -7,10 +7,12 @@ public class CorsoDiLaurea {
     private String id;
     private String nome;
     private List<Materia> materie;
+    private int anniAccademici;
 
-    public CorsoDiLaurea(String id, String nome) {
+    public CorsoDiLaurea(String id, String nome, int anniAccademici) {
         this.id = id;
         this.nome = nome;
+        this.anniAccademici = anniAccademici;
         this.materie = new ArrayList<>();
     }
 
@@ -45,6 +47,7 @@ public class CorsoDiLaurea {
     public void rimuoviMateria(Materia materia) {
         this.materie.remove(materia);
     }
+    
    
     
 }

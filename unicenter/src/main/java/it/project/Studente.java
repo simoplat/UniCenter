@@ -5,40 +5,22 @@ import java.util.List;
 
 import it.project.strategy.ICalcoloTasseStrategy;
 
-public class Studente extends Utente implements ObserverAppello{
+public class Studente extends Utente implements ObserverAppello {
     private String matricola;
-    private String corsoDiLaurea;
-    private boolean tassePagate;
-    private double totaleTasse;
-    private PianoDiStudi pianoStudi;
     private List<Notifica> notifiche;
+    private Carriera carriera;
 
-
-    public Studente(String matricola, String nome, 
-                    String cognome, String email, 
-                    String password, String codiceFiscale, 
-                    String corsoDiLaurea) {
+    public Studente(String matricola, String nome,
+            String cognome, String email,
+            String password, String codiceFiscale, String idCorsoDiLaurea) {
         super(nome, cognome, email, password, codiceFiscale);
         this.setNome(nome);
         this.setCognome(cognome);
-        this.setEmail(email);        
+        this.setEmail(email);
         this.matricola = matricola;
-        this.corsoDiLaurea = corsoDiLaurea;
-        this.tassePagate = false;
-        this.pianoStudi = new PianoDiStudi();
         this.notifiche = new ArrayList<>();
-    }
-
-    public void calcolaImportoTasse(ICalcoloTasseStrategy strategy, double tassaBaseCorso, boolean isFuoriCorso) {
-        this.totaleTasse = strategy.calcolaTasse(tassaBaseCorso, isFuoriCorso);
-    }
-
-    public PianoDiStudi getPianoStudi() {
-        return pianoStudi;
-    }
-
-    public void setPianoStudi(PianoDiStudi pianoStudi) {
-        this.pianoStudi = pianoStudi;
+        this.carriera = new Carriera(matricola, idCorsoDiLaurea);
+        ;
     }
 
     public void aggiungiNotifica(Notifica notifica) {
@@ -49,20 +31,8 @@ public class Studente extends Utente implements ObserverAppello{
         return matricola;
     }
 
-    public String getCorsoDiLaurea() {
-        return corsoDiLaurea;
-    }
-
-    public boolean isTassePagate() {
-        return tassePagate;
-    }
-
-    public void setTassePagate(boolean tassePagate) {
-        this.tassePagate = tassePagate;
-    }
-
-    public double getTotaleTasse() {
-        return totaleTasse;
+    public double getTasse() {
+        return this.carriera.getTasse();
     }
 
     public List<Notifica> getNotifiche() {
@@ -76,8 +46,32 @@ public class Studente extends Utente implements ObserverAppello{
 
     @Override
     public String toString() {
-        return "Studente [matricola=" + matricola + ", nome=" + getNome() + ", cognome=" + getCognome() + ", codiceFiscale=" + getCodiceFiscale() + ", corsoDiLaurea=" + corsoDiLaurea + ", tassePagate=" + tassePagate
-                + ", totaleTasse=" + totaleTasse + ", pianoStudi=" + pianoStudi + ", notifiche=" + notifiche + "]";
+        return "Studente [matricola=" + matricola + ", nome=" + getNome() + ", cognome=" + getCognome()
+                + ", codiceFiscale=" + getCodiceFiscale() + ", notifiche=" + notifiche + "]";
+    }
+
+    public PianoDiStudi getPianoDiStudi() {
+        return this.carriera.getPianoDiStudi();
+    }
+
+    public String getIdCorsoDiLaurea() {
+        return this.carriera.getIdCorsoDiLaurea();
+    }
+
+    public void setPianoDiStudi(PianoDiStudi pianoDiStudi) {
+        this.carriera.setPianoDiStudi(pianoDiStudi);
+    }
+
+    public boolean isTassePagate() {
+        return this.carriera.isTassePagate();
+    }
+
+    public void setTassePagate(boolean tassePagate) {
+        this.carriera.setTassePagate(tassePagate);
+    }
+
+    public void calcolaTasse(ICalcoloTasseStrategy strategy, double tassaBase) {
+        this.carriera.calcolaImportoTasse(strategy, tassaBase);
     }
 
 }

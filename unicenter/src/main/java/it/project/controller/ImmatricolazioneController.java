@@ -3,6 +3,7 @@ package it.project.controller;
 import java.time.LocalDate;
 import java.time.Month;
 
+import it.project.Carriera;
 import it.project.CorsoDiLaurea;
 import it.project.Studente;
 import it.project.Unicenter;
@@ -14,6 +15,9 @@ import it.project.strategy.ICalcoloTasseStrategy;
 public class ImmatricolazioneController {
     private ICalcoloTasseStrategy calcoloTasseStrategy;
     private Unicenter unicenter;
+    // ImmatricolazioneController.java
+    public static final double TASSA_IMMATRICOLAZIONE = 150.0;
+    private double tasseImmatricolazione = TASSA_IMMATRICOLAZIONE;
 
     public ImmatricolazioneController(Unicenter unicenter) {
         this.calcoloTasseStrategy = new CalcoloTasseStandardStrategy();
@@ -21,12 +25,12 @@ public class ImmatricolazioneController {
     }
 
     public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso,
-            double tassaBaseCorso, String codiceFisale) {
+            String codiceFisale) {
 
         CorsoDiLaurea corsoTrovato = unicenter.trovaCorsoDiLaureaByNome(corso);
         if (corsoTrovato == null) {
             throw new IllegalArgumentException("Impossibile immatricolarsi: corso non esistente (" + corso + ")");
-        } 
+        }
 
         Studente studente = new StudenteBuilder()
                 .setNome(nome)
@@ -36,8 +40,7 @@ public class ImmatricolazioneController {
                 .setPassword(password)
                 .setCodiceFiscale(codiceFisale)
                 .build();
-
-        studente.calcolaImportoTasse(calcoloTasseStrategy, tassaBaseCorso, false);
+        studente.calcolaTasse(calcoloTasseStrategy, tasseImmatricolazione);
         return studente;
     }
 
@@ -50,4 +53,3 @@ public class ImmatricolazioneController {
         return true;
     }
 }
-    
