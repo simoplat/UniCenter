@@ -18,7 +18,6 @@ public class Studente extends Utente implements ObserverAppello {
         this.setEmail(email);
         this.notifiche = new ArrayList<>();
         this.carriera = new Carriera(matricola, idCorsoDiLaurea);
-        ;
     }
 
     public void aggiungiNotifica(Notifica notifica) {
