@@ -29,6 +29,10 @@ public class Carriera {
                 + pianoStudi + "]";
     }
 
+    public String getMatricola(){
+        return this.matricola;
+    }
+
     public PianoDiStudi getPianoDiStudi() {
         return this.pianoStudi;
     }

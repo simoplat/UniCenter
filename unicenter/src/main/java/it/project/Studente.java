@@ -6,7 +6,6 @@ import java.util.List;
 import it.project.strategy.ICalcoloTasseStrategy;
 
 public class Studente extends Utente implements ObserverAppello {
-    private String matricola;
     private List<Notifica> notifiche;
     private Carriera carriera;
 
@@ -17,7 +16,6 @@ public class Studente extends Utente implements ObserverAppello {
         this.setNome(nome);
         this.setCognome(cognome);
         this.setEmail(email);
-        this.matricola = matricola;
         this.notifiche = new ArrayList<>();
         this.carriera = new Carriera(matricola, idCorsoDiLaurea);
         ;
@@ -28,7 +26,7 @@ public class Studente extends Utente implements ObserverAppello {
     }
 
     public String getMatricola() {
-        return matricola;
+        return this.carriera.getMatricola();
     }
 
     public double getTasse() {
@@ -46,7 +44,7 @@ public class Studente extends Utente implements ObserverAppello {
 
     @Override
     public String toString() {
-        return "Studente [matricola=" + matricola + ", nome=" + getNome() + ", cognome=" + getCognome()
+        return "Studente [matricola=" + this.carriera.getMatricola() + ", nome=" + getNome() + ", cognome=" + getCognome()
                 + ", codiceFiscale=" + getCodiceFiscale() + ", notifiche=" + notifiche + "]";
     }
 
