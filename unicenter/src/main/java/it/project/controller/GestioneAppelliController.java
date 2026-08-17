@@ -1,6 +1,7 @@
 package it.project.controller;
 
 import it.project.Appello;
+import it.project.EsameSostenuto;
 import it.project.Studente;
 
 import java.time.LocalDate;
@@ -116,6 +117,16 @@ public class GestioneAppelliController {
         if (appello == null || appello.getIscritti().contains(studente)) {
             return false; // Appello non trovato o studente già iscritto
         }
+
+        // Controlla se lo studente ha un esito pendente per questa materia
+        String codiceMateria = appello.getCodiceMateria();
+        List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
+        for (EsameSostenuto esame : esitiPendenti) {
+            if (esame.getCodiceMateria().equals(codiceMateria)) {
+                console.mostraErrore("Hai un esito pendente di questa materia. Non puoi prenotarti ad un altro appello.");
+                return false;
+            }
+        }
         try {
             // Esegue i controlli della Chain of Responsibility
             validatorChain.validate(studente, appello);
@@ -176,10 +187,21 @@ public class GestioneAppelliController {
         if (appelliById == null || appelliById.isEmpty()) {
             return Collections.emptyList(); // Nessun appello disponibile per le materie specificate
         }
+
         for (Appello app : appelliById) {
-            if (!app.getIscritti().contains(studente)) {
-                appelliPrenotabili.add(app);
+            String codiceMateria = app.getCodiceMateria();
+
+            // Escludi appelli di materie già superate e registrate nel libretto
+            if (studente.getLibretto().isEsameSuperato(codiceMateria)) {
+                continue;
             }
+
+            // Escludi appelli a cui lo studente è già iscritto
+            if (app.getIscritti().contains(studente)) {
+                continue;
+            }
+
+            appelliPrenotabili.add(app);
         }
         return appelliPrenotabili;
     }

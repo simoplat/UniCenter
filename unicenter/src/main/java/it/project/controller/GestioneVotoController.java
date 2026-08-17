@@ -130,6 +130,15 @@ public class GestioneVotoController {
                 studente.getLibretto().registraEsame(esame);
             }
 
+            // Rimuove gli altri esiti pendenti della stessa materia per lo stesso studente
+            String matricola = esame.getMatricolaStudente();
+            String codiceMateria = esame.getCodiceMateria();
+            esitiPubblicati.removeIf(e ->
+                    !e.getIdEsame().equals(idEsame)
+                    && e.getMatricolaStudente().equals(matricola)
+                    && e.getCodiceMateria().equals(codiceMateria)
+                    && e.getNomeStato().equals("In attesa di conferma"));
+
             return true;
         } catch (IllegalStateException e) {
             console.mostraErrore(e.getMessage());

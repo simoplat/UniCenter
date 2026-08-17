@@ -509,4 +509,16 @@ public class Unicenter {
         return gestoreMaterie;
     }
 
+    /**
+     * Restituisce gli esiti pendenti ("In attesa di conferma") per uno studente dato la matricola.
+     * Utilizzato dal GestioneAppelliController per impedire prenotazioni
+     * ad appelli di materie con esiti ancora pendenti.
+     *
+     * @param matricola la matricola dello studente
+     * @return lista degli esiti pendenti
+     */
+    public List<EsameSostenuto> getEsitiPendentiByMatricola(String matricola) {
+        return gestioneVotoController.trovaEsitiPendentiByStudente(matricola);
+    }
+
 }
