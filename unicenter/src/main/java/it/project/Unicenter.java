@@ -16,7 +16,7 @@ public class Unicenter {
     private final ImmatricolazioneController immatricolazioneController;
     private final GestioneAppelliController gestioneAppelliController;
     private final GestoreMaterieController gestoreMaterie;
-    private final CorsoDiLaureaController corsoDiLaureaController;
+    private final GestioneCorsiLaureaController gestioneCorsiLaureaController;
     private final GestioneVotoController gestioneVotoController;
     private final MenuController menuController;
     private Utente currentUser = null;
@@ -36,7 +36,7 @@ public class Unicenter {
         this.gestioneAppelliController = new GestioneAppelliController(this);
 
         this.gestoreMaterie = new GestoreMaterieController();
-        this.corsoDiLaureaController = new CorsoDiLaureaController(this);
+        this.gestioneCorsiLaureaController = new GestioneCorsiLaureaController();
 
         // 3. Inizializzazione Controller UC3 (Gestione Voto)
         this.gestioneVotoController = new GestioneVotoController(this, this.gestoreMaterie);
@@ -69,6 +69,13 @@ public class Unicenter {
             throw new IllegalArgumentException("Attenzione: Email già inserita!");
         } else if (cfEsiste) {
             throw new IllegalArgumentException("Attenzione: Codice Fiscale già inserito!");
+        }
+
+        // UC4: Blocca iscrizione a corsi obsoleti
+        CorsoDiLaurea corsoTrovato = trovaCorsoDiLaureaByNome(corso);
+        if (corsoTrovato != null && corsoTrovato.isObsoleto()) {
+            throw new IllegalArgumentException(
+                "Impossibile immatricolarsi: il corso '" + corso + "' è obsoleto e non accetta nuove iscrizioni.");
         }
 
         Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso, codiceFiscale);
@@ -172,10 +179,16 @@ public class Unicenter {
             ingInformatica.aggiungiMateria(ingSoftware);
             ingInformatica.aggiungiMateria(basiDati);
             ingInformatica.aggiungiMateria(architetture);
-            this.corsoDiLaureaController.addCorsoDiLaurea(ingInformatica);
-            this.corsoDiLaureaController.addCorsoDiLaurea(ingGestionale);
-            this.corsoDiLaureaController.addCorsoDiLaurea(ingElettronica);
-            this.corsoDiLaureaController.addCorsoDiLaurea(ingMeccanica);    
+            this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingInformatica);
+            this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingGestionale);
+            this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingElettronica);
+            this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingMeccanica);
+
+            // INSERIMENTO AMMINISTRATORE (UC4)
+            Amministratore admin = new Amministratore(
+                    "ADM-001", "Admin", "Sistema", "admin@unicenter.it", "admin123", "ADMSST80A01H501X");
+            this.utenti.add(admin);
+            console.mostraMessaggio("[DB POPULATION] Amministratore creato: " + admin.getEmail());
 
             // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
 
@@ -350,7 +363,7 @@ public class Unicenter {
     }
 
     public CorsoDiLaurea trovaCorsoDiLaureaByNome(String nomeCorsoDiLaurea) {
-        return corsoDiLaureaController.trovaCorsoDiLaureaByNome(nomeCorsoDiLaurea);
+        return gestioneCorsiLaureaController.trovaCorsoDiLaureaByNome(nomeCorsoDiLaurea);
     }
 
     public boolean validaDataImmatricolazione() throws DataNonValidaException {
@@ -358,7 +371,55 @@ public class Unicenter {
     }
 
     public List<CorsoDiLaurea> getCorsiDiLaurea() {
-        return corsoDiLaureaController.getCorsiDiLaurea();
+        return gestioneCorsiLaureaController.getTuttiCorsi();
+    }
+
+    /**
+     * Restituisce solo i corsi attivi (non obsoleti) — usato dall'immatricolazione.
+     */
+    public List<CorsoDiLaurea> getCorsiDiLaureaAttivi() {
+        return gestioneCorsiLaureaController.getCorsiAttivi();
+    }
+
+    // =========================================================================
+    // UC4 - FACADE METHODS (Gestione Corsi di Laurea)
+    // =========================================================================
+
+    /**
+     * L'Amministratore crea un nuovo Corso di Laurea.
+     */
+    public CorsoDiLaurea creaCorsoDiLaurea(String nome, String tipologia, int anniAccademici) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può creare un corso di laurea.");
+        }
+        return gestioneCorsiLaureaController.creaCorsoDiLaurea(nome, tipologia, anniAccademici);
+    }
+
+    /**
+     * L'Amministratore aggiorna un Corso di Laurea esistente.
+     */
+    public boolean aggiornaCorsoDiLaurea(String codice, String nuovoNome, String nuovaTipologia) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può aggiornare un corso di laurea.");
+        }
+        return gestioneCorsiLaureaController.aggiornaCorsoDiLaurea(codice, nuovoNome, nuovaTipologia);
+    }
+
+    /**
+     * L'Amministratore rende obsoleto un Corso di Laurea (soft-delete).
+     */
+    public boolean rendiObsoletoCorsoDiLaurea(String codice) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può rendere obsoleto un corso di laurea.");
+        }
+        return gestioneCorsiLaureaController.rendiObsoletoCorsoDiLaurea(codice);
+    }
+
+    /**
+     * Cerca un Corso di Laurea per codice.
+     */
+    public CorsoDiLaurea trovaCorsoDiLaureaByCodice(String codice) {
+        return gestioneCorsiLaureaController.trovaCorsoDiLaureaByCodice(codice);
     }
 
     // =========================================================================

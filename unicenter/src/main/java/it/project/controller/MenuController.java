@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+import it.project.Amministratore;
 import it.project.Appello;
 import it.project.ConsoleUI;
 import it.project.CorsoDiLaurea;
@@ -18,6 +19,7 @@ import it.project.Studente;
 import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
+import it.project.factory.CorsoDiLaureaFactory;
 
 public class MenuController {
 
@@ -151,7 +153,8 @@ public class MenuController {
                     // Verifica scadenze (Estensione A: Silenzio Rifiuto)
                     int rifiutatiAuto = unicenter.verificaScadenzeVoti();
                     if (rifiutatiAuto > 0) {
-                        console.mostraMessaggio("[SISTEMA] " + rifiutatiAuto + " esito/i rifiutato/i automaticamente per scadenza.");
+                        console.mostraMessaggio(
+                                "[SISTEMA] " + rifiutatiAuto + " esito/i rifiutato/i automaticamente per scadenza.");
                     }
 
                     List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiStudente();
@@ -170,7 +173,8 @@ public class MenuController {
                     console.mostraMessaggio("Esiti in attesa di conferma:");
                     stampaEsiti(esitiPendenti);
 
-                    String idEsame = console.leggiStringa("Inserisci l'ID dell'esame per cui vuoi esprimere la scelta (0 per uscire): ");
+                    String idEsame = console.leggiStringa(
+                            "Inserisci l'ID dell'esame per cui vuoi esprimere la scelta (0 per uscire): ");
                     if ("0".equals(idEsame)) {
                         break;
                     }
@@ -222,7 +226,8 @@ public class MenuController {
                     } else {
                         console.mostraMessaggio("Esami superati: " + libretto.getNumeroEsamiSuperati());
                         console.mostraMessaggio("CFU totali: " + libretto.getTotaleCfu());
-                        console.mostraMessaggio(String.format("Media ponderata: %.2f/30", libretto.getMediaPonderata()));
+                        console.mostraMessaggio(
+                                String.format("Media ponderata: %.2f/30", libretto.getMediaPonderata()));
                         console.mostraMessaggio("------------------------------------------");
                         for (EsameSostenuto esame : libretto.getEsamiSuperati()) {
                             console.mostraMessaggio(
@@ -378,25 +383,24 @@ public class MenuController {
 
                     Appello appelloTrovato = null;
 
-                        String idApp = console.leggiStringa(
-                                "Seleziona il codice dell'appello da modificare (inserisci 0 per annullare): ");
+                    String idApp = console.leggiStringa(
+                            "Seleziona il codice dell'appello da modificare (inserisci 0 per annullare): ");
 
-                        if ("0".equals(idApp)) {
-                            console.mostraMessaggio("Operazione annullata.");
-                            break;
+                    if ("0".equals(idApp)) {
+                        console.mostraMessaggio("Operazione annullata.");
+                        break;
+                    }
+
+                    for (Appello a : appelliProfessore) {
+                        if (a.getCodiceAppello().equals(idApp)) {
+                            appelloTrovato = a;
                         }
+                    }
 
-                        for (Appello a : appelliProfessore) {
-                            if (a.getCodiceAppello().equals(idApp)) {
-                                appelloTrovato = a;
-                            }
-                        }
-
-                        if (appelloTrovato == null) {
-                            console.mostraErrore(" Codice appello non valido. Riprova.");
-                            break;
-                        }
-
+                    if (appelloTrovato == null) {
+                        console.mostraErrore(" Codice appello non valido. Riprova.");
+                        break;
+                    }
 
                     if (appelloTrovato != null) {
                         String nuovaDataOraStr = console
@@ -570,7 +574,8 @@ public class MenuController {
                         if (esito.getNomeStato().equals("Bocciato")) {
                             console.mostraMessaggio("(Voto insufficiente - Regola di Dominio 4)");
                         } else {
-                            console.mostraMessaggio("Scadenza conferma: " + esito.getScadenzaConferma().format(formatterStampa));
+                            console.mostraMessaggio(
+                                    "Scadenza conferma: " + esito.getScadenzaConferma().format(formatterStampa));
                         }
                     } catch (Exception e) {
                         console.mostraErrore(e.getMessage());
@@ -609,13 +614,13 @@ public class MenuController {
             if (unicenter.validaDataImmatricolazione()) {
                 console.mostraMessaggio(
                         "Finestra temporale per l'immatricolazione aperta. Procedi con l'immatricolazione.");
-                
-                List<CorsoDiLaurea> corsi = unicenter.getCorsiDiLaurea();
+
+                List<CorsoDiLaurea> corsi = unicenter.getCorsiDiLaureaAttivi();
                 if (corsi == null || corsi.isEmpty()) {
-                    console.mostraMessaggio("Nessun corso di laurea disponibile al momento.");
+                    console.mostraMessaggio("Nessun corso di laurea attivo disponibile al momento.");
                     return;
                 }
-                console.mostraMessaggio("Corsi di laurea disponibili:");
+                console.mostraMessaggio("Corsi di laurea disponibili (solo attivi):");
                 stampaCorsiDiLaurea(corsi);
             }
         } catch (DataNonValidaException e) {
@@ -639,7 +644,8 @@ public class MenuController {
         String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
 
         try {
-            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, codiceFiscale);
+            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea,
+                    codiceFiscale);
 
             console.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
             console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
@@ -672,6 +678,8 @@ public class MenuController {
             menuStudente();
         } else if (unicenter.getCurrentUser() instanceof Professore) {
             menuProfessore();
+        } else if (unicenter.getCurrentUser() instanceof Amministratore) {
+            menuAmministratore();
         }
         return;
     }
@@ -712,16 +720,121 @@ public class MenuController {
         for (Studente studente : studenti) {
             console.mostraMessaggio(
                     "Matricola: " + studente.getMatricola() + " | " +
-                    studente.getNome() + " - " + studente.getCognome() + " - " + studente.getCodiceFiscale() + "\n" +
+                            studente.getNome() + " - " + studente.getCognome() + " - " + studente.getCodiceFiscale()
+                            + "\n" +
                             "----------------------------------------");
         }
     }
 
     public void stampaCorsiDiLaurea(List<CorsoDiLaurea> corsi) {
         for (CorsoDiLaurea corso : corsi) {
+            String stato = corso.isObsoleto() ? "OBSOLETO" : "ATTIVO";
+            String tipologia = corso.getTipologia() != null ? corso.getTipologia() : "N/D";
             console.mostraMessaggio(
-                    "Nome Corso: " + corso.getNome() + "\n" +
+                    "Codice: " + corso.getId() + "\n" +
+                            "Nome Corso: " + corso.getNome() + "\n" +
+                            "Tipologia: " + tipologia + "\n" +
+                            "Durata: " + corso.getAnniAccademici() + " anni\n" +
+                            "Stato: " + stato + "\n" +
                             "----------------------------------------");
+        }
+    }
+
+    // =========================================================================
+    // UC4 - MENU AREA AMMINISTRATORE
+    // =========================================================================
+    private void menuAmministratore() {
+        boolean back = false;
+
+        while (!back) {
+            console.mostraMessaggio("\n------------------------------------------");
+            console.mostraMessaggio("        AREA AMMINISTRATORE         ");
+            console.mostraMessaggio("------------------------------------------");
+            console.mostraMessaggio("1. Crea nuovo Corso di Laurea");
+            console.mostraMessaggio("2. Rendi obsoleto un Corso di Laurea");
+            console.mostraMessaggio("3. Visualizza tutti i Corsi di Laurea");
+            console.mostraMessaggio("0. Torna al menu principale");
+
+            int scelta = console.leggiIntero("Seleziona un'opzione: ");
+
+            switch (scelta) {
+                // ============================================================
+                // UC4 - CREA NUOVO CORSO DI LAUREA
+                // ============================================================
+                case 1 -> {
+                    console.mostraMessaggio("\n--- Creazione Nuovo Corso di Laurea ---");
+                    String nome = console.leggiStringa("Inserisci il nome del corso (es. Ingegneria Informatica): ");
+
+                    console.mostraMessaggio("Tipologie disponibili:");
+                    String[] tipologie = CorsoDiLaureaFactory.getTipologieValide();
+                    for (int i = 0; i < tipologie.length; i++) {
+                        int anniPrevisti = CorsoDiLaureaFactory.getAnniPerTipologia(tipologie[i]);
+                        console.mostraMessaggio((i + 1) + ". " + tipologie[i] + " (" + anniPrevisti + " anni)");
+                    }
+
+                    int sceltaTipologia = console.leggiIntero("Seleziona la tipologia (1-" + tipologie.length + "): ");
+                    if (sceltaTipologia < 1 || sceltaTipologia > tipologie.length) {
+                        console.mostraErrore("Tipologia non valida.");
+                        break;
+                    }
+                    String tipologia = tipologie[sceltaTipologia - 1];
+                    int anniAccademici = CorsoDiLaureaFactory.getAnniPerTipologia(tipologia);
+
+                    try {
+                        CorsoDiLaurea nuovoCorso = unicenter.creaCorsoDiLaurea(nome, tipologia, anniAccademici);
+                        console.mostraMessaggio("\nCorso di Laurea creato con successo!");
+                        console.mostraMessaggio("Codice generato: " + nuovoCorso.getId());
+                        console.mostraMessaggio("Nome: " + nuovoCorso.getNome());
+                        console.mostraMessaggio("Tipologia: " + nuovoCorso.getTipologia());
+                        console.mostraMessaggio("Durata: " + nuovoCorso.getAnniAccademici() + " anni");
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+
+                // ============================================================
+                // UC4 - RENDI OBSOLETO CORSO DI LAUREA
+                // ============================================================
+                case 2 -> {
+                    console.mostraMessaggio("\n--- Rendi Obsoleto Corso di Laurea ---");
+                    List<CorsoDiLaurea> corsiAttivi = unicenter.getCorsiDiLaureaAttivi();
+                    if (corsiAttivi == null || corsiAttivi.isEmpty()) {
+                        console.mostraMessaggio("Nessun corso attivo da rendere obsoleto.");
+                        break;
+                    }
+                    console.mostraMessaggio("Corsi attivi:");
+                    stampaCorsiDiLaurea(corsiAttivi);
+
+                    String codice = console
+                            .leggiStringa("Inserisci il codice del corso da rendere obsoleto (0 per annullare): ");
+                    if ("0".equals(codice))
+                        break;
+
+                    try {
+                        unicenter.rendiObsoletoCorsoDiLaurea(codice);
+                        console.mostraMessaggio(
+                                "Corso reso obsoleto con successo. Non accetterà più nuove iscrizioni.");
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+
+                // ============================================================
+                // UC4 - VISUALIZZA TUTTI I CORSI
+                // ============================================================
+                case 3 -> {
+                    console.mostraMessaggio("\n--- Tutti i Corsi di Laurea ---");
+                    List<CorsoDiLaurea> tuttiCorsi = unicenter.getCorsiDiLaurea();
+                    if (tuttiCorsi == null || tuttiCorsi.isEmpty()) {
+                        console.mostraMessaggio("Nessun corso di laurea presente nel sistema.");
+                    } else {
+                        stampaCorsiDiLaurea(tuttiCorsi);
+                    }
+                }
+
+                case 0 -> back = true;
+                default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
+            }
         }
     }
 
