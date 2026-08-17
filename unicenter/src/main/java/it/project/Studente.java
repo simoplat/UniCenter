@@ -3,11 +3,13 @@ package it.project;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.project.observer.ObserverAppello;
 import it.project.strategy.ICalcoloTasseStrategy;
 
 public class Studente extends Utente implements ObserverAppello {
     private List<Notifica> notifiche;
     private Carriera carriera;
+    private Libretto libretto;
 
     public Studente(String matricola, String nome,
             String cognome, String email,
@@ -18,6 +20,7 @@ public class Studente extends Utente implements ObserverAppello {
         this.setEmail(email);
         this.notifiche = new ArrayList<>();
         this.carriera = new Carriera(matricola, idCorsoDiLaurea);
+        this.libretto = new Libretto();
     }
 
     public void aggiungiNotifica(Notifica notifica) {
@@ -43,7 +46,8 @@ public class Studente extends Utente implements ObserverAppello {
 
     @Override
     public String toString() {
-        return "Studente [matricola=" + this.carriera.getMatricola() + ", nome=" + getNome() + ", cognome=" + getCognome()
+        return "Studente [matricola=" + this.carriera.getMatricola() + ", nome=" + getNome() + ", cognome="
+                + getCognome()
                 + ", codiceFiscale=" + getCodiceFiscale() + ", notifiche=" + notifiche + "]";
     }
 
@@ -65,6 +69,10 @@ public class Studente extends Utente implements ObserverAppello {
 
     public void setTassePagate(boolean tassePagate) {
         this.carriera.setTassePagate(tassePagate);
+    }
+
+    public Libretto getLibretto() {
+        return this.libretto;
     }
 
     public void calcolaTasse(ICalcoloTasseStrategy strategy, double tassaBase) {

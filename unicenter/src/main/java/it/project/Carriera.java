@@ -1,13 +1,9 @@
 package it.project;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import it.project.strategy.ICalcoloTasseStrategy;
 
 public class Carriera {
     private String matricola;
-    private Map<Materia, Voto> libretto;
     private String idCorsoDiLaurea;
     private boolean tassePagate;
     private double totaleTasse;
@@ -20,7 +16,6 @@ public class Carriera {
         this.matricola = matricola;
         this.idCorsoDiLaurea = idCorsoDiLaurea;
         this.pianoStudi = new PianoDiStudi();
-        this.libretto = new HashMap<>();
     }
 
     @Override

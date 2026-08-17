@@ -59,4 +59,8 @@ public class GestoreMaterieController {
         List<String> materieProf = materieDelProfessore.get(idProfessore);
         return materieProf != null && materieProf.contains(idMateria);
     }
+
+    public Materia trovaMaterieByCodice(String codiceMateria) {
+        return materie.get(codiceMateria);
+    }
 }

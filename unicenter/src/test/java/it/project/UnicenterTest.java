@@ -15,7 +15,6 @@ import org.mockito.MockedStatic;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.UtenteNonTrovatoException;
 
-
 class UnicenterTest {
 
     private static Unicenter unicenter;
@@ -187,7 +186,7 @@ class UnicenterTest {
         String cf = "CF-" + UUID.randomUUID();
 
         Studente nuovo = unicenter.immatricolaStudente("Nuovo", "Studente", email, "pass123",
-                "Ingegneria Informatica",cf);
+                "Ingegneria Informatica", cf);
 
         assertNotNull(nuovo);
         assertNotNull(nuovo.getMatricola());

@@ -17,6 +17,7 @@ public class Unicenter {
     private final GestioneAppelliController gestioneAppelliController;
     private final GestoreMaterieController gestoreMaterie;
     private final CorsoDiLaureaController corsoDiLaureaController;
+    private final GestioneVotoController gestioneVotoController;
     private final MenuController menuController;
     private Utente currentUser = null;
 
@@ -36,6 +37,9 @@ public class Unicenter {
 
         this.gestoreMaterie = new GestoreMaterieController();
         this.corsoDiLaureaController = new CorsoDiLaureaController(this);
+
+        // 3. Inizializzazione Controller UC3 (Gestione Voto)
+        this.gestioneVotoController = new GestioneVotoController(this, this.gestoreMaterie);
 
     }
 
@@ -122,6 +126,12 @@ public class Unicenter {
     }
 
     public boolean disiscriviStudenteDaAppello(String codiceAppello) {
+        // Vincolo: la disiscrizione è bloccata se la data dell'esame è già passata
+        Appello appello = gestioneAppelliController.trovaAppelloByIdAppello(codiceAppello);
+        if (appello != null && appello.getDataOra().isBefore(LocalDateTime.now())) {
+            console.mostraMessaggio("[UNICENTER] Impossibile annullare la prenotazione: l'esame è già in corso o si è già svolto.");
+            return false;
+        }
         if (gestioneAppelliController.disiscriviStudente((Studente) this.currentUser, codiceAppello)) {
             return true;
         }
@@ -212,6 +222,24 @@ public class Unicenter {
             Notifica notifica = new Notifica("Ciao", "ti sei iscritto", LocalDateTime.now());
             st1.aggiungiNotifica(notifica);
 
+            // ===============================================================
+            // UC3 - DATI DI TEST: Pubblicazione esiti esame
+            // ===============================================================
+
+            // Esito 1: Voto sufficiente per st1 su IS01 (In attesa di conferma)
+            this.gestioneVotoController.pubblicaEsito(
+                    "APP-00001", st1.getMatricola(), "IS01",
+                    profRossi.getIdProfessore(), 28, false, 7);
+            console.mostraMessaggio("[UC3 TEST] Pubblicato esito IS01 per " + st1.getMatricola() + ": 28/30");
+
+            // Esito 2: Voto insufficiente per st2 su IS01 (Bocciato automaticamente - RD4)
+            st2.setTassePagate(true); // Per permettere l'iscrizione di test
+            this.gestioneAppelliController.iscriviStudente(st2, "APP-00001");
+            this.gestioneVotoController.pubblicaEsito(
+                    "APP-00001", st2.getMatricola(), "IS01",
+                    profRossi.getIdProfessore(), 15, false, 7);
+            console.mostraMessaggio("[UC3 TEST] Pubblicato esito IS01 per " + st2.getMatricola() + ": 15/30 (Bocciato)");
+
         
         } 
         catch (DataNonValidaException e) {
@@ -237,6 +265,14 @@ public class Unicenter {
                 .filter(u -> u instanceof Studente)
                 .map(u -> (Studente) u)
                 .filter(s -> s.getMatricola().equalsIgnoreCase(matricola))
+                .findFirst();
+    }
+
+    public Optional<Professore> trovaProfessore(String idProfessore) {
+        return utenti.stream()
+                .filter(u -> u instanceof Professore)
+                .map(u -> (Professore) u)
+                .filter(p -> p.getIdProfessore().equals(idProfessore))
                 .findFirst();
     }
 
@@ -323,6 +359,93 @@ public class Unicenter {
 
     public List<CorsoDiLaurea> getCorsiDiLaurea() {
         return corsoDiLaureaController.getCorsiDiLaurea();
+    }
+
+    // =========================================================================
+    // UC3 - FACADE METHODS (Gestione Voto)
+    // =========================================================================
+
+    /**
+     * Il Professore pubblica l'esito di un esame.
+     */
+    public EsameSostenuto pubblicaEsitoEsame(String codiceAppello, String matricolaStudente,
+                                              String codiceMateria, int votoNumerico,
+                                              boolean lode, int giorniScadenza) {
+        if (!(currentUser instanceof Professore)) {
+            throw new IllegalStateException("Solo un professore può pubblicare un esito.");
+        }
+        Professore professore = (Professore) currentUser;
+        return gestioneVotoController.pubblicaEsito(
+                codiceAppello, matricolaStudente, codiceMateria,
+                professore.getIdProfessore(), votoNumerico, lode, giorniScadenza);
+    }
+
+    /**
+     * Lo Studente accetta il voto.
+     */
+    public boolean accettaVoto(String idEsame) {
+        return gestioneVotoController.accettaVoto(idEsame);
+    }
+
+    /**
+     * Lo Studente rifiuta il voto.
+     */
+    public boolean rifiutaVoto(String idEsame) {
+        return gestioneVotoController.rifiutaVoto(idEsame);
+    }
+
+    /**
+     * Verifica le scadenze per il silenzio-rifiuto (Estensione A).
+     */
+    public int verificaScadenzeVoti() {
+        return gestioneVotoController.verificaScadenze();
+    }
+
+    /**
+     * Restituisce gli esiti pendenti dello studente corrente.
+     */
+    public List<EsameSostenuto> getEsitiPendentiStudente() {
+        if (!(currentUser instanceof Studente)) {
+            return Collections.emptyList();
+        }
+        Studente studente = (Studente) currentUser;
+        return gestioneVotoController.trovaEsitiPendentiByStudente(studente.getMatricola());
+    }
+
+    /**
+     * Restituisce tutti gli esiti dello studente corrente (qualsiasi stato).
+     */
+    public List<EsameSostenuto> getTuttiEsitiStudente() {
+        if (!(currentUser instanceof Studente)) {
+            return Collections.emptyList();
+        }
+        Studente studente = (Studente) currentUser;
+        return gestioneVotoController.trovaEsitiByStudente(studente.getMatricola());
+    }
+
+    /**
+     * Restituisce tutti gli esiti pubblicati dal professore corrente.
+     */
+    public List<EsameSostenuto> getEsitiProfessore() {
+        if (!(currentUser instanceof Professore)) {
+            return Collections.emptyList();
+        }
+        Professore professore = (Professore) currentUser;
+        return gestioneVotoController.trovaEsitiByProfessore(professore.getIdProfessore());
+    }
+
+    /**
+     * Restituisce il libretto dello studente corrente.
+     */
+    public Libretto getLibrettoStudente() {
+        if (!(currentUser instanceof Studente)) {
+            return null;
+        }
+        return ((Studente) currentUser).getLibretto();
+    }
+
+    public GestoreMaterieController getGestoreMaterie() {
+        return gestoreMaterie;
     }
 
 }

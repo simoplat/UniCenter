@@ -21,6 +21,10 @@ public final class Voto {
     }
 
 
+    public Integer getValoreNumerico() {
+        return valoreNumerico;
+    }
+
     public boolean haLode() {
         return lode;
     }

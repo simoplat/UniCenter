@@ -13,6 +13,7 @@ public class Materia {
 
     public String getCodiceMateria() { return codiceMateria; }
     public String getNome() { return nome; }
+    public int getCfu() { return cfu; }
 
     @Override
     public String toString() {

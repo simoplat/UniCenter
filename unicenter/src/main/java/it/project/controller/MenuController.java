@@ -9,6 +9,8 @@ import java.util.List;
 import it.project.Appello;
 import it.project.ConsoleUI;
 import it.project.CorsoDiLaurea;
+import it.project.EsameSostenuto;
+import it.project.Libretto;
 import it.project.Materia;
 import it.project.Notifica;
 import it.project.Professore;
@@ -67,6 +69,8 @@ public class MenuController {
             console.mostraMessaggio("1. Iscriviti ad un appello d'esame");
             console.mostraMessaggio("2. Visualizza gli appelli a cui sei prenotato");
             console.mostraMessaggio("3. Visualizza notifiche");
+            console.mostraMessaggio("4. Gestione esiti esami (Accetta/Rifiuta voto)");
+            console.mostraMessaggio("5. Visualizza libretto");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -137,6 +141,101 @@ public class MenuController {
                         }
                     }
                 }
+
+                // ============================================================
+                // UC3 - GESTIONE ESITI ESAMI (Accetta / Rifiuta voto)
+                // ============================================================
+                case 4 -> {
+                    console.mostraMessaggio("\n--- Gestione Esiti Esami ---");
+
+                    // Verifica scadenze (Estensione A: Silenzio Rifiuto)
+                    int rifiutatiAuto = unicenter.verificaScadenzeVoti();
+                    if (rifiutatiAuto > 0) {
+                        console.mostraMessaggio("[SISTEMA] " + rifiutatiAuto + " esito/i rifiutato/i automaticamente per scadenza.");
+                    }
+
+                    List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiStudente();
+                    if (esitiPendenti == null || esitiPendenti.isEmpty()) {
+                        console.mostraMessaggio("Non hai esiti in attesa di conferma.");
+
+                        // Mostra anche lo storico completo
+                        List<EsameSostenuto> tuttiEsiti = unicenter.getTuttiEsitiStudente();
+                        if (tuttiEsiti != null && !tuttiEsiti.isEmpty()) {
+                            console.mostraMessaggio("\n--- Storico Esiti ---");
+                            stampaEsiti(tuttiEsiti);
+                        }
+                        break;
+                    }
+
+                    console.mostraMessaggio("Esiti in attesa di conferma:");
+                    stampaEsiti(esitiPendenti);
+
+                    String idEsame = console.leggiStringa("Inserisci l'ID dell'esame per cui vuoi esprimere la scelta (0 per uscire): ");
+                    if ("0".equals(idEsame)) {
+                        break;
+                    }
+
+                    // Verifica che l'ID appartenga agli esiti pendenti
+                    boolean esameValido = false;
+                    for (EsameSostenuto e : esitiPendenti) {
+                        if (e.getIdEsame().equals(idEsame)) {
+                            esameValido = true;
+                            break;
+                        }
+                    }
+                    if (!esameValido) {
+                        console.mostraErrore("ID esame non valido o non in attesa di conferma.");
+                        break;
+                    }
+
+                    console.mostraMessaggio("1. Accetta il voto");
+                    console.mostraMessaggio("2. Rifiuta il voto");
+                    int sceltaVoto = console.leggiIntero("Seleziona un'opzione: ");
+
+                    switch (sceltaVoto) {
+                        case 1 -> {
+                            if (unicenter.accettaVoto(idEsame)) {
+                                console.mostraMessaggio("Voto ACCETTATO con successo! Registrato nel libretto.");
+                            } else {
+                                console.mostraMessaggio("Impossibile accettare il voto.");
+                            }
+                        }
+                        case 2 -> {
+                            if (unicenter.rifiutaVoto(idEsame)) {
+                                console.mostraMessaggio("Voto RIFIUTATO. Potrai iscriverti a un appello futuro.");
+                            } else {
+                                console.mostraMessaggio("Impossibile rifiutare il voto.");
+                            }
+                        }
+                        default -> console.mostraMessaggio("Opzione non valida.");
+                    }
+                }
+
+                // ============================================================
+                // UC3 - VISUALIZZA LIBRETTO (Information Expert)
+                // ============================================================
+                case 5 -> {
+                    console.mostraMessaggio("\n--- Il tuo Libretto ---");
+                    Libretto libretto = unicenter.getLibrettoStudente();
+                    if (libretto == null || libretto.getNumeroEsamiSuperati() == 0) {
+                        console.mostraMessaggio("Il libretto è vuoto. Nessun esame registrato.");
+                    } else {
+                        console.mostraMessaggio("Esami superati: " + libretto.getNumeroEsamiSuperati());
+                        console.mostraMessaggio("CFU totali: " + libretto.getTotaleCfu());
+                        console.mostraMessaggio(String.format("Media ponderata: %.2f/30", libretto.getMediaPonderata()));
+                        console.mostraMessaggio("------------------------------------------");
+                        for (EsameSostenuto esame : libretto.getEsamiSuperati()) {
+                            console.mostraMessaggio(
+                                    "Materia: " + esame.getCodiceMateria()
+                                            + " | Voto: " + esame.getVotoNumerico()
+                                            + (esame.isLode() ? " e Lode" : "")
+                                            + " | CFU: " + esame.getCfu()
+                                            + " | Data: " + esame.getDataRegistrazione().format(formatterStampa));
+                        }
+                        console.mostraMessaggio("------------------------------------------");
+                    }
+                }
+
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
@@ -157,6 +256,8 @@ public class MenuController {
             console.mostraMessaggio("2. Visualizza iscritti ad un appello");
             console.mostraMessaggio("3. Modifica appello.");
             console.mostraMessaggio("4. Elimina appello d'esame");
+            console.mostraMessaggio("5. Pubblica esito esame (UC3)");
+            console.mostraMessaggio("6. Visualizza esiti pubblicati");
             console.mostraMessaggio("0. Torna al menu principale");
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
@@ -387,6 +488,108 @@ public class MenuController {
                         }
                     }
                 }
+
+                // ============================================================
+                // UC3 - PUBBLICA ESITO ESAME
+                // ============================================================
+                case 5 -> {
+                    console.mostraMessaggio("\n--- Pubblica Esito Esame ---");
+                    console.mostraMessaggio("------------------------------------------");
+
+                    // Mostra gli appelli del professore
+                    List<Appello> appelliProfessore = unicenter.trovaAppelliProfessore();
+                    if (appelliProfessore == null || appelliProfessore.isEmpty()) {
+                        console.mostraMessaggio("Non hai appelli disponibili.");
+                        break;
+                    }
+                    StampaAppelli(appelliProfessore);
+
+                    String codAppello = console.leggiStringa("Inserisci il codice dell'appello: ");
+
+                    // Verifica che l'appello appartenga al professore
+                    boolean appelloValido = false;
+                    for (Appello a : appelliProfessore) {
+                        if (a.getCodiceAppello().equals(codAppello)) {
+                            appelloValido = true;
+                            break;
+                        }
+                    }
+                    if (!appelloValido) {
+                        console.mostraErrore("Codice appello non valido.");
+                        break;
+                    }
+
+                    // Mostra gli studenti iscritti
+                    List<Studente> iscritti = unicenter.trovaIscrittiByAppello(codAppello);
+                    if (iscritti == null || iscritti.isEmpty()) {
+                        console.mostraMessaggio("Non ci sono studenti iscritti a questo appello.");
+                        break;
+                    }
+                    console.mostraMessaggio("\nStudenti iscritti:");
+                    stampaStudenti(iscritti);
+
+                    String matricola = console.leggiStringa("Inserisci la matricola dello studente: ");
+
+                    // Verifica che lo studente sia iscritto
+                    boolean studenteValido = false;
+                    String codiceMateriaPubblica = null;
+                    for (Studente s : iscritti) {
+                        if (s.getMatricola().equals(matricola)) {
+                            studenteValido = true;
+                            break;
+                        }
+                    }
+                    if (!studenteValido) {
+                        console.mostraErrore("Matricola non trovata tra gli iscritti.");
+                        break;
+                    }
+
+                    // Recupera il codice materia dall'appello
+                    for (Appello a : appelliProfessore) {
+                        if (a.getCodiceAppello().equals(codAppello)) {
+                            codiceMateriaPubblica = a.getCodiceMateria();
+                            break;
+                        }
+                    }
+
+                    int voto = console.leggiIntero("Inserisci il voto (0-30): ");
+                    boolean lode = false;
+                    if (voto == 30) {
+                        String lodeStr = console.leggiStringa("Lode? (s/n): ");
+                        lode = lodeStr.equalsIgnoreCase("s");
+                    }
+
+                    try {
+                        EsameSostenuto esito = unicenter.pubblicaEsitoEsame(
+                                codAppello, matricola, codiceMateriaPubblica,
+                                voto, lode, 7 // 7 giorni di scadenza per la conferma
+                        );
+                        console.mostraMessaggio("Esito pubblicato con successo!");
+                        console.mostraMessaggio("ID Esame: " + esito.getIdEsame());
+                        console.mostraMessaggio("Stato: " + esito.getNomeStato());
+                        if (esito.getNomeStato().equals("Bocciato")) {
+                            console.mostraMessaggio("(Voto insufficiente - Regola di Dominio 4)");
+                        } else {
+                            console.mostraMessaggio("Scadenza conferma: " + esito.getScadenzaConferma().format(formatterStampa));
+                        }
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+
+                // ============================================================
+                // UC3 - VISUALIZZA ESITI PUBBLICATI
+                // ============================================================
+                case 6 -> {
+                    console.mostraMessaggio("\n--- Esiti Pubblicati ---");
+                    List<EsameSostenuto> esitiProf = unicenter.getEsitiProfessore();
+                    if (esitiProf == null || esitiProf.isEmpty()) {
+                        console.mostraMessaggio("Non hai pubblicato nessun esito.");
+                    } else {
+                        stampaEsiti(esitiProf);
+                    }
+                }
+
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
@@ -508,6 +711,7 @@ public class MenuController {
     public void stampaStudenti(List<Studente> studenti) {
         for (Studente studente : studenti) {
             console.mostraMessaggio(
+                    "Matricola: " + studente.getMatricola() + " | " +
                     studente.getNome() + " - " + studente.getCognome() + " - " + studente.getCodiceFiscale() + "\n" +
                             "----------------------------------------");
         }
@@ -518,6 +722,25 @@ public class MenuController {
             console.mostraMessaggio(
                     "Nome Corso: " + corso.getNome() + "\n" +
                             "----------------------------------------");
+        }
+    }
+
+    // =========================================================================
+    // UC3 - METODO DI STAMPA ESITI
+    // =========================================================================
+    public void stampaEsiti(List<EsameSostenuto> esiti) {
+        for (EsameSostenuto esame : esiti) {
+            String scadenzaStr = esame.getNomeStato().equals("In attesa di conferma")
+                    ? " | Scadenza: " + esame.getScadenzaConferma().format(formatterStampa)
+                    : "";
+            console.mostraMessaggio(
+                    "ID: " + esame.getIdEsame()
+                            + " | Materia: " + esame.getCodiceMateria()
+                            + " | Voto: " + esame.getVotoNumerico()
+                            + (esame.isLode() ? " e Lode" : "")
+                            + " | Stato: " + esame.getNomeStato()
+                            + scadenzaStr
+                            + "\n----------------------------------------");
         }
     }
 
