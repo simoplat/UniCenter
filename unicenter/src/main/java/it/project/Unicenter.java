@@ -58,7 +58,8 @@ public class Unicenter {
     }
 
     // Immatricolazione
-    public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso, String codiceFiscale) {
+    public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso,
+            String codiceFiscale) {
         boolean emailEsiste = esisteUtente(email);
         boolean cfEsiste = esisteCodiceFiscale(codiceFiscale);
 
@@ -75,22 +76,25 @@ public class Unicenter {
         CorsoDiLaurea corsoTrovato = trovaCorsoDiLaureaByNome(corso);
         if (corsoTrovato != null && corsoTrovato.isObsoleto()) {
             throw new IllegalArgumentException(
-                "Impossibile immatricolarsi: il corso '" + corso + "' è obsoleto e non accetta nuove iscrizioni.");
+                    "Impossibile immatricolarsi: il corso '" + corso + "' è obsoleto e non accetta nuove iscrizioni.");
         }
 
-        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso, codiceFiscale);
+        Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso,
+                codiceFiscale);
         utenti.add(nuovoStudente);
         return nuovoStudente;
     }
 
     // Inserire Appello d'Esame
-    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
-        return gestioneAppelliController.creaNuovoAppello(codiceMateria, dataOraStr, aula, postiDisponibili, vincoloLetteraCognome, termineIscrizione);
+    public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili,
+            String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
+        return gestioneAppelliController.creaNuovoAppello(codiceMateria, dataOraStr, aula, postiDisponibili,
+                vincoloLetteraCognome, termineIscrizione);
     }
 
     // iscriviStudenteAdAppello , iscrizione appello
     public List<Appello> trovaAppelliStudentePrenotabili() {
-        
+
         if (!(this.currentUser instanceof Studente) || this.currentUser == null) {
             return Collections.emptyList();
         }
@@ -124,7 +128,7 @@ public class Unicenter {
     }
 
     public List<Studente> trovaIscrittiByAppello(String codiceAppello) {
-        
+
         return gestioneAppelliController.trovaIscrittiByIdAppello(codiceAppello);
     }
 
@@ -132,12 +136,11 @@ public class Unicenter {
         return gestioneAppelliController.iscriviStudente((Studente) this.currentUser, codiceAppello);
     }
 
-    public boolean disiscriviStudenteDaAppello(String codiceAppello) {
+    public boolean disiscriviStudenteDaAppello(String codiceAppello) throws Exception {
         // Vincolo: la disiscrizione è bloccata se la data dell'esame è già passata
         Appello appello = gestioneAppelliController.trovaAppelloByIdAppello(codiceAppello);
         if (appello != null && appello.getDataOra().isBefore(LocalDateTime.now())) {
-            console.mostraMessaggio("[UNICENTER] Impossibile annullare la prenotazione: l'esame è già in corso o si è già svolto.");
-            return false;
+            throw new Exception("Impossibile annullare la prenotazione: l'esame è già in corso o si è già svolto.");
         }
         if (gestioneAppelliController.disiscriviStudente((Studente) this.currentUser, codiceAppello)) {
             return true;
@@ -194,7 +197,7 @@ public class Unicenter {
 
             // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
             Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "pass123",
-                    "Ingegneria Informatica",  "CODICEFISCALEMARIOROSSI");
+                    "Ingegneria Informatica", "CODICEFISCALEMARIOROSSI");
             st1.getPianoDiStudi().aggiungiMateria("IS01");
             st1.getPianoDiStudi().aggiungiMateria("BD01");
             st1.setTassePagate(true); // Tasse Saldate
@@ -213,9 +216,8 @@ public class Unicenter {
             st3.setTassePagate(true);
             console.mostraMessaggio(st3.toString());
 
-
             Studente st4 = this.immatricolaStudente("Simo", "plata", "simo.plata@studenti.it", "pass123",
-                    "Ingegneria Informatica","SIMO");
+                    "Ingegneria Informatica", "SIMO");
             console.mostraMessaggio(st4.toString());
 
             // CREAZIONE APPELLI D'ESAME (UC1 + Factory Method + CodiceAppelloGenerator)
@@ -223,12 +225,16 @@ public class Unicenter {
             LocalDateTime dataAppello2 = LocalDateTime.now().plusDays(20).withHour(14).withMinute(30);
 
             // Appello 1: Ingegneria del Software (IS01) - 15 posti, fascia cognome R-Z
-            //String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione
-            this.gestioneAppelliController.creaNuovoAppello("IS01", dataAppello1, "Aula Magna", 15, "A-Z", LocalDate.now().plusDays(10));
+            // String codiceMateria, LocalDateTime dataOraStr, String aula, int
+            // postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione
+            this.gestioneAppelliController.creaNuovoAppello("IS01", dataAppello1, "Aula Magna", 15, "A-Z",
+                    LocalDate.now().plusDays(10));
 
-            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 101", 10, "A-Z", LocalDate.now().plusDays(10));
+            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 101", 10, "A-Z",
+                    LocalDate.now().plusDays(10));
 
-            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 102", 20, "A-Z", LocalDate.now().plusDays(10));
+            this.gestioneAppelliController.creaNuovoAppello("BD01", dataAppello2, "Aula 102", 20, "A-Z",
+                    LocalDate.now().plusDays(10));
 
             this.gestioneAppelliController.iscriviStudente(st1, "APP-00001");
 
@@ -251,14 +257,12 @@ public class Unicenter {
             this.gestioneVotoController.pubblicaEsito(
                     "APP-00001", st2.getMatricola(), "IS01",
                     profRossi.getIdProfessore(), 15, false, 7);
-            console.mostraMessaggio("[UC3 TEST] Pubblicato esito IS01 per " + st2.getMatricola() + ": 15/30 (Bocciato)");
+            console.mostraMessaggio(
+                    "[UC3 TEST] Pubblicato esito IS01 per " + st2.getMatricola() + ": 15/30 (Bocciato)");
 
-        
-        } 
-        catch (DataNonValidaException e) {
+        } catch (DataNonValidaException e) {
             console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
         }
 
@@ -354,8 +358,10 @@ public class Unicenter {
         return Collections.emptyList();
     }
 
-    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili, String vincolo, LocalDate dataTermineIscrizione) throws Exception {
-        return gestioneAppelliController.modificaAppello(codiceAppello, dataOra, aula, postiDisponibili, vincolo, dataTermineIscrizione);
+    public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili,
+            String vincolo, LocalDate dataTermineIscrizione) throws Exception {
+        return gestioneAppelliController.modificaAppello(codiceAppello, dataOra, aula, postiDisponibili, vincolo,
+                dataTermineIscrizione);
     }
 
     public boolean eliminaAppello(String codiceAppello) {
@@ -430,8 +436,8 @@ public class Unicenter {
      * Il Professore pubblica l'esito di un esame.
      */
     public EsameSostenuto pubblicaEsitoEsame(String codiceAppello, String matricolaStudente,
-                                              String codiceMateria, int votoNumerico,
-                                              boolean lode, int giorniScadenza) {
+            String codiceMateria, int votoNumerico,
+            boolean lode, int giorniScadenza) {
         if (!(currentUser instanceof Professore)) {
             throw new IllegalStateException("Solo un professore può pubblicare un esito.");
         }
@@ -510,7 +516,8 @@ public class Unicenter {
     }
 
     /**
-     * Restituisce gli esiti pendenti ("In attesa di conferma") per uno studente dato la matricola.
+     * Restituisce gli esiti pendenti ("In attesa di conferma") per uno studente
+     * dato la matricola.
      * Utilizzato dal GestioneAppelliController per impedire prenotazioni
      * ad appelli di materie con esiti ancora pendenti.
      *

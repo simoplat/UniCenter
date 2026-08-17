@@ -85,38 +85,35 @@ class GestioneAppelliControllerTest {
 
     @Test
     void creaNuovoAppello_conDataPassata_lanciaDataNonValidaException() {
-        assertThrows(DataNonValidaException.class, () ->
-                controller.creaNuovoAppello(MATERIA, LocalDateTime.now().minusDays(1),
+        assertThrows(DataNonValidaException.class,
+                () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().minusDays(1),
                         "Aula 1", 10, "A-Z", LocalDate.now().plusDays(1)));
     }
 
     @Test
     void creaNuovoAppello_conDataNulla_lanciaDataNonValidaException() {
-        assertThrows(DataNonValidaException.class, () ->
-                controller.creaNuovoAppello(MATERIA, null,
-                        "Aula 1", 10, "A-Z", LocalDate.now().plusDays(1)));
+        assertThrows(DataNonValidaException.class, () -> controller.creaNuovoAppello(MATERIA, null,
+                "Aula 1", 10, "A-Z", LocalDate.now().plusDays(1)));
     }
 
     @Test
     void creaNuovoAppello_conTermineIscrizioneDopoDataAppello_lanciaEccezione() {
         LocalDateTime dataAppello = LocalDateTime.now().plusDays(2);
-        assertThrows(DataNonValidaException.class, () ->
-                controller.creaNuovoAppello(MATERIA, dataAppello,
-                        "Aula 1", 10, "A-Z", dataAppello.toLocalDate().plusDays(1)));
+        assertThrows(DataNonValidaException.class, () -> controller.creaNuovoAppello(MATERIA, dataAppello,
+                "Aula 1", 10, "A-Z", dataAppello.toLocalDate().plusDays(1)));
     }
 
     @Test
     void creaNuovoAppello_conTermineIscrizioneNelPassato_lanciaEccezione() {
-        assertThrows(DataNonValidaException.class, () ->
-                controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(5),
+        assertThrows(DataNonValidaException.class,
+                () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(5),
                         "Aula 1", 10, "A-Z", LocalDate.now().minusDays(1)));
     }
 
     @Test
     void creaNuovoAppello_conPostiNonPositivi_lanciaPostiNonValidi() {
-        assertThrows(PostiNonValidi.class, () ->
-                controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
-                        "Aula 1", 0, "A-Z", LocalDate.now().plusDays(1)));
+        assertThrows(PostiNonValidi.class, () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
+                "Aula 1", 0, "A-Z", LocalDate.now().plusDays(1)));
     }
 
     @Test
@@ -126,8 +123,8 @@ class GestioneAppelliControllerTest {
         when(unicenterMock.getCurrentUser()).thenReturn(prof);
         when(unicenterMock.isProfessoreAbilitatoAMateria(MATERIA)).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () ->
-                controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
+        assertThrows(IllegalArgumentException.class,
+                () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
                         "Aula 1", 10, "A-Z", LocalDate.now().plusDays(1)));
     }
 
@@ -179,8 +176,8 @@ class GestioneAppelliControllerTest {
 
     @Test
     void creaNuovoAppello_vincoloFormatoNonValido_lanciaIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () ->
-                controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
+        assertThrows(IllegalArgumentException.class,
+                () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
                         "Aula 1", 10, "ABC", LocalDate.now().plusDays(1)));
     }
 
@@ -272,7 +269,7 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void disiscriviStudente_appelloInesistente_restituisceFalse() {
+    void disiscriviStudente_appelloInesistente_restituisceFalse() throws Exception {
         Studente studente = creaStudente("M007");
         assertFalse(controller.disiscriviStudente(studente, "NON_ESISTE"));
     }
@@ -423,9 +420,8 @@ class GestioneAppelliControllerTest {
         appello.aggiungiIscritto(creaStudente("M013"));
         aggiungiAppelloDirettamente(appello);
 
-        assertThrows(PostiNonValidi.class, () ->
-                controller.modificaAppello("APP015", LocalDateTime.now().plusDays(5),
-                        "Aula 1", 1, "A-Z", LocalDate.now().plusDays(1)));
+        assertThrows(PostiNonValidi.class, () -> controller.modificaAppello("APP015", LocalDateTime.now().plusDays(5),
+                "Aula 1", 1, "A-Z", LocalDate.now().plusDays(1)));
     }
 
     // =================================================================

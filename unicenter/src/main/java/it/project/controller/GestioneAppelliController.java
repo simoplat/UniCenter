@@ -98,9 +98,10 @@ public class GestioneAppelliController {
         }
 
         // if (!(unicenter.getCurrentUser() instanceof Professore)) {
-        //    throw new IllegalArgumentException("Solo un professore autenticato può gestire gli appelli.");
+        // throw new IllegalArgumentException("Solo un professore autenticato può
+        // gestire gli appelli.");
         // }
-        
+
         if (unicenter.getCurrentUser() != null && !unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
             throw new IllegalArgumentException("Il professore non è abilitato a gestire questa materia.");
         }
@@ -123,7 +124,8 @@ public class GestioneAppelliController {
         List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
         for (EsameSostenuto esame : esitiPendenti) {
             if (esame.getCodiceMateria().equals(codiceMateria)) {
-                console.mostraErrore("Hai un esito pendente di questa materia. Non puoi prenotarti ad un altro appello.");
+                console.mostraErrore(
+                        "Hai un esito pendente di questa materia. Non puoi prenotarti ad un altro appello.");
                 return false;
             }
         }
@@ -147,11 +149,24 @@ public class GestioneAppelliController {
 
     }
 
-    public boolean disiscriviStudente(Studente studente, String codiceAppello) {
+    public boolean disiscriviStudente(Studente studente, String codiceAppello) throws Exception {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
             return false; // Appello non trovato
         }
+
+        // Vincolo: la disiscrizione è bloccata se lo studente ha un esito pendente per
+        // questo appello
+        List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
+        if (esitiPendenti != null && !esitiPendenti.isEmpty()) {
+            for (EsameSostenuto esame : esitiPendenti) {
+                if (esame.getCodiceAppello().equals(codiceAppello)) {
+                    throw new Exception(
+                            "Impossibile annullare la prenotazione: hai un esito pendente per questo appello. Devi prima accettare o rifiutare il voto.");
+                }
+            }
+        }
+
         if (appello.getIscritti().contains(studente)) {
             appello.rimuoviIscritto(studente);
             String messaggio = "Ti sei disiscritto dall'appello: " + appello.toString();

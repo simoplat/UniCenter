@@ -117,10 +117,14 @@ public class MenuController {
                         case 1 -> {
                             String codiceAppello = console.leggiStringa(
                                     "Inserisci il codice dell'appello da cui vuoi eliminare la prenotazione: ");
-                            if (!unicenter.disiscriviStudenteDaAppello(codiceAppello)) {
-                                console.mostraMessaggio("Codice appello non valido. Riprova.");
-                            } else {
-                                console.mostraMessaggio("Prenotazione eliminata con successo.");
+                            try {
+                                if (!unicenter.disiscriviStudenteDaAppello(codiceAppello)) {
+                                    console.mostraMessaggio("Codice appello non valido. Riprova.");
+                                } else {
+                                    console.mostraMessaggio("Prenotazione eliminata con successo.");
+                                }
+                            } catch (Exception e) {
+                                console.mostraMessaggio(e.getMessage());
                             }
                             break;
                         }
@@ -523,20 +527,51 @@ public class MenuController {
                         break;
                     }
 
-                    // Mostra gli studenti iscritti
-                    List<Studente> iscritti = unicenter.trovaIscrittiByAppello(codAppello);
-                    if (iscritti == null || iscritti.isEmpty()) {
+                    // Mostra gli studenti iscritti, escludendo quelli con esito pendente per questa
+                    // materia
+                    List<Studente> tuttiIscritti = unicenter.trovaIscrittiByAppello(codAppello);
+                    if (tuttiIscritti == null || tuttiIscritti.isEmpty()) {
                         console.mostraMessaggio("Non ci sono studenti iscritti a questo appello.");
                         break;
                     }
-                    console.mostraMessaggio("\nStudenti iscritti:");
+
+                    // Recupera il codice materia dell'appello per il filtro
+                    String codiceMateriaAppello = null;
+                    for (Appello a : appelliProfessore) {
+                        if (a.getCodiceAppello().equals(codAppello)) {
+                            codiceMateriaAppello = a.getCodiceMateria();
+                            break;
+                        }
+                    }
+
+                    // Filtra: escludi studenti che hanno già un esito pendente per questa materia
+                    List<Studente> iscritti = new java.util.ArrayList<>();
+                    for (Studente s : tuttiIscritti) {
+                        boolean haEsitoPendente = false;
+                        List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(s.getMatricola());
+                        for (EsameSostenuto e : esitiPendenti) {
+                            if (e.getCodiceMateria().equals(codiceMateriaAppello)) {
+                                haEsitoPendente = true;
+                                break;
+                            }
+                        }
+                        if (!haEsitoPendente) {
+                            iscritti.add(s);
+                        }
+                    }
+
+                    if (iscritti.isEmpty()) {
+                        console.mostraMessaggio(
+                                "Tutti gli studenti iscritti hanno già un esito pendente per questa materia.");
+                        break;
+                    }
+                    console.mostraMessaggio("\nStudenti iscritti (senza esito pendente):");
                     stampaStudenti(iscritti);
 
                     String matricola = console.leggiStringa("Inserisci la matricola dello studente: ");
 
-                    // Verifica che lo studente sia iscritto
+                    // Verifica che lo studente sia iscritto (nella lista filtrata)
                     boolean studenteValido = false;
-                    String codiceMateriaPubblica = null;
                     for (Studente s : iscritti) {
                         if (s.getMatricola().equals(matricola)) {
                             studenteValido = true;
@@ -548,14 +583,6 @@ public class MenuController {
                         break;
                     }
 
-                    // Recupera il codice materia dall'appello
-                    for (Appello a : appelliProfessore) {
-                        if (a.getCodiceAppello().equals(codAppello)) {
-                            codiceMateriaPubblica = a.getCodiceMateria();
-                            break;
-                        }
-                    }
-
                     int voto = console.leggiIntero("Inserisci il voto (0-30): ");
                     boolean lode = false;
                     if (voto == 30) {
@@ -565,7 +592,7 @@ public class MenuController {
 
                     try {
                         EsameSostenuto esito = unicenter.pubblicaEsitoEsame(
-                                codAppello, matricola, codiceMateriaPubblica,
+                                codAppello, matricola, codiceMateriaAppello,
                                 voto, lode, 7 // 7 giorni di scadenza per la conferma
                         );
                         console.mostraMessaggio("Esito pubblicato con successo!");
