@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import it.project.CorsoDiLaurea;
+import it.project.Materia;
 import it.project.factory.CorsoDiLaureaFactory;
 
 /**
- * Controller (GRASP / Facade Controller) per UC4 - Gestione Corsi di Laurea.
+ * Controller (GRASP / Facade Controller) per UC4/UC5 - Gestione Corsi di Laurea e Materie.
  * Coordina le operazioni dell'amministratore relative ai percorsi universitari:
- * creazione, aggiornamento, obsolescenza e ricerca dei Corsi di Laurea.
+ * creazione, aggiornamento, obsolescenza, finalizzazione e ricerca dei Corsi di Laurea.
  */
 public class GestioneCorsiLaureaController {
     private final List<CorsoDiLaurea> corsiDiLaurea;
@@ -26,6 +27,8 @@ public class GestioneCorsiLaureaController {
     /**
      * Crea un nuovo Corso di Laurea tramite la Factory e lo aggiunge al sistema.
      * La Factory applica le validazioni e genera il codice univoco (Regola di Dominio 3).
+     * Il corso viene creato come "non finalizzato": non ha materie e non è visibile
+     * per l'immatricolazione.
      *
      * @return il CorsoDiLaurea appena creato
      */
@@ -59,6 +62,12 @@ public class GestioneCorsiLaureaController {
 
         if (corso.isObsoleto()) {
             throw new IllegalStateException("Impossibile aggiornare un corso obsoleto (codice: " + codice + ").");
+        }
+
+        if (corso.isFinalizzato()) {
+            throw new IllegalStateException(
+                "Impossibile aggiornare il corso '" + corso.getNome() + "': è già finalizzato. "
+                + "È possibile solo renderlo obsoleto e crearne uno nuovo.");
         }
 
         if (nuovoNome != null && !nuovoNome.trim().isEmpty()) {
@@ -99,6 +108,52 @@ public class GestioneCorsiLaureaController {
     }
 
     // =========================================================================
+    // UC5 - FINALIZZAZIONE CORSO DI LAUREA
+    // =========================================================================
+
+    /**
+     * Restituisce i corsi creati ma non ancora finalizzati (senza materie associate).
+     * Questi sono i corsi che l'amministratore può ancora configurare.
+     */
+    public List<CorsoDiLaurea> getCorsiNonFinalizzati() {
+        return corsiDiLaurea.stream()
+                .filter(c -> !c.isFinalizzato() && !c.isObsoleto())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Associa una materia a un anno specifico di un Corso di Laurea.
+     * Delega al CorsoDiLaurea la validazione dell'anno e dello stato di finalizzazione
+     * (pattern Creator GRASP).
+     *
+     * @param codiceCorso il codice del corso
+     * @param anno        l'anno accademico (1-based)
+     * @param materia     la materia da associare
+     */
+    public void associaMateriaACorso(String codiceCorso, int anno, Materia materia) {
+        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codiceCorso);
+        if (corso == null) {
+            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codiceCorso);
+        }
+        // Delega al CorsoDiLaurea (Creator) che valida anno e stato finalizzazione
+        corso.aggiungiMateriaAdAnno(anno, materia);
+    }
+
+    /**
+     * Finalizza un Corso di Laurea: dopo questa operazione il corso diventa
+     * immutabile e visibile per l'immatricolazione.
+     *
+     * @param codiceCorso il codice del corso da finalizzare
+     */
+    public void finalizzaCorso(String codiceCorso) {
+        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codiceCorso);
+        if (corso == null) {
+            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codiceCorso);
+        }
+        corso.finalizza();
+    }
+
+    // =========================================================================
     // RICERCA
     // =========================================================================
 
@@ -121,16 +176,17 @@ public class GestioneCorsiLaureaController {
     }
 
     /**
-     * Restituisce solo i corsi attivi (non obsoleti).
+     * Restituisce solo i corsi attivi, finalizzati e non obsoleti.
+     * Un corso non finalizzato NON è visibile per l'immatricolazione.
      */
     public List<CorsoDiLaurea> getCorsiAttivi() {
         return corsiDiLaurea.stream()
-                .filter(c -> !c.isObsoleto())
+                .filter(c -> !c.isObsoleto() && c.isFinalizzato())
                 .collect(Collectors.toList());
     }
 
     /**
-     * Restituisce tutti i corsi (anche obsoleti).
+     * Restituisce tutti i corsi (anche obsoleti e non finalizzati).
      */
     public List<CorsoDiLaurea> getTuttiCorsi() {
         return corsiDiLaurea;

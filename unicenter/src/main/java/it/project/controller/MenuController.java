@@ -659,7 +659,7 @@ public class MenuController {
         String cognome = console.leggiStringa("Inserisci il cognome dello studente: ");
         String email = console.leggiStringa("Inserisci l'email dello studente: ");
         String password = console.leggiStringa("Inserisci la password di almeno 4 caratteri: ");
-        String corsoDiLaurea = console.leggiStringa("Inserisci il corso di laurea : ");
+        String corsoDiLaurea = console.leggiStringa("Inserisci il nome delcorso di laurea : ");
 
         CorsoDiLaurea corso = unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
 
@@ -753,22 +753,8 @@ public class MenuController {
         }
     }
 
-    public void stampaCorsiDiLaurea(List<CorsoDiLaurea> corsi) {
-        for (CorsoDiLaurea corso : corsi) {
-            String stato = corso.isObsoleto() ? "OBSOLETO" : "ATTIVO";
-            String tipologia = corso.getTipologia() != null ? corso.getTipologia() : "N/D";
-            console.mostraMessaggio(
-                    "Codice: " + corso.getId() + "\n" +
-                            "Nome Corso: " + corso.getNome() + "\n" +
-                            "Tipologia: " + tipologia + "\n" +
-                            "Durata: " + corso.getAnniAccademici() + " anni\n" +
-                            "Stato: " + stato + "\n" +
-                            "----------------------------------------");
-        }
-    }
-
     // =========================================================================
-    // UC4 - MENU AREA AMMINISTRATORE
+    // UC4/UC5 - MENU AREA AMMINISTRATORE
     // =========================================================================
     private void menuAmministratore() {
         boolean back = false;
@@ -780,6 +766,9 @@ public class MenuController {
             console.mostraMessaggio("1. Crea nuovo Corso di Laurea");
             console.mostraMessaggio("2. Rendi obsoleto un Corso di Laurea");
             console.mostraMessaggio("3. Visualizza tutti i Corsi di Laurea");
+            console.mostraMessaggio("4. Crea nuova Materia (UC5)");
+            console.mostraMessaggio("5. Visualizza tutte le Materie (UC5)");
+            console.mostraMessaggio("6. Finalizza Corso di Laurea - associa materie (UC5)");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -814,6 +803,8 @@ public class MenuController {
                         console.mostraMessaggio("Nome: " + nuovoCorso.getNome());
                         console.mostraMessaggio("Tipologia: " + nuovoCorso.getTipologia());
                         console.mostraMessaggio("Durata: " + nuovoCorso.getAnniAccademici() + " anni");
+                        console.mostraMessaggio(
+                                "Stato: NON FINALIZZATO - Usa l'opzione 6 per associare le materie e finalizzare.");
                     } catch (Exception e) {
                         console.mostraErrore(e.getMessage());
                     }
@@ -859,9 +850,189 @@ public class MenuController {
                     }
                 }
 
+                // ============================================================
+                // UC5 - CREA NUOVA MATERIA
+                // ============================================================
+                case 4 -> {
+                    console.mostraMessaggio("\n--- Creazione Nuova Materia (UC5) ---");
+                    String nomeMateria = console.leggiStringa("Inserisci il nome della materia: ");
+                    int cfu = console.leggiIntero("Inserisci il numero di CFU: ");
+
+                    try {
+                        Materia nuovaMateria = unicenter.creaMateria(nomeMateria, cfu);
+                        console.mostraMessaggio("\nMateria creata con successo!");
+                        console.mostraMessaggio("Codice generato: " + nuovaMateria.getCodiceMateria());
+                        console.mostraMessaggio("Nome: " + nuovaMateria.getNome());
+                        console.mostraMessaggio("CFU: " + nuovaMateria.getCfu());
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+
+                // ============================================================
+                // UC5 - VISUALIZZA TUTTE LE MATERIE
+                // ============================================================
+                case 5 -> {
+                    console.mostraMessaggio("\n--- Tutte le Materie (UC5) ---");
+                    List<Materia> tutteMaterie = unicenter.getTutteLeMaterie();
+                    if (tutteMaterie == null || tutteMaterie.isEmpty()) {
+                        console.mostraMessaggio("Nessuna materia presente nel sistema.");
+                    } else {
+                        for (Materia m : tutteMaterie) {
+                            console.mostraMessaggio(
+                                    "Codice: " + m.getCodiceMateria() + "\n" +
+                                            "Nome: " + m.getNome() + "\n" +
+                                            "CFU: " + m.getCfu() + "\n" +
+                                            "----------------------------------------");
+                        }
+                        console.mostraMessaggio("Totale materie: " + tutteMaterie.size());
+                    }
+                }
+
+                // ============================================================
+                // UC5 - FINALIZZA CORSO DI LAUREA (ASSOCIA MATERIE)
+                // ============================================================
+                case 6 -> {
+                    console.mostraMessaggio("\n--- Finalizza Corso di Laurea - Associa Materie (UC5) ---");
+
+                    // 1. Mostra corsi non finalizzati
+                    List<CorsoDiLaurea> corsiNonFinalizzati = unicenter.getCorsiNonFinalizzati();
+                    if (corsiNonFinalizzati == null || corsiNonFinalizzati.isEmpty()) {
+                        console.mostraMessaggio("Nessun corso non finalizzato disponibile.");
+                        console.mostraMessaggio("Crea prima un nuovo corso di laurea (opzione 1).");
+                        break;
+                    }
+
+                    console.mostraMessaggio("Corsi di Laurea NON ancora finalizzati:");
+                    stampaCorsiDiLaurea(corsiNonFinalizzati);
+
+                    String codiceCorso = console.leggiStringa(
+                            "Inserisci il codice del corso da finalizzare (0 per annullare): ");
+                    if ("0".equals(codiceCorso))
+                        break;
+
+                    // Verifica che il codice sia tra quelli non finalizzati
+                    CorsoDiLaurea corsoScelto = null;
+                    for (CorsoDiLaurea c : corsiNonFinalizzati) {
+                        if (c.getId().equalsIgnoreCase(codiceCorso)) {
+                            corsoScelto = c;
+                            break;
+                        }
+                    }
+                    if (corsoScelto == null) {
+                        console.mostraErrore("Codice corso non valido o corso già finalizzato.");
+                        break;
+                    }
+
+                    // 2. Mostra materie disponibili
+                    List<Materia> materieDisponibili = unicenter.getTutteLeMaterie();
+                    if (materieDisponibili == null || materieDisponibili.isEmpty()) {
+                        console.mostraMessaggio("Nessuna materia disponibile nel sistema.");
+                        console.mostraMessaggio("Crea prima le materie (opzione 4).");
+                        break;
+                    }
+
+                    console.mostraMessaggio("\nCorso selezionato: " + corsoScelto.getNome()
+                            + " (" + corsoScelto.getAnniAccademici() + " anni)");
+                    console.mostraMessaggio("Materie disponibili:");
+                    for (Materia m : materieDisponibili) {
+                        console.mostraMessaggio(
+                                "  " + m.getCodiceMateria() + " - " + m.getNome() + " (" + m.getCfu() + " CFU)");
+                    }
+
+                    // 3. Loop: associa materie con anno
+                    boolean continua = true;
+                    while (continua) {
+                        console.mostraMessaggio("\n--- Associa una materia al corso ---");
+                        String codiceMateria = console.leggiStringa(
+                                "Inserisci il codice della materia da associare (0 per terminare e finalizzare): ");
+
+                        if ("0".equals(codiceMateria)) {
+                            continua = false;
+                            break;
+                        }
+
+                        // Verifica che la materia esista
+                        Materia materiaScelta = null;
+                        for (Materia m : materieDisponibili) {
+                            if (m.getCodiceMateria().equalsIgnoreCase(codiceMateria)) {
+                                materiaScelta = m;
+                                break;
+                            }
+                        }
+                        if (materiaScelta == null) {
+                            console.mostraErrore("Codice materia non valido. Riprova.");
+                            continue;
+                        }
+
+                        int anno = console.leggiIntero(
+                                "Inserisci l'anno accademico per '" + materiaScelta.getNome()
+                                        + "' (1-" + corsoScelto.getAnniAccademici() + "): ");
+
+                        try {
+                            unicenter.associaMateriaACorso(corsoScelto.getId(), anno, materiaScelta);
+                            console.mostraMessaggio("Materia '" + materiaScelta.getNome()
+                                    + "' associata all'anno " + anno + " con successo!");
+                        } catch (Exception e) {
+                            console.mostraErrore(e.getMessage());
+                        }
+                    }
+
+                    // 4. Riepilogo materie associate prima della finalizzazione
+                    if (!corsoScelto.getMaterie().isEmpty()) {
+                        console.mostraMessaggio("\n--- Riepilogo materie associate ---");
+                        for (int anno = 1; anno <= corsoScelto.getAnniAccademici(); anno++) {
+                            List<Materia> materieAnno = corsoScelto.getMaterieByAnno(anno);
+                            if (!materieAnno.isEmpty()) {
+                                console.mostraMessaggio("Anno " + anno + ":");
+                                for (Materia m : materieAnno) {
+                                    console.mostraMessaggio("  - " + m.getNome() + " (" + m.getCfu() + " CFU)");
+                                }
+                            }
+                        }
+
+                        String conferma = console.leggiStringa(
+                                "\nConfermi la finalizzazione del corso? (s/n): ");
+                        if (conferma.equalsIgnoreCase("s")) {
+                            try {
+                                unicenter.finalizzaCorso(corsoScelto.getId());
+                                console.mostraMessaggio(
+                                        "Corso '" + corsoScelto.getNome()
+                                                + "' finalizzato con successo! Ora è visibile per l'immatricolazione.");
+                            } catch (Exception e) {
+                                console.mostraErrore(e.getMessage());
+                            }
+                        } else {
+                            console.mostraMessaggio(
+                                    "Finalizzazione annullata. Le materie associate sono state salvate, "
+                                            + "potrai finalizzare in seguito.");
+                        }
+                    } else {
+                        console.mostraMessaggio("Nessuna materia associata. Il corso non può essere finalizzato.");
+                    }
+                }
+
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
+        }
+    }
+
+    public void stampaCorsiDiLaurea(List<CorsoDiLaurea> corsi) {
+        for (CorsoDiLaurea corso : corsi) {
+            String stato = corso.isObsoleto() ? "OBSOLETO" : "ATTIVO";
+            String tipologia = corso.getTipologia() != null ? corso.getTipologia() : "N/D";
+            String finalizzato = corso.isFinalizzato() ? "SI" : "NO";
+            int numMaterie = corso.getMaterie().size();
+            console.mostraMessaggio(
+                    "Codice: " + corso.getId() + "\n" +
+                            "Nome Corso: " + corso.getNome() + "\n" +
+                            "Tipologia: " + tipologia + "\n" +
+                            "Durata: " + corso.getAnniAccademici() + " anni\n" +
+                            "Stato: " + stato + "\n" +
+                            "Finalizzato: " + finalizzato + "\n" +
+                            "Materie associate: " + numMaterie + "\n" +
+                            "----------------------------------------");
         }
     }
 

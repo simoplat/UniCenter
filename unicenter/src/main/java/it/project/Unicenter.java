@@ -79,9 +79,24 @@ public class Unicenter {
                     "Impossibile immatricolarsi: il corso '" + corso + "' è obsoleto e non accetta nuove iscrizioni.");
         }
 
+        // UC5: Blocca iscrizione a corsi non finalizzati
+        if (corsoTrovato != null && !corsoTrovato.isFinalizzato()) {
+            throw new IllegalArgumentException(
+                    "Impossibile immatricolarsi: il corso '" + corso + "' non è ancora finalizzato.");
+        }
+
         Studente nuovoStudente = immatricolazioneController.immatricolaStudente(nome, cognome, email, password, corso,
                 codiceFiscale);
         utenti.add(nuovoStudente);
+
+        // UC5: Auto-popola il piano di studi con le materie del corso
+        if (corsoTrovato != null && corsoTrovato.isFinalizzato()) {
+            PianoDiStudi pianoDiStudi = nuovoStudente.getPianoDiStudi();
+            for (Materia materia : corsoTrovato.getMaterie()) {
+                pianoDiStudi.aggiungiMateria(materia.getCodiceMateria());
+            }
+        }
+
         return nuovoStudente;
     }
 
@@ -174,14 +189,18 @@ public class Unicenter {
             this.gestoreMaterie.associaProfessoreAMateria("2", "AR01");
             this.gestoreMaterie.associaProfessoreAMateria("2", "IS01");
 
+            // UC5: Creazione corsi con materie associate per anno (Creator GRASP)
             CorsoDiLaurea ingInformatica = new CorsoDiLaurea("ING-INF", "Ingegneria Informatica", 3);
+            ingInformatica.aggiungiMateriaAdAnno(2, ingSoftware);   // Anno 2
+            ingInformatica.aggiungiMateriaAdAnno(2, basiDati);      // Anno 2
+            ingInformatica.aggiungiMateriaAdAnno(1, architetture);  // Anno 1
+            ingInformatica.finalizza(); // Corso finalizzato: immutabile e visibile per immatricolazione
+
+            // Corsi NON finalizzati (per testare il flusso UC5 dal menu admin)
             CorsoDiLaurea ingGestionale = new CorsoDiLaurea("ING-GES", "Ingegneria Gestionale", 3);
             CorsoDiLaurea ingElettronica = new CorsoDiLaurea("ING-ELE", "Ingegneria Elettronica", 3);
             CorsoDiLaurea ingMeccanica = new CorsoDiLaurea("ING-MEC", "Ingegneria Meccanica", 3);
 
-            ingInformatica.aggiungiMateria(ingSoftware);
-            ingInformatica.aggiungiMateria(basiDati);
-            ingInformatica.aggiungiMateria(architetture);
             this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingInformatica);
             this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingGestionale);
             this.gestioneCorsiLaureaController.addCorsoDiLaurea(ingElettronica);
@@ -194,25 +213,22 @@ public class Unicenter {
             console.mostraMessaggio("[DB POPULATION] Amministratore creato: " + admin.getEmail());
 
             // IMMATRICOLAZIONE STUDENTI (UC8 + Builder + Strategy + MatricolaGenerator)
+            // UC5: il piano di studi viene auto-popolato con le materie del corso finalizzato
 
-            // Studente 1: Mario Rossi (Tasse OK, Piano Studi Completo)
+            // Studente 1: Mario Rossi (Tasse OK, Piano Studi auto-popolato da UC5)
             Studente st1 = this.immatricolaStudente("Mario", "Rossi", "mario.rossi@studenti.it", "pass123",
                     "Ingegneria Informatica", "CODICEFISCALEMARIOROSSI");
-            st1.getPianoDiStudi().aggiungiMateria("IS01");
-            st1.getPianoDiStudi().aggiungiMateria("BD01");
             st1.setTassePagate(true); // Tasse Saldate
 
             // Studente 2: Luigi Verdi (Tasse NON pagate, per testare i blocchi dei
             // validatori)
             Studente st2 = this.immatricolaStudente("Luigi", "Verdi", "luigi.verdi@studenti.it", "pass123",
                     "Ingegneria Informatica", "CODICEFISCALELUIGIVERDI");
-            st2.getPianoDiStudi().aggiungiMateria("IS01");
             st2.setTassePagate(false);
 
-            // Studente 3: Anna Bianchi (Piano di studi limitato)
+            // Studente 3: Anna Bianchi (Piano di studi auto-popolato da UC5)
             Studente st3 = this.immatricolaStudente("Anna", "Bianchi", "anna.bianchi@studenti.it", "pass123",
                     "Ingegneria Informatica", "CODICEFISCALEANNABIANCHI");
-            st3.getPianoDiStudi().aggiungiMateria("BD01"); // Niente IS01 nel piano di studi
             st3.setTassePagate(true);
             console.mostraMessaggio(st3.toString());
 
@@ -526,6 +542,56 @@ public class Unicenter {
      */
     public List<EsameSostenuto> getEsitiPendentiByMatricola(String matricola) {
         return gestioneVotoController.trovaEsitiPendentiByStudente(matricola);
+    }
+
+    // =========================================================================
+    // UC5 - FACADE METHODS (Gestione Materie)
+    // =========================================================================
+
+    /**
+     * L'Amministratore crea una nuova materia (nome, CFU).
+     * Il codice viene generato automaticamente.
+     */
+    public Materia creaMateria(String nome, int cfu) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può creare una materia.");
+        }
+        return gestoreMaterie.creaMateria(nome, cfu);
+    }
+
+    /**
+     * Restituisce tutte le materie create nel sistema.
+     */
+    public List<Materia> getTutteLeMaterie() {
+        return gestoreMaterie.getTutteLeMaterie();
+    }
+
+    /**
+     * Restituisce i corsi non ancora finalizzati (senza materie associate).
+     */
+    public List<CorsoDiLaurea> getCorsiNonFinalizzati() {
+        return gestioneCorsiLaureaController.getCorsiNonFinalizzati();
+    }
+
+    /**
+     * L'Amministratore associa una materia a un anno di un corso non finalizzato.
+     */
+    public void associaMateriaACorso(String codiceCorso, int anno, Materia materia) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può associare materie a un corso.");
+        }
+        gestioneCorsiLaureaController.associaMateriaACorso(codiceCorso, anno, materia);
+    }
+
+    /**
+     * L'Amministratore finalizza un corso di laurea, rendendolo immutabile
+     * e visibile per l'immatricolazione.
+     */
+    public void finalizzaCorso(String codiceCorso) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può finalizzare un corso.");
+        }
+        gestioneCorsiLaureaController.finalizzaCorso(codiceCorso);
     }
 
 }
