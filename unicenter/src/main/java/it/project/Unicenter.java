@@ -527,6 +527,44 @@ public class Unicenter {
         return ((Studente) currentUser).getLibretto();
     }
 
+    /**
+     * Restituisce l'importo delle tasse dello studente corrente.
+     */
+    public double getTasseStudente() {
+        if (currentUser instanceof Studente) {
+            return ((Studente) currentUser).getTasse();
+        }
+        return 0.0;
+    }
+
+    /**
+     * Verifica se le tasse dello studente corrente risultano saldate.
+     */
+    public boolean isTassePagateStudente() {
+        if (currentUser instanceof Studente) {
+            return ((Studente) currentUser).isTassePagate();
+        }
+        return false;
+    }
+
+    /**
+     * Simula il pagamento delle tasse per lo studente corrente.
+     */
+    public boolean pagaTasseStudente() {
+        if (currentUser instanceof Studente) {
+            Studente studente = (Studente) currentUser;
+            double importoPagato = studente.getTasse();
+            studente.setTassePagate(true);
+            studente.aggiungiNotifica(new Notifica(
+                    "Pagamento Tasse",
+                    "Hai saldato con successo le tasse universitarie di " + String.format("%.2f €", importoPagato) + ".",
+                    LocalDateTime.now()
+            ));
+            return true;
+        }
+        return false;
+    }
+
     public GestoreMaterieController getGestoreMaterie() {
         return gestoreMaterie;
     }

@@ -52,10 +52,6 @@ public class Carriera {
         return this.tassePagate;
     }
 
-    public void setTassePagate(){
-        this.tassePagate = true;
-    }
-
     public int getAnnoCorrente() {
         return this.annoCorrente;
     }
@@ -65,7 +61,10 @@ public class Carriera {
     }
 
     public void setTassePagate(boolean tassePagate) {
-    this.tassePagate = tassePagate;
-}
+        this.tassePagate = tassePagate;
+        if (tassePagate) {
+            this.totaleTasse = 0.0;
+        }
+    }
 
 }

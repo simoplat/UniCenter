@@ -73,6 +73,7 @@ public class MenuController {
             console.mostraMessaggio("3. Visualizza notifiche");
             console.mostraMessaggio("4. Gestione esiti esami (Accetta/Rifiuta voto)");
             console.mostraMessaggio("5. Visualizza libretto");
+            console.mostraMessaggio("6. Gestione tasse universitarie (Visualizza / Paga)");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -242,6 +243,34 @@ public class MenuController {
                                             + " | Data: " + esame.getDataRegistrazione().format(formatterStampa));
                         }
                         console.mostraMessaggio("------------------------------------------");
+                    }
+                }
+
+                // ============================================================
+                // GESTIONE TASSE UNIVERSITARIE (Visualizza / Paga)
+                // ============================================================
+                case 6 -> {
+                    console.mostraMessaggio("\n--- Gestione Tasse Universitarie ---");
+                    double importoTasse = unicenter.getTasseStudente();
+                    boolean pagate = unicenter.isTassePagateStudente();
+
+                    console.mostraMessaggio("Importo totale tasse: " + String.format("%.2f €", importoTasse));
+                    console.mostraMessaggio("Stato pagamento: " + (pagate ? "REGOLARE (Saldate)" : "IN SOSPESO (Non saldate)"));
+
+                    if (pagate) {
+                        console.mostraMessaggio("Le tasse universitarie risultano regolarmente saldate.");
+                    } else {
+                        console.mostraMessaggio("\n1. Simula pagamento delle tasse (" + String.format("%.2f €", importoTasse) + ")");
+                        console.mostraMessaggio("0. Torna indietro");
+                        int sceltaPaga = console.leggiIntero("Seleziona un'opzione: ");
+                        if (sceltaPaga == 1) {
+                            if (unicenter.pagaTasseStudente()) {
+                                console.mostraMessaggio("Pagamento di " + String.format("%.2f €", importoTasse) + " completato con successo!");
+                                console.mostraMessaggio("Le tasse risultano ora SALDATE. Puoi procedere con l'iscrizione agli appelli.");
+                            } else {
+                                console.mostraErrore("Errore durante il pagamento delle tasse.");
+                            }
+                        }
                     }
                 }
 
