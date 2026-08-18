@@ -769,6 +769,7 @@ public class MenuController {
             console.mostraMessaggio("4. Crea nuova Materia (UC5)");
             console.mostraMessaggio("5. Visualizza tutte le Materie (UC5)");
             console.mostraMessaggio("6. Finalizza Corso di Laurea - associa materie (UC5)");
+            console.mostraMessaggio("7. Associa Professore a Materia");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -1009,6 +1010,88 @@ public class MenuController {
                         }
                     } else {
                         console.mostraMessaggio("Nessuna materia associata. Il corso non può essere finalizzato.");
+                    }
+                }
+
+                // ============================================================
+                // UC5 - ASSOCIA PROFESSORE A MATERIA
+                // ============================================================
+                case 7 -> {
+                    console.mostraMessaggio("\n--- Associa Professore a Materia ---");
+
+                    // 1. Mostra tutte le materie
+                    List<Materia> tutteMaterie = unicenter.getTutteLeMaterie();
+                    if (tutteMaterie == null || tutteMaterie.isEmpty()) {
+                        console.mostraMessaggio("Nessuna materia presente nel sistema.");
+                        break;
+                    }
+
+                    console.mostraMessaggio("Materie disponibili:");
+                    for (Materia m : tutteMaterie) {
+                        console.mostraMessaggio(
+                                "  " + m.getCodiceMateria() + " - " + m.getNome() + " (" + m.getCfu() + " CFU)");
+                    }
+
+                    String codiceMateria = console.leggiStringa(
+                            "Inserisci il codice della materia (0 per annullare): ");
+                    if ("0".equals(codiceMateria))
+                        break;
+
+                    // Verifica che la materia esista
+                    Materia materiaScelta = null;
+                    for (Materia m : tutteMaterie) {
+                        if (m.getCodiceMateria().equalsIgnoreCase(codiceMateria)) {
+                            materiaScelta = m;
+                            break;
+                        }
+                    }
+                    if (materiaScelta == null) {
+                        console.mostraErrore("Codice materia non valido.");
+                        break;
+                    }
+
+                    // 2. Mostra solo i professori NON già associati a questa materia
+                    List<Professore> professoriDisponibili = unicenter
+                            .getProfessoriNonAssociatiAMateria(materiaScelta.getCodiceMateria());
+                    if (professoriDisponibili == null || professoriDisponibili.isEmpty()) {
+                        console.mostraMessaggio(
+                                "Tutti i professori sono già associati alla materia '" + materiaScelta.getNome()
+                                        + "'.");
+                        break;
+                    }
+
+                    console.mostraMessaggio(
+                            "\nProfessori disponibili per '" + materiaScelta.getNome() + "':");
+                    for (Professore p : professoriDisponibili) {
+                        console.mostraMessaggio(
+                                "  ID: " + p.getIdProfessore() + " - " + p.getNome() + " " + p.getCognome());
+                    }
+
+                    String idProfessore = console.leggiStringa(
+                            "Inserisci l'ID del professore da associare (0 per annullare): ");
+                    if ("0".equals(idProfessore))
+                        break;
+
+                    // Verifica che il professore sia nella lista dei disponibili
+                    boolean profValido = false;
+                    for (Professore p : professoriDisponibili) {
+                        if (p.getIdProfessore().equals(idProfessore)) {
+                            profValido = true;
+                            break;
+                        }
+                    }
+                    if (!profValido) {
+                        console.mostraErrore("ID professore non valido o già associato.");
+                        break;
+                    }
+
+                    try {
+                        unicenter.associaProfessoreAMateriaAdmin(idProfessore,
+                                materiaScelta.getCodiceMateria());
+                        console.mostraMessaggio("Professore associato con successo alla materia '"
+                                + materiaScelta.getNome() + "'!");
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
                     }
                 }
 

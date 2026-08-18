@@ -594,4 +594,42 @@ public class Unicenter {
         gestioneCorsiLaureaController.finalizzaCorso(codiceCorso);
     }
 
+    /**
+     * Restituisce tutti i professori registrati nel sistema.
+     */
+    public List<Professore> getTuttiProfessori() {
+        List<Professore> professori = new ArrayList<>();
+        for (Utente u : utenti) {
+            if (u instanceof Professore) {
+                professori.add((Professore) u);
+            }
+        }
+        return professori;
+    }
+
+    /**
+     * Restituisce i professori NON ancora associati a una materia.
+     */
+    public List<Professore> getProfessoriNonAssociatiAMateria(String codiceMateria) {
+        List<String> idProfAssociati = gestoreMaterie.trovaProfessoriDellaMateria(codiceMateria);
+        List<Professore> tuttiProf = getTuttiProfessori();
+        List<Professore> nonAssociati = new ArrayList<>();
+        for (Professore p : tuttiProf) {
+            if (!idProfAssociati.contains(p.getIdProfessore())) {
+                nonAssociati.add(p);
+            }
+        }
+        return nonAssociati;
+    }
+
+    /**
+     * L'Amministratore associa un professore a una materia.
+     */
+    public void associaProfessoreAMateriaAdmin(String idProfessore, String codiceMateria) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può associare un professore a una materia.");
+        }
+        gestoreMaterie.associaProfessoreAMateria(idProfessore, codiceMateria);
+    }
+
 }

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 import it.project.ConsoleUI;
 import it.project.EsameSostenuto;
@@ -24,7 +24,7 @@ import it.project.observer.NotificaEsitoObserver;
 public class GestioneVotoController {
 
     private final List<EsameSostenuto> esitiPubblicati;
-    private final AtomicInteger contatorEsami;
+    private int contatorEsami;
     private final Unicenter unicenter;
     private final GestoreMaterieController gestoreMaterie;
     private final ConsoleUI console = ConsoleUI.getInstance();
@@ -33,7 +33,7 @@ public class GestioneVotoController {
         this.unicenter = unicenter;
         this.gestoreMaterie = gestoreMaterie;
         this.esitiPubblicati = new ArrayList<>();
-        this.contatorEsami = new AtomicInteger(0);
+        this.contatorEsami = 0;
     }
 
     // =========================================================================
@@ -73,7 +73,7 @@ public class GestioneVotoController {
         int cfu = materia.getCfu();
 
         // Genera ID univoco
-        String idEsame = "ESM-" + String.format("%05d", contatorEsami.incrementAndGet());
+        String idEsame = "ESM-" + String.format("%05d", ++contatorEsami);
 
         // Crea l'EsameSostenuto (RD4 applicata nel costruttore)
         EsameSostenuto esame = new EsameSostenuto(

@@ -123,4 +123,11 @@ public class GestoreMaterieController {
     public Materia trovaMaterieByCodice(String codiceMateria) {
         return materie.get(codiceMateria);
     }
+
+    /**
+     * Restituisce la lista degli ID dei professori associati a una materia.
+     */
+    public List<String> trovaProfessoriDellaMateria(String codiceMateria) {
+        return professoriDellaMateria.getOrDefault(codiceMateria, Collections.emptyList());
+    }
 }
