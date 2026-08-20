@@ -257,10 +257,10 @@ public class DatabasePopulator {
             }
 
             // =========================================================================
-            // SIMULAZIONE TEMPORALE CON CLOCK: FASE 1 - IMMATRICOLAZIONI (Settembre 2026)
+            // SIMULAZIONE TEMPORALE CON CLOCK: FASE 1 - IMMATRICOLAZIONI (Agosto 2026)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Finestra Immatricolazioni (Settembre 2026)...");
-            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 9, 1, 10, 0));
+            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Finestra Immatricolazioni (Agosto 2026)...");
+            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 1, 10, 0));
 
             // IMMATRICOLAZIONE STUDENTI (32 Studenti >= 30)
             String[][] studentiData = {
@@ -308,45 +308,45 @@ public class DatabasePopulator {
             }
 
             // =========================================================================
-            // SIMULAZIONE TEMPORALE: FASE 2 - CREAZIONE APPELLI (15 Settembre 2026)
+            // SIMULAZIONE TEMPORALE: FASE 2 - CREAZIONE APPELLI (2 Agosto 2026)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Creazione appelli futuri d'esame (Settembre 2026)...");
-            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 9, 15, 9, 0));
+            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Creazione appelli futuri d'esame (Agosto 2026)...");
+            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 2, 9, 0));
 
-            // CREAZIONE APPELLI (32 Appelli >= 30)
+            // CREAZIONE APPELLI (32 Appelli con appelli per il 15 Agosto e date successive)
             Object[][] appelliData = {
-                {"IS01", LocalDateTime.of(2026, 10, 10, 9, 0), "Aula Magna", 50, "A-Z", LocalDate.of(2026, 10, 8)},
-                {"BD01", LocalDateTime.of(2026, 10, 12, 14, 0), "Aula 101", 40, "A-Z", LocalDate.of(2026, 10, 10)},
-                {"AR01", LocalDateTime.of(2026, 10, 14, 9, 30), "Aula 102", 30, "A-Z", LocalDate.of(2026, 10, 12)},
-                {"AM01", LocalDateTime.of(2026, 10, 16, 11, 0), "Aula Magna", 60, "A-Z", LocalDate.of(2026, 10, 14)},
-                {"AM02", LocalDateTime.of(2026, 10, 18, 9, 0), "Aula 201", 35, "A-Z", LocalDate.of(2026, 10, 16)},
-                {"PRG01", LocalDateTime.of(2026, 10, 20, 10, 0), "Lab Inf 1", 40, "A-Z", LocalDate.of(2026, 10, 18)},
-                {"PRG02", LocalDateTime.of(2026, 10, 22, 14, 30), "Lab Inf 2", 35, "A-Z", LocalDate.of(2026, 10, 20)},
-                {"SO01", LocalDateTime.of(2026, 10, 24, 9, 0), "Aula 103", 40, "A-Z", LocalDate.of(2026, 10, 22)},
-                {"RET01", LocalDateTime.of(2026, 10, 26, 15, 0), "Aula 104", 30, "A-Z", LocalDate.of(2026, 10, 24)},
-                {"SIC01", LocalDateTime.of(2026, 10, 28, 9, 0), "Aula Magna", 30, "A-Z", LocalDate.of(2026, 10, 26)},
-                {"IA01", LocalDateTime.of(2026, 10, 30, 11, 0), "Aula 202", 25, "A-Z", LocalDate.of(2026, 10, 28)},
-                {"ML01", LocalDateTime.of(2026, 11, 2, 9, 0), "Aula 203", 25, "A-Z", LocalDate.of(2026, 10, 31)},
-                {"ASD01", LocalDateTime.of(2026, 11, 4, 10, 30), "Aula 105", 40, "A-Z", LocalDate.of(2026, 11, 2)},
-                {"ALG01", LocalDateTime.of(2026, 11, 6, 9, 0), "Aula 106", 50, "A-Z", LocalDate.of(2026, 11, 4)},
-                {"FIS01", LocalDateTime.of(2026, 11, 8, 14, 0), "Aula Magna", 60, "A-Z", LocalDate.of(2026, 11, 6)},
-                {"FIS02", LocalDateTime.of(2026, 11, 10, 9, 0), "Aula 107", 35, "A-Z", LocalDate.of(2026, 11, 8)},
-                {"STAT01", LocalDateTime.of(2026, 11, 12, 10, 0), "Aula 204", 40, "A-Z", LocalDate.of(2026, 11, 10)},
-                {"WEB01", LocalDateTime.of(2026, 11, 14, 15, 0), "Lab Inf 3", 30, "A-Z", LocalDate.of(2026, 11, 12)},
-                {"CLOUD01", LocalDateTime.of(2026, 11, 16, 9, 0), "Aula 205", 25, "A-Z", LocalDate.of(2026, 11, 14)},
-                {"IOT01", LocalDateTime.of(2026, 11, 18, 11, 30), "Lab Inf 4", 25, "A-Z", LocalDate.of(2026, 11, 16)},
-                {"ROB01", LocalDateTime.of(2026, 11, 20, 9, 0), "Aula Magna", 30, "A-Z", LocalDate.of(2026, 11, 18)},
-                {"ELE01", LocalDateTime.of(2026, 11, 22, 14, 0), "Aula 108", 35, "A-Z", LocalDate.of(2026, 11, 20)},
-                {"ELN01", LocalDateTime.of(2026, 11, 24, 9, 0), "Aula 109", 30, "A-Z", LocalDate.of(2026, 11, 22)},
-                {"TD01", LocalDateTime.of(2026, 11, 26, 10, 0), "Aula 110", 30, "A-Z", LocalDate.of(2026, 11, 24)},
-                {"GES01", LocalDateTime.of(2026, 11, 28, 15, 0), "Aula 206", 40, "A-Z", LocalDate.of(2026, 11, 26)},
-                {"FIN01", LocalDateTime.of(2026, 11, 30, 9, 0), "Aula 207", 35, "A-Z", LocalDate.of(2026, 11, 28)},
-                {"ECO01", LocalDateTime.of(2026, 12, 2, 11, 0), "Aula 208", 40, "A-Z", LocalDate.of(2026, 11, 30)},
-                {"DIR01", LocalDateTime.of(2026, 12, 4, 9, 0), "Aula Magna", 50, "A-Z", LocalDate.of(2026, 12, 2)},
-                {"DIR02", LocalDateTime.of(2026, 12, 6, 14, 30), "Aula 111", 45, "A-Z", LocalDate.of(2026, 12, 4)},
-                {"BIO01", LocalDateTime.of(2026, 12, 8, 9, 0), "Aula 112", 30, "A-Z", LocalDate.of(2026, 12, 6)},
-                {"CHM01", LocalDateTime.of(2026, 12, 10, 10, 0), "Lab Chimica", 30, "A-Z", LocalDate.of(2026, 12, 8)},
-                {"MAT01", LocalDateTime.of(2026, 12, 12, 9, 0), "Aula 113", 35, "A-Z", LocalDate.of(2026, 12, 10)}
+                {"IS01", LocalDateTime.of(2026, 8, 10, 9, 0), "Aula Magna", 50, "A-Z", LocalDate.of(2026, 8, 8)},
+                {"AR01", LocalDateTime.of(2026, 8, 12, 9, 30), "Aula 102", 30, "A-Z", LocalDate.of(2026, 8, 10)},
+                {"AM01", LocalDateTime.of(2026, 8, 14, 11, 0), "Aula Magna", 60, "A-Z", LocalDate.of(2026, 8, 12)},
+                {"PRG01", LocalDateTime.of(2026, 8, 15, 9, 0), "Lab Inf 1", 40, "A-Z", LocalDate.of(2026, 8, 13)}, // Appello 15 Agosto
+                {"BD01", LocalDateTime.of(2026, 8, 15, 14, 30), "Aula 101", 40, "A-Z", LocalDate.of(2026, 8, 13)},  // Appello 15 Agosto
+                {"PRG02", LocalDateTime.of(2026, 8, 18, 14, 30), "Lab Inf 2", 35, "A-Z", LocalDate.of(2026, 8, 16)},
+                {"AM02", LocalDateTime.of(2026, 8, 22, 9, 0), "Aula 201", 35, "A-Z", LocalDate.of(2026, 8, 20)},
+                {"SO01", LocalDateTime.of(2026, 8, 25, 9, 0), "Aula 103", 40, "A-Z", LocalDate.of(2026, 8, 23)},
+                {"RET01", LocalDateTime.of(2026, 8, 28, 15, 0), "Aula 104", 30, "A-Z", LocalDate.of(2026, 8, 26)},
+                {"SIC01", LocalDateTime.of(2026, 9, 2, 9, 0), "Aula Magna", 30, "A-Z", LocalDate.of(2026, 8, 30)},
+                {"IA01", LocalDateTime.of(2026, 9, 5, 11, 0), "Aula 202", 25, "A-Z", LocalDate.of(2026, 9, 3)},
+                {"ML01", LocalDateTime.of(2026, 9, 8, 9, 0), "Aula 203", 25, "A-Z", LocalDate.of(2026, 9, 6)},
+                {"ASD01", LocalDateTime.of(2026, 9, 11, 10, 30), "Aula 105", 40, "A-Z", LocalDate.of(2026, 9, 9)},
+                {"ALG01", LocalDateTime.of(2026, 9, 14, 9, 0), "Aula 106", 50, "A-Z", LocalDate.of(2026, 9, 12)},
+                {"FIS01", LocalDateTime.of(2026, 9, 16, 14, 0), "Aula Magna", 60, "A-Z", LocalDate.of(2026, 9, 14)},
+                {"FIS02", LocalDateTime.of(2026, 9, 18, 9, 0), "Aula 107", 35, "A-Z", LocalDate.of(2026, 9, 16)},
+                {"STAT01", LocalDateTime.of(2026, 9, 20, 10, 0), "Aula 204", 40, "A-Z", LocalDate.of(2026, 9, 18)},
+                {"WEB01", LocalDateTime.of(2026, 9, 22, 15, 0), "Lab Inf 3", 30, "A-Z", LocalDate.of(2026, 9, 20)},
+                {"CLOUD01", LocalDateTime.of(2026, 9, 25, 9, 0), "Aula 205", 25, "A-Z", LocalDate.of(2026, 9, 23)},
+                {"IOT01", LocalDateTime.of(2026, 9, 28, 11, 30), "Lab Inf 4", 25, "A-Z", LocalDate.of(2026, 9, 26)},
+                {"ROB01", LocalDateTime.of(2026, 10, 2, 9, 0), "Aula Magna", 30, "A-Z", LocalDate.of(2026, 9, 30)},
+                {"ELE01", LocalDateTime.of(2026, 10, 5, 14, 0), "Aula 108", 35, "A-Z", LocalDate.of(2026, 10, 3)},
+                {"ELN01", LocalDateTime.of(2026, 10, 8, 9, 0), "Aula 109", 30, "A-Z", LocalDate.of(2026, 10, 6)},
+                {"TD01", LocalDateTime.of(2026, 10, 10, 10, 0), "Aula 110", 30, "A-Z", LocalDate.of(2026, 10, 8)},
+                {"GES01", LocalDateTime.of(2026, 10, 12, 15, 0), "Aula 206", 40, "A-Z", LocalDate.of(2026, 10, 10)},
+                {"FIN01", LocalDateTime.of(2026, 10, 15, 9, 0), "Aula 207", 35, "A-Z", LocalDate.of(2026, 10, 13)},
+                {"ECO01", LocalDateTime.of(2026, 10, 18, 11, 0), "Aula 208", 40, "A-Z", LocalDate.of(2026, 10, 16)},
+                {"DIR01", LocalDateTime.of(2026, 10, 20, 9, 0), "Aula Magna", 50, "A-Z", LocalDate.of(2026, 10, 18)},
+                {"DIR02", LocalDateTime.of(2026, 10, 22, 14, 30), "Aula 111", 45, "A-Z", LocalDate.of(2026, 10, 20)},
+                {"BIO01", LocalDateTime.of(2026, 10, 25, 9, 0), "Aula 112", 30, "A-Z", LocalDate.of(2026, 10, 23)},
+                {"CHM01", LocalDateTime.of(2026, 10, 28, 10, 0), "Lab Chimica", 30, "A-Z", LocalDate.of(2026, 10, 26)},
+                {"MAT01", LocalDateTime.of(2026, 10, 30, 9, 0), "Aula 113", 35, "A-Z", LocalDate.of(2026, 10, 28)}
             };
 
             for (Object[] apRow : appelliData) {
@@ -361,21 +361,27 @@ public class DatabasePopulator {
             }
 
             // =========================================================================
-            // SIMULAZIONE TEMPORALE: FASE 3 - ISCRIZIONE STUDENTI AGLI APPELLI (1 Ottobre 2026)
+            // SIMULAZIONE TEMPORALE: FASE 3 - ISCRIZIONE STUDENTI AGLI APPELLI (5 Agosto 2026)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Iscrizioni studenti agli appelli (Ottobre 2026)...");
-            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 1, 12, 0));
+            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Iscrizioni studenti agli appelli (Agosto 2026)...");
+            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 5, 12, 0));
 
             List<Appello> appelliIS01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("IS01"));
             String codAppelloIS01 = !appelliIS01.isEmpty() ? appelliIS01.get(0).getCodiceAppello() : "APP-00001";
 
-            List<Appello> appelliBD01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("BD01"));
-            String codAppelloBD01 = !appelliBD01.isEmpty() ? appelliBD01.get(0).getCodiceAppello() : "APP-00002";
-
             List<Appello> appelliAR01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("AR01"));
-            String codAppelloAR01 = !appelliAR01.isEmpty() ? appelliAR01.get(0).getCodiceAppello() : "APP-00003";
+            String codAppelloAR01 = !appelliAR01.isEmpty() ? appelliAR01.get(0).getCodiceAppello() : "APP-00002";
 
-            // Iscrizione studenti all'appello IS01 e BD01
+            List<Appello> appelliAM01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("AM01"));
+            String codAppelloAM01 = !appelliAM01.isEmpty() ? appelliAM01.get(0).getCodiceAppello() : "APP-00003";
+
+            List<Appello> appelliPRG01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("PRG01"));
+            String codAppelloPRG01 = !appelliPRG01.isEmpty() ? appelliPRG01.get(0).getCodiceAppello() : "APP-00004";
+
+            List<Appello> appelliBD01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("BD01"));
+            String codAppelloBD01 = !appelliBD01.isEmpty() ? appelliBD01.get(0).getCodiceAppello() : "APP-00005";
+
+            // Iscrizione studenti all'appello IS01
             for (int i = 0; i < 20; i++) {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
@@ -383,17 +389,14 @@ public class DatabasePopulator {
                 }
             }
 
-            for (int i = 5; i < 25; i++) {
+            // Iscrizione Mario Rossi (index 0) e altri studenti agli appelli del 15 Agosto (PRG01 e BD01) e altri
+            for (int i = 0; i < 20; i++) {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
+                    gestioneAppelli.iscriviStudente(st, codAppelloPRG01);
                     gestioneAppelli.iscriviStudente(st, codAppelloBD01);
-                }
-            }
-
-            for (int i = 0; i < 15; i++) {
-                Studente st = studentiList.get(i);
-                if (st.isTassePagate()) {
                     gestioneAppelli.iscriviStudente(st, codAppelloAR01);
+                    gestioneAppelli.iscriviStudente(st, codAppelloAM01);
                 }
             }
 
@@ -402,8 +405,8 @@ public class DatabasePopulator {
             // =========================================================================
             console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Svolgimento esami e pubblicazione esiti...");
 
-            // 10 Ottobre 2026: Giorno appello IS01
-            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 10, 18, 0));
+            // 10 Agosto 2026: Giorno appello IS01
+            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 10, 18, 0));
 
             // Pubblicazione esiti per IS01 (Prof. Rossi - ID: "1") (Oltre 30 esiti complessivi)
             int[] votiIS = {28, 15, 30, 24, 27, 14, 30, 26, 22, 17, 29, 25, 23, 16, 28, 30, 24, 18, 20, 26};
@@ -426,20 +429,23 @@ public class DatabasePopulator {
                 }
             }
 
-            // 12 Ottobre 2026: Giorno appello BD01
-            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 12, 18, 0));
+            // 15 Agosto 2026: Giorno appello PRG01 / BD01
+            // Per questi appelli del 15 Agosto, Mario Rossi (index 0) è regolarmente iscritto ma NON ha ancora
+            // un esito registrato, così che il docente possa inserirlo direttamente da interfaccia grafica!
+            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 15, 18, 0));
 
-            int[] votiBD = {30, 28, 25, 14, 27, 22, 30, 15, 26, 24, 29, 18, 21, 23, 27, 16, 30, 25, 28, 20};
-            for (int i = 5; i < 25; i++) {
+            // Pubblichiamo gli esiti solo per alcuni studenti (dal 5 al 19), lasciando Mario Rossi (index 0) disponibile per l'inserimento
+            int[] votiPRG = {30, 28, 25, 14, 27, 22, 30, 15, 26, 24, 29, 18, 21, 23, 27};
+            for (int i = 5; i < 20; i++) {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
                     EsameSostenuto esm = gestioneVoto.pubblicaEsito(
-                        codAppelloBD01,
+                        codAppelloPRG01,
                         st.getMatricola(),
-                        "BD01",
+                        "PRG01",
                         "1",
-                        votiBD[i - 5],
-                        (votiBD[i - 5] == 30 && (i % 2 == 0)),
+                        votiPRG[i - 5],
+                        (votiPRG[i - 5] == 30 && (i % 2 == 0)),
                         7
                     );
                     esamiPubblicatiList.add(esm);
@@ -450,7 +456,7 @@ public class DatabasePopulator {
             // SIMULAZIONE TEMPORALE: FASE 5 - ACCETTAZIONE / RIFIUTO VOTI E LIBRETTO
             // =========================================================================
             console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Registrazione scelte studenti nel libretto...");
-            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 13, 11, 0));
+            ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 16, 11, 0));
 
             // Alcuni studenti accettano il voto (verbalizzato nel libretto), altri lo rifiutano, altri rimangono pendenti
             for (int i = 0; i < esamiPubblicatiList.size(); i++) {
