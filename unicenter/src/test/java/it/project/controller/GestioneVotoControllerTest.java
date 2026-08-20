@@ -100,6 +100,14 @@ class GestioneVotoControllerTest {
     }
 
     @Test
+    @DisplayName("Accettazione voto con studente non trovato lancia IllegalStateException")
+    void testAccettaVoto_StudenteNonTrovato() {
+        EsameSostenuto esame = controller.pubblicaEsito("APP001", "MATRICOLA_NON_ESISTE", MATERIA, PROF_ID, 28, false, 7);
+        when(unicenterMock.trovaStudente("MATRICOLA_NON_ESISTE")).thenReturn(Optional.empty());
+        assertThrows(IllegalStateException.class, () -> controller.accettaVoto(esame.getIdEsame()));
+    }
+
+    @Test
     @DisplayName("Rifiuto voto con successo")
     void testRifiutaVoto_Successo() {
         EsameSostenuto esame = controller.pubblicaEsito("APP001", MATRICOLA, MATERIA, PROF_ID, 28, false, 7);

@@ -487,7 +487,7 @@ public class MenuController {
                     }
                 }
                 case 4 -> {
-                    console.mostraMessaggio("\n--- Sezione di modifica appelli ---");
+                    console.mostraMessaggio("\n--- Sezione di eliminazione appelli ---");
                     console.mostraMessaggio("------------------------------------------");
 
                     List<Appello> appelliProfessore = unicenter.trovaAppelliProfessore();
@@ -495,7 +495,7 @@ public class MenuController {
                     console.mostraMessaggio("I tuoi appelli:");
 
                     if (appelliProfessore == null || appelliProfessore.isEmpty()) {
-                        console.mostraMessaggio("Non hai appelli da modificare.");
+                        console.mostraMessaggio("Non hai appelli da eliminare.");
                         break;
                     } else {
                         StampaAppelli(appelliProfessore);
@@ -813,6 +813,7 @@ public class MenuController {
             console.mostraMessaggio("5. Visualizza tutte le Materie (UC5)");
             console.mostraMessaggio("6. Finalizza Corso di Laurea - associa materie (UC5)");
             console.mostraMessaggio("7. Associa Professore a Materia");
+            console.mostraMessaggio("8. Elimina Corso di Laurea (Bozza non finalizzata o Obsoleto)");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -1133,6 +1134,39 @@ public class MenuController {
                                 materiaScelta.getCodiceMateria());
                         console.mostraMessaggio("Professore associato con successo alla materia '"
                                 + materiaScelta.getNome() + "'!");
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+
+                // ============================================================
+                // UC4 - ELIMINA CORSO DI LAUREA (NON FINALIZZATO O OBSOLETO)
+                // ============================================================
+                case 8 -> {
+                    console.mostraMessaggio("\n--- Elimina Corso di Laurea (Bozza o Obsoleto) ---");
+                    List<CorsoDiLaurea> tuttiCorsi = unicenter.getCorsiDiLaurea();
+                    List<CorsoDiLaurea> eliminabili = new java.util.ArrayList<>();
+                    if (tuttiCorsi != null) {
+                        for (CorsoDiLaurea c : tuttiCorsi) {
+                            if (!c.isFinalizzato() || c.isObsoleto()) {
+                                eliminabili.add(c);
+                            }
+                        }
+                    }
+                    if (eliminabili.isEmpty()) {
+                        console.mostraMessaggio("Nessun corso di laurea eliminabile (solo corsi non finalizzati o obsoleti possono essere eliminati).");
+                        break;
+                    }
+                    console.mostraMessaggio("Corsi di laurea eliminabili:");
+                    stampaCorsiDiLaurea(eliminabili);
+
+                    String codice = console.leggiStringa("Inserisci il codice del corso da eliminare (0 per annullare): ");
+                    if ("0".equals(codice))
+                        break;
+
+                    try {
+                        unicenter.eliminaCorsoDiLaurea(codice);
+                        console.mostraMessaggio("Corso di laurea eliminato con successo!");
                     } catch (Exception e) {
                         console.mostraErrore(e.getMessage());
                     }

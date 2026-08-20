@@ -435,6 +435,16 @@ public class Unicenter {
     }
 
     /**
+     * L'Amministratore elimina definitivamente un Corso di Laurea non finalizzato o obsoleto.
+     */
+    public boolean eliminaCorsoDiLaurea(String codice) {
+        if (!(currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può eliminare un corso di laurea.");
+        }
+        return gestioneCorsiLaureaController.eliminaCorsoDiLaurea(codice);
+    }
+
+    /**
      * Cerca un Corso di Laurea per codice.
      */
     public CorsoDiLaurea trovaCorsoDiLaureaByCodice(String codice) {

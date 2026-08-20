@@ -22,6 +22,7 @@ public class ValidationChainBuilder {
     }
 
     public static IscrizioneValidator buildDefaultChain() {
+        IscrizioneValidator esameSuperato = new EsameSuperatoValidator();
         IscrizioneValidator pianoStudi = new PianoStudiValidator();
         IscrizioneValidator posti = new PostiDisponibiliValidator();
         IscrizioneValidator tasse = new TassaPaidValidator();
@@ -29,11 +30,12 @@ public class ValidationChainBuilder {
         IscrizioneValidator dataTermine = new DataTermineIscrizioneValidator();
 
         // Collega i validatori in sequenza
+        esameSuperato.setNext(pianoStudi);
         pianoStudi.setNext(posti);
         posti.setNext(tasse);
         tasse.setNext(cognome);
         cognome.setNext(dataTermine);
 
-        return pianoStudi;
+        return esameSuperato;
     }
 }

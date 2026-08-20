@@ -107,6 +107,27 @@ public class GestioneCorsiLaureaController {
         return true;
     }
 
+    /**
+     * Elimina definitivamente un Corso di Laurea (se non ancora finalizzato o se già reso obsoleto).
+     * I corsi attivi e finalizzati devono essere prima resi obsoleti per sicurezza.
+     *
+     * @param codice codice identificativo del corso da eliminare
+     * @return true se eliminato con successo
+     */
+    public boolean eliminaCorsoDiLaurea(String codice) {
+        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codice);
+        if (corso == null) {
+            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
+        }
+
+        if (corso.isFinalizzato() && !corso.isObsoleto()) {
+            throw new IllegalStateException(
+                    "Impossibile eliminare un corso di laurea attivo e finalizzato. Rendi prima il corso obsoleto.");
+        }
+
+        return corsiDiLaurea.remove(corso);
+    }
+
     // =========================================================================
     // UC5 - FINALIZZAZIONE CORSO DI LAUREA
     // =========================================================================

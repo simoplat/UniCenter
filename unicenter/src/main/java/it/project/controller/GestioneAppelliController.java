@@ -121,8 +121,14 @@ public class GestioneAppelliController {
             throw new IllegalStateException("Sei già iscritto a questo appello.");
         }
 
-        // Controlla se lo studente ha un esito pendente per questa materia
+        // Controlla se lo studente ha già superato l'esame per questa materia
         String codiceMateria = appello.getCodiceMateria();
+        if (studente.getLibretto() != null && studente.getLibretto().isEsameSuperato(codiceMateria)) {
+            throw new IllegalStateException(
+                    "Iscrizione rifiutata: esame già superato e verbalizzato nel libretto.");
+        }
+
+        // Controlla se lo studente ha un esito pendente per questa materia
         List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
         for (EsameSostenuto esame : esitiPendenti) {
             if (esame.getCodiceMateria().equals(codiceMateria)) {
@@ -252,15 +258,18 @@ public class GestioneAppelliController {
         validateAppello(appello.getCodiceMateria(), dataOra, aula, postiDisponibili, vincoloNormalizzato,
                 dataTermineIscrizione);
 
-        if (postiDisponibili < appello.getIscritti().size()) {
+        int iscrittiPresenti = appello.getIscritti().size();
+        if (postiDisponibili < iscrittiPresenti) {
             throw new PostiNonValidi(
                     "Il numero di posti disponibili non può essere inferiore agli iscritti già presenti ("
-                            + appello.getIscritti().size() + ").");
+                            + iscrittiPresenti + ").");
         }
+
+        int postiRimanenti = postiDisponibili - iscrittiPresenti;
 
         appello.setDataOra(dataOra);
         appello.setAula(aula);
-        appello.setPostiDisponibili(postiDisponibili);
+        appello.setPostiDisponibili(postiRimanenti);
         appello.setVincoloLetteraCognome(vincoloNormalizzato);
         appello.setTermineIscrizione(dataTermineIscrizione);
 

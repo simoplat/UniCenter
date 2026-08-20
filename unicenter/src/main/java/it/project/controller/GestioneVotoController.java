@@ -111,13 +111,18 @@ public class GestioneVotoController {
             throw new IllegalArgumentException("Esame non trovato: " + idEsame);
         }
 
+        // Recupera lo studente e verifica la presenza
+        Studente studente = unicenter.trovaStudente(esame.getMatricolaStudente())
+                .orElseThrow(() -> new IllegalStateException("Studente non trovato per la matricola: " + esame.getMatricolaStudente()));
+
+        if (studente.getLibretto() == null) {
+            throw new IllegalStateException("Libretto non disponibile per lo studente " + esame.getMatricolaStudente());
+        }
+
         esame.accetta();
 
         // Registra nel libretto dello studente (Information Expert)
-        Studente studente = unicenter.trovaStudente(esame.getMatricolaStudente()).orElse(null);
-        if (studente != null) {
-            studente.getLibretto().registraEsame(esame);
-        }
+        studente.getLibretto().registraEsame(esame);
 
         // Rimuove gli altri esiti pendenti della stessa materia per lo stesso studente
         String matricola = esame.getMatricolaStudente();

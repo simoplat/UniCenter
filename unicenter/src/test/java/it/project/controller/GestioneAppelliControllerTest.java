@@ -239,6 +239,20 @@ class GestioneAppelliControllerTest {
         assertTrue(studente.getNotifiche().isEmpty());
     }
 
+    @Test
+    void iscriviStudente_esameGiaSuperatoNelLibretto_lanciaIllegalStateException() throws Exception {
+        Appello appello = creaAppelloValido("APP_SUP");
+        aggiungiAppelloDirettamente(appello);
+
+        Studente studente = creaStudente("M020");
+        EsameSostenuto esameSuperato = new EsameSostenuto("ESM-001", "APP_OLD", "M020", MATERIA, "P001", 28, false, 9, 7);
+        esameSuperato.accetta();
+        studente.getLibretto().registraEsame(esameSuperato);
+
+        assertThrows(IllegalStateException.class, () -> controller.iscriviStudente(studente, "APP_SUP"));
+        assertFalse(appello.getIscritti().contains(studente));
+    }
+
     // =================================================================
     // disiscriviStudente
     // =================================================================
@@ -398,7 +412,7 @@ class GestioneAppelliControllerTest {
         assertTrue(risultato);
         assertEquals(nuovaData, appello.getDataOra());
         assertEquals("Aula 9", appello.getAula());
-        assertEquals(50, appello.getPostiDisponibili());
+        assertEquals(49, appello.getPostiDisponibili());
         assertEquals("M-Z", appello.getVincoloLetteraCognome());
         assertEquals(1, studente.getNotifiche().size());
     }
