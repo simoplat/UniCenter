@@ -3,10 +3,10 @@ package it.project;
 import java.util.ArrayList;
 import java.util.List;
 
-import it.project.observer.ObserverAppello;
+import it.project.observer.ObserverNotifica;
 import it.project.strategy.ICalcoloTasseStrategy;
 
-public class Studente extends Utente implements ObserverAppello {
+public class Studente extends Utente implements ObserverNotifica {
     private List<Notifica> notifiche;
     private Carriera carriera;
     private Libretto libretto;

@@ -20,6 +20,7 @@ public class Unicenter {
     private final GestoreMaterieController gestoreMaterie;
     private final GestioneCorsiLaureaController gestioneCorsiLaureaController;
     private final GestioneVotoController gestioneVotoController;
+    private final InvioComunicazioniController invioComunicazioniController;
     private final MenuController menuController;
     private Utente currentUser = null;
 
@@ -42,6 +43,9 @@ public class Unicenter {
 
         // 3. Inizializzazione Controller UC3 (Gestione Voto)
         this.gestioneVotoController = new GestioneVotoController(this, this.gestoreMaterie);
+
+        // 4. Inizializzazione Controller UC7 (Invio Comunicazioni)
+        this.invioComunicazioniController = new InvioComunicazioniController(this, this.gestoreMaterie);
 
     }
 
@@ -119,9 +123,7 @@ public class Unicenter {
         Studente studente = (Studente) this.currentUser;
         PianoDiStudi pianoDiStudi = studente.getPianoDiStudi();
         if (pianoDiStudi == null || "IN_ATTESA".equals(pianoDiStudi.getStato())) {
-            console.mostraMessaggio(
-                    "[UNICENTER] Impossibile iscrivere lo studente: il piano di studi non è approvato.");
-            return Collections.emptyList();
+            throw new IllegalStateException("Impossibile iscrivere lo studente: il piano di studi non è approvato.");
         }
         return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getIdMaterie());
     }
@@ -185,6 +187,28 @@ public class Unicenter {
 
     public GestioneCorsiLaureaController getGestioneCorsiLaureaController() {
         return gestioneCorsiLaureaController;
+    }
+
+    public InvioComunicazioniController getInvioComunicazioniController() {
+        return invioComunicazioniController;
+    }
+
+    /**
+     * UC7: Il Professore autenticato invia un avviso/comunicazione per una materia di cui è responsabile.
+     */
+    public int inviaComunicazioneMateria(String codiceMateria, String titolo, String messaggio) {
+        if (!(currentUser instanceof Professore)) {
+            throw new IllegalStateException("Solo un professore autenticato può inviare comunicazioni di corso.");
+        }
+        Professore professore = (Professore) currentUser;
+        return invioComunicazioniController.inviaComunicazione(professore, codiceMateria, titolo, messaggio);
+    }
+
+    /**
+     * UC7: Restituisce gli studenti destinatari per una data materia.
+     */
+    public List<Studente> getStudentiDestinatariComunicazione(String codiceMateria) {
+        return invioComunicazioniController.getStudentiDestinatari(codiceMateria);
     }
 
     public Utente effettuaLogin(String email, String password) throws UtenteNonTrovatoException {

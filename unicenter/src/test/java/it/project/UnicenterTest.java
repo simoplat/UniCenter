@@ -278,6 +278,20 @@ class UnicenterTest {
     }
 
     @Test
+    void trovaAppelliStudentePrenotabili_pianoStudiNonApprovato_lanciaIllegalStateException() {
+        unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
+        Studente studente = (Studente) unicenter.getCurrentUser();
+        studente.getPianoDiStudi().setStato("IN_ATTESA");
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> unicenter.trovaAppelliStudentePrenotabili());
+        assertTrue(ex.getMessage().contains("piano di studi non è approvato"));
+
+        // Ripristina lo stato del piano di studi per i successivi test
+        studente.getPianoDiStudi().setStato("APPROVATO");
+    }
+
+    @Test
     void isProfessoreAbilitatoAMateria_professoreAbilitato_ritornaTrue() {
         unicenter.passwordCorretta("mario.rossi@unicenter.it", "pass123"); // Prof. Rossi, idProfessore "1"
 
@@ -293,10 +307,13 @@ class UnicenterTest {
 
     @Test
     void getMaterieDelProfessore_professoreConMaterie_leRitornaTutte() {
-        unicenter.passwordCorretta("mario.rossi@unicenter.it", "pass123"); // associato a IS01, BD01, AR01
+        unicenter.passwordCorretta("mario.rossi@unicenter.it", "pass123");
 
         List<Materia> materie = unicenter.getMaterieDelProfessore();
 
-        assertEquals(3, materie.size());
+        assertEquals(5, materie.size());
+        assertTrue(materie.stream().anyMatch(m -> m.getCodiceMateria().equals("IS01")));
+        assertTrue(materie.stream().anyMatch(m -> m.getCodiceMateria().equals("BD01")));
+        assertTrue(materie.stream().anyMatch(m -> m.getCodiceMateria().equals("AR01")));
     }
 }

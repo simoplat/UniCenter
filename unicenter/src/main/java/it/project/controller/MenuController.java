@@ -82,8 +82,14 @@ public class MenuController {
 
                 case 1 -> {
                     console.mostraMessaggio("\n--- Iscrizione Appello ---");
-                    // Invocazione della catena di validazione e iscrizione
-                    List<Appello> appelliDisponibili = unicenter.trovaAppelliStudentePrenotabili();
+                    List<Appello> appelliDisponibili;
+                    try {
+                        appelliDisponibili = unicenter.trovaAppelliStudentePrenotabili();
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                        break;
+                    }
+
                     if (appelliDisponibili == null || appelliDisponibili.isEmpty()) {
                         console.mostraMessaggio("Nessun appello disponibile al momento.");
                         break;
@@ -307,6 +313,7 @@ public class MenuController {
             console.mostraMessaggio("4. Elimina appello d'esame");
             console.mostraMessaggio("5. Pubblica esito esame (UC3)");
             console.mostraMessaggio("6. Visualizza esiti pubblicati");
+            console.mostraMessaggio("7. Invia comunicazione / avviso di corso (UC7)");
             console.mostraMessaggio("0. Torna al menu principale");
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
 
@@ -664,6 +671,44 @@ public class MenuController {
                         console.mostraMessaggio("Non hai pubblicato nessun esito.");
                     } else {
                         stampaEsiti(esitiProf);
+                    }
+                }
+
+                // ============================================================
+                // UC7 - INVIA COMUNICAZIONE DI CORSO (Observer Pattern)
+                // ============================================================
+                case 7 -> {
+                    console.mostraMessaggio("\n--- Invia Comunicazione di Corso (UC7) ---");
+                    console.mostraMessaggio("Materie di cui sei professore:");
+                    console.mostraMessaggio("------------------------------------------");
+                    List<Materia> materieProf = unicenter.getMaterieDelProfessore();
+                    if (materieProf == null || materieProf.isEmpty()) {
+                        console.mostraMessaggio("Non sei abilitato a nessuna materia.");
+                        break;
+                    }
+                    stampaMaterie(materieProf);
+
+                    String codMateria = console.leggiStringa("Inserisci il codice della materia per l'avviso (0 per annullare): ");
+                    if ("0".equals(codMateria)) {
+                        break;
+                    }
+
+                    if (!unicenter.isProfessoreAbilitatoAMateria(codMateria)) {
+                        console.mostraErrore("Non sei abilitato a gestire questa materia.");
+                        break;
+                    }
+
+                    List<Studente> destinatari = unicenter.getStudentiDestinatariComunicazione(codMateria);
+                    console.mostraMessaggio("Studenti attualmente iscritti alla materia (destinatari): " + destinatari.size());
+
+                    String titolo = console.leggiStringa("Inserisci il titolo/oggetto dell'avviso: ");
+                    String messaggio = console.leggiStringa("Inserisci il testo della comunicazione: ");
+
+                    try {
+                        int notificati = unicenter.inviaComunicazioneMateria(codMateria, titolo, messaggio);
+                        console.mostraMessaggio("\n[SUCCESSO] Comunicazione pubblicata e inviata a " + notificati + " studente/i.");
+                    } catch (Exception e) {
+                        console.mostraErrore("Errore durante l'invio della comunicazione: " + e.getMessage());
                     }
                 }
 

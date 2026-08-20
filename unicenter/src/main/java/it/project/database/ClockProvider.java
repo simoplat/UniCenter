@@ -13,7 +13,7 @@ import java.time.ZoneId;
  */
 public class ClockProvider {
     private static final ZoneId DEFAULT_ZONE = ZoneId.systemDefault();
-    private static Clock clock = Clock.systemDefaultZone();
+    private static Clock clock = null;
 
     private ClockProvider() {}
 
@@ -22,7 +22,7 @@ public class ClockProvider {
     }
 
     public static void setClock(Clock newClock) {
-        clock = (newClock != null) ? newClock : Clock.systemDefaultZone();
+        clock = newClock;
     }
 
     public static void setFixedDateTime(LocalDateTime dateTime) {
@@ -34,14 +34,14 @@ public class ClockProvider {
     }
 
     public static void resetClock() {
-        clock = Clock.systemDefaultZone();
+        clock = null;
     }
 
     public static LocalDate nowLocalDate() {
-        return LocalDate.now(clock);
+        return (clock != null) ? LocalDate.now(clock) : LocalDate.now();
     }
 
     public static LocalDateTime nowLocalDateTime() {
-        return LocalDateTime.now(clock);
+        return (clock != null) ? LocalDateTime.now(clock) : LocalDateTime.now();
     }
 }

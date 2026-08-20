@@ -100,21 +100,21 @@ class CognomeFasciaValidatorTest {
     }
 
     @Test
-    void validate_cognomeNullo_ritornaFalseSenzaEccezione() throws Exception {
+    void validate_cognomeNullo_lanciaIllegalStateException() {
         Studente studente = creaStudente("Placeholder");
         studente.setCognome(null);
         when(appello.getVincoloLetteraCognome()).thenReturn("A-Z");
 
-        assertFalse(validator.validate(studente, appello));
+        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
     }
 
     @Test
-    void validate_cognomeVuoto_ritornaFalseSenzaEccezione() throws Exception {
+    void validate_cognomeVuoto_lanciaIllegalStateException() {
         Studente studente = creaStudente("Placeholder");
         studente.setCognome("   ");
         when(appello.getVincoloLetteraCognome()).thenReturn("A-Z");
 
-        assertFalse(validator.validate(studente, appello));
+        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
     }
 
     @Test

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import it.project.Amministratore;
+import it.project.Appello;
 import it.project.ConsoleUI;
 import it.project.CorsoDiLaurea;
 import it.project.EsameSostenuto;
@@ -38,6 +39,10 @@ public class DatabasePopulator {
     }
 
     public void popolaDataBase() {
+        if (unicenter.esisteUtente("admin@unicenter.it") || unicenter.esisteUtente("mario.rossi@studenti.it")) {
+            return;
+        }
+
         try {
             console.mostraMessaggio("[DB POPULATION] Avvio popolamento database strutturato con simulazione temporale...");
 
@@ -361,25 +366,34 @@ public class DatabasePopulator {
             console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Iscrizioni studenti agli appelli (Ottobre 2026)...");
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 1, 12, 0));
 
-            // Iscrizione studenti all'appello IS01 (APP-00001) e BD01 (APP-00002)
+            List<Appello> appelliIS01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("IS01"));
+            String codAppelloIS01 = !appelliIS01.isEmpty() ? appelliIS01.get(0).getCodiceAppello() : "APP-00001";
+
+            List<Appello> appelliBD01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("BD01"));
+            String codAppelloBD01 = !appelliBD01.isEmpty() ? appelliBD01.get(0).getCodiceAppello() : "APP-00002";
+
+            List<Appello> appelliAR01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("AR01"));
+            String codAppelloAR01 = !appelliAR01.isEmpty() ? appelliAR01.get(0).getCodiceAppello() : "APP-00003";
+
+            // Iscrizione studenti all'appello IS01 e BD01
             for (int i = 0; i < 20; i++) {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
-                    gestioneAppelli.iscriviStudente(st, "APP-00001");
+                    gestioneAppelli.iscriviStudente(st, codAppelloIS01);
                 }
             }
 
             for (int i = 5; i < 25; i++) {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
-                    gestioneAppelli.iscriviStudente(st, "APP-00002");
+                    gestioneAppelli.iscriviStudente(st, codAppelloBD01);
                 }
             }
 
             for (int i = 0; i < 15; i++) {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
-                    gestioneAppelli.iscriviStudente(st, "APP-00003");
+                    gestioneAppelli.iscriviStudente(st, codAppelloAR01);
                 }
             }
 
@@ -388,10 +402,10 @@ public class DatabasePopulator {
             // =========================================================================
             console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Svolgimento esami e pubblicazione esiti...");
 
-            // 10 Ottobre 2026: Giorno appello IS01 (APP-00001)
+            // 10 Ottobre 2026: Giorno appello IS01
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 10, 18, 0));
 
-            // Pubblicazione esiti per APP-00001 (Prof. Rossi - ID: "1") (Oltre 30 esiti complessivi)
+            // Pubblicazione esiti per IS01 (Prof. Rossi - ID: "1") (Oltre 30 esiti complessivi)
             int[] votiIS = {28, 15, 30, 24, 27, 14, 30, 26, 22, 17, 29, 25, 23, 16, 28, 30, 24, 18, 20, 26};
             boolean[] lodiIS = {false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false};
 
@@ -400,7 +414,7 @@ public class DatabasePopulator {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
                     EsameSostenuto esm = gestioneVoto.pubblicaEsito(
-                        "APP-00001",
+                        codAppelloIS01,
                         st.getMatricola(),
                         "IS01",
                         "1",
@@ -412,7 +426,7 @@ public class DatabasePopulator {
                 }
             }
 
-            // 12 Ottobre 2026: Giorno appello BD01 (APP-00002)
+            // 12 Ottobre 2026: Giorno appello BD01
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 10, 12, 18, 0));
 
             int[] votiBD = {30, 28, 25, 14, 27, 22, 30, 15, 26, 24, 29, 18, 21, 23, 27, 16, 30, 25, 28, 20};
@@ -420,7 +434,7 @@ public class DatabasePopulator {
                 Studente st = studentiList.get(i);
                 if (st.isTassePagate()) {
                     EsameSostenuto esm = gestioneVoto.pubblicaEsito(
-                        "APP-00002",
+                        codAppelloBD01,
                         st.getMatricola(),
                         "BD01",
                         "1",

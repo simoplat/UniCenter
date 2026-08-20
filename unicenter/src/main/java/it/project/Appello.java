@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import it.project.observer.ObserverAppello;
+import it.project.observer.ObserverNotifica;
 
 public class Appello {
     private String codiceAppello;
@@ -91,7 +91,7 @@ public class Appello {
     }
 
     public void notifica(Notifica notifica) {
-        for (ObserverAppello observer : iscritti) {
+        for (ObserverNotifica observer : iscritti) {
             observer.riceviNotifica(notifica);
         }
     }
