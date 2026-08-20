@@ -194,7 +194,8 @@ public class Unicenter {
     }
 
     /**
-     * UC7: Il Professore autenticato invia un avviso/comunicazione per una materia di cui è responsabile.
+     * UC7: Il Professore autenticato invia un avviso/comunicazione per una materia
+     * di cui è responsabile.
      */
     public int inviaComunicazioneMateria(String codiceMateria, String titolo, String messaggio) {
         if (!(currentUser instanceof Professore)) {
@@ -228,11 +229,27 @@ public class Unicenter {
                 .findFirst();
     }
 
+    public Optional<Studente> trovaStudenteByEmail(String email) {
+        return utenti.stream()
+                .filter(u -> u instanceof Studente)
+                .map(u -> (Studente) u)
+                .filter(s -> s.getEmail().equalsIgnoreCase(email))
+                .findFirst();
+    }
+
     public Optional<Professore> trovaProfessore(String idProfessore) {
         return utenti.stream()
                 .filter(u -> u instanceof Professore)
                 .map(u -> (Professore) u)
                 .filter(p -> p.getIdProfessore().equals(idProfessore))
+                .findFirst();
+    }
+
+    public Optional<Professore> trovaProfessoreByEmail(String email) {
+        return utenti.stream()
+                .filter(u -> u instanceof Professore)
+                .map(u -> (Professore) u)
+                .filter(p -> p.getEmail().equalsIgnoreCase(email))
                 .findFirst();
     }
 

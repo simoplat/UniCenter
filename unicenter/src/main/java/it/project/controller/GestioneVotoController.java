@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 import it.project.EsameSostenuto;
 import it.project.Materia;
 import it.project.Professore;
@@ -15,7 +14,8 @@ import it.project.generator.IdEsameGenerator;
 import it.project.observer.NotificaEsitoObserver;
 
 /**
- * Controller (GRASP / Facade Controller) per il UC3 - Accettazione/Rifiuto Voto Esame.
+ * Controller (GRASP / Facade Controller) per il UC3 - Accettazione/Rifiuto Voto
+ * Esame.
  *
  * Riceve le richieste dalla UI (o dal job schedulato per la gestione scadenze)
  * e coordina l'elaborazione: pubblicazione esiti, accettazione/rifiuto voti,
@@ -41,7 +41,8 @@ public class GestioneVotoController {
 
     /**
      * Il Professore pubblica l'esito di un esame.
-     * Se il voto è >= 18: stato "In attesa di conferma" (Regola di Dominio 4 applicata in EsameSostenuto).
+     * Se il voto è >= 18: stato "In attesa di conferma" (Regola di Dominio 4
+     * applicata in EsameSostenuto).
      * Se il voto è < 18: stato "Bocciato" automaticamente.
      *
      * @param codiceAppello     codice dell'appello
@@ -53,8 +54,8 @@ public class GestioneVotoController {
      * @return l'EsameSostenuto creato
      */
     public EsameSostenuto pubblicaEsito(String codiceAppello, String matricolaStudente,
-                                         String codiceMateria, String idProfessore,
-                                         int votoNumerico, boolean lode, int giorniScadenza) {
+            String codiceMateria, String idProfessore,
+            int votoNumerico, boolean lode, int giorniScadenza) {
 
         // Validazioni
         if (lode && votoNumerico != 30) {
@@ -64,7 +65,8 @@ public class GestioneVotoController {
             throw new IllegalArgumentException("Il voto deve essere compreso tra 0 e 30.");
         }
 
-        // Controlla che non esista già un esito per lo stesso studente sullo stesso appello
+        // Controlla che non esista già un esito per lo stesso studente sullo stesso
+        // appello
         for (EsameSostenuto esistente : esitiPubblicati) {
             if (esistente.getCodiceAppello().equals(codiceAppello)
                     && esistente.getMatricolaStudente().equals(matricolaStudente)) {
@@ -88,8 +90,7 @@ public class GestioneVotoController {
         EsameSostenuto esame = new EsameSostenuto(
                 idEsame, codiceAppello, matricolaStudente,
                 codiceMateria, idProfessore,
-                votoNumerico, lode, cfu, giorniScadenza
-        );
+                votoNumerico, lode, cfu, giorniScadenza);
 
         // Registra l'Observer (notifica Studente e Professore)
         Studente studente = unicenter.trovaStudente(matricolaStudente).orElse(null);
@@ -128,7 +129,8 @@ public class GestioneVotoController {
 
         // Recupera lo studente e verifica la presenza
         Studente studente = unicenter.trovaStudente(esame.getMatricolaStudente())
-                .orElseThrow(() -> new IllegalStateException("Studente non trovato per la matricola: " + esame.getMatricolaStudente()));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Studente non trovato per la matricola: " + esame.getMatricolaStudente()));
 
         if (studente.getLibretto() == null) {
             throw new IllegalStateException("Libretto non disponibile per lo studente " + esame.getMatricolaStudente());
@@ -142,8 +144,7 @@ public class GestioneVotoController {
         // Rimuove gli altri esiti pendenti della stessa materia per lo stesso studente
         String matricola = esame.getMatricolaStudente();
         String codiceMateria = esame.getCodiceMateria();
-        esitiPubblicati.removeIf(e ->
-                !e.getIdEsame().equals(idEsame)
+        esitiPubblicati.removeIf(e -> !e.getIdEsame().equals(idEsame)
                 && e.getMatricolaStudente().equals(matricola)
                 && e.getCodiceMateria().equals(codiceMateria)
                 && e.getNomeStato().equals("In attesa di conferma"));
@@ -173,7 +174,8 @@ public class GestioneVotoController {
     // =========================================================================
 
     /**
-     * Verifica tutti gli esiti in "In attesa di conferma" e applica il rifiuto automatico
+     * Verifica tutti gli esiti in "In attesa di conferma" e applica il rifiuto
+     * automatico
      * se la scadenza temporale è passata (Estensione A - Silenzio Rifiuto).
      *
      * @return il numero di esiti rifiutati automaticamente
@@ -198,7 +200,8 @@ public class GestioneVotoController {
     // =========================================================================
 
     /**
-     * Restituisce tutti gli esiti pendenti ("In attesa di conferma") per uno studente.
+     * Restituisce tutti gli esiti pendenti ("In attesa di conferma") per uno
+     * studente.
      */
     public List<EsameSostenuto> trovaEsitiPendentiByStudente(String matricola) {
         List<EsameSostenuto> risultato = new ArrayList<>();

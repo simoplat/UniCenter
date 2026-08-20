@@ -141,7 +141,8 @@ public class GestioneAppelliController {
             }
         }
 
-        // Esegue i controlli della Chain of Responsibility (lancia eccezione in caso di violazione)
+        // Esegue i controlli della Chain of Responsibility (lancia eccezione in caso di
+        // violazione)
         validatorChain.validate(studente, appello);
 
         // Se la validazione passa, registra l'iscritto
@@ -161,7 +162,8 @@ public class GestioneAppelliController {
             throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
         }
 
-        // Vincolo temporale: la disiscrizione è bloccata dopo la data di termine iscrizione
+        // Vincolo temporale: la disiscrizione è bloccata dopo la data di termine
+        // iscrizione
         if (appello.getTermineIscrizione() != null
                 && ClockProvider.nowLocalDate().isAfter(appello.getTermineIscrizione())) {
             throw new IllegalStateException(
@@ -184,7 +186,8 @@ public class GestioneAppelliController {
         if (appello.getIscritti().contains(studente)) {
             appello.rimuoviIscritto(studente);
             String messaggio = "Ti sei disiscritto dall'appello: " + appello.toString();
-            Notifica nuovaNotifica = new Notifica("[Disiscrizione Appello]", messaggio, ClockProvider.nowLocalDateTime());
+            Notifica nuovaNotifica = new Notifica("[Disiscrizione Appello]", messaggio,
+                    ClockProvider.nowLocalDateTime());
             studente.riceviNotifica(nuovaNotifica);
             return true;
         } else {

@@ -38,15 +38,24 @@ class InvioComunicazioniControllerTest {
         // Popola database iniziale per avere corsi e dati puliti
         unicenter.popolaDataBase();
 
-        profRossi = unicenter.trovaProfessore("1").orElseThrow(); // Abilitato a IS01, BD01, AR01, PRG01, PRG02
-        profVerdi = unicenter.trovaProfessore("2").orElseThrow(); // Abilitato a AR01, SO01, RET01, SIC01
+        profRossi = unicenter.trovaProfessore("1")
+                .or(() -> unicenter.trovaProfessoreByEmail("mario.rossi@unicenter.it"))
+                .orElseThrow(() -> new AssertionError("Prof. Mario Rossi non trovato"));
+
+        profVerdi = unicenter.trovaProfessore("2")
+                .or(() -> unicenter.trovaProfessoreByEmail("giuseppe.verdi@unicenter.it"))
+                .orElseThrow(() -> new AssertionError("Prof. Giuseppe Verdi non trovato"));
+
         ingSoftware = gestoreMaterie.trovaMaterieByCodice("IS01");
         basiDati = gestoreMaterie.trovaMaterieByCodice("BD01");
 
-        // Studenti di prova
-        st1 = unicenter.trovaStudente("M100001").orElseThrow(); // Mario Rossi
-        st2 = unicenter.trovaStudente("M100002").orElseThrow(); // Luigi Verdi
-        st3 = unicenter.trovaStudente("M100003").orElseThrow(); // Anna Bianchi
+        // Studenti di prova recuperati per email
+        st1 = unicenter.trovaStudenteByEmail("mario.rossi@studenti.it")
+                .orElseThrow(() -> new AssertionError("Studente Mario Rossi non trovato"));
+        st2 = unicenter.trovaStudenteByEmail("luigi.verdi@studenti.it")
+                .orElseThrow(() -> new AssertionError("Studente Luigi Verdi non trovato"));
+        st3 = unicenter.trovaStudenteByEmail("anna.bianchi@studenti.it")
+                .orElseThrow(() -> new AssertionError("Studentessa Anna Bianchi non trovata"));
     }
 
     @Test
