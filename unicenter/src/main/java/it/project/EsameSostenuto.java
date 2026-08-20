@@ -19,7 +19,7 @@ import it.project.state.InAttesaConfermaState;
  */
 public class EsameSostenuto {
 
-    private final String idEsame;
+    private final String idVerbale;
     private final String codiceAppello;
     private final String matricolaStudente;
     private final String codiceMateria;
@@ -38,7 +38,7 @@ public class EsameSostenuto {
      * Costruttore principale.
      * Applica automaticamente la Regola di Dominio 4: voto < 18 → BocciatoState.
      *
-     * @param idEsame identificativo univoco dell'esame sostenuto
+     * @param idVerbale identificativo univoco del verbale dell'esame sostenuto
      * @param codiceAppello codice dell'appello d'esame
      * @param matricolaStudente matricola dello studente
      * @param codiceMateria codice della materia
@@ -48,10 +48,10 @@ public class EsameSostenuto {
      * @param cfu crediti formativi della materia
      * @param giorniScadenza giorni di scadenza per la conferma (Estensione A)
      */
-    public EsameSostenuto(String idEsame, String codiceAppello, String matricolaStudente,
+    public EsameSostenuto(String idVerbale, String codiceAppello, String matricolaStudente,
                           String codiceMateria, String idProfessore,
                           int votoNumerico, boolean lode, int cfu, int giorniScadenza) {
-        this.idEsame = idEsame;
+        this.idVerbale = idVerbale;
         this.codiceAppello = codiceAppello;
         this.matricolaStudente = matricolaStudente;
         this.codiceMateria = codiceMateria;
@@ -130,8 +130,8 @@ public class EsameSostenuto {
     // GETTER
     // =========================================================================
 
-    public String getIdEsame() {
-        return idEsame;
+    public String getIdVerbale() {
+        return idVerbale;
     }
 
     public String getCodiceAppello() {
@@ -180,7 +180,7 @@ public class EsameSostenuto {
 
     @Override
     public String toString() {
-        return "EsameSostenuto [id=" + idEsame
+        return "EsameSostenuto [idVerbale=" + idVerbale
                 + ", materia=" + codiceMateria
                 + ", studente=" + matricolaStudente
                 + ", voto=" + votoNumerico + (lode ? "L" : "")

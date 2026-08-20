@@ -10,7 +10,7 @@ import it.project.Materia;
 import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
-import it.project.generator.IdEsameGenerator;
+import it.project.generator.IdVerbaleGenerator;
 import it.project.observer.NotificaEsitoObserver;
 
 /**
@@ -24,7 +24,7 @@ import it.project.observer.NotificaEsitoObserver;
 public class GestioneVotoController {
 
     private final List<EsameSostenuto> esitiPubblicati;
-    private final IdEsameGenerator idEsameGenerator;
+    private final IdVerbaleGenerator idVerbaleGenerator;
     private final Unicenter unicenter;
     private final GestoreMaterieController gestoreMaterie;
 
@@ -32,7 +32,7 @@ public class GestioneVotoController {
         this.unicenter = unicenter;
         this.gestoreMaterie = gestoreMaterie;
         this.esitiPubblicati = new ArrayList<>();
-        this.idEsameGenerator = IdEsameGenerator.getInstance();
+        this.idVerbaleGenerator = IdVerbaleGenerator.getInstance();
     }
 
     // =========================================================================
@@ -83,12 +83,12 @@ public class GestioneVotoController {
         }
         int cfu = materia.getCfu();
 
-        // Genera ID univoco
-        String idEsame = idEsameGenerator.generateId();
+        // Genera ID verbale univoco
+        String idVerbale = idVerbaleGenerator.generateId();
 
         // Crea l'EsameSostenuto (RD4 applicata nel costruttore)
         EsameSostenuto esame = new EsameSostenuto(
-                idEsame, codiceAppello, matricolaStudente,
+                idVerbale, codiceAppello, matricolaStudente,
                 codiceMateria, idProfessore,
                 votoNumerico, lode, cfu, giorniScadenza);
 
@@ -118,13 +118,13 @@ public class GestioneVotoController {
      * Lo Studente accetta il voto. Il voto diventa definitivo ("Approvato")
      * e viene registrato nel libretto dello studente.
      *
-     * @param idEsame l'identificativo dell'esame sostenuto
+     * @param idVerbale l'identificativo del verbale dell'esame sostenuto
      * @return true se l'operazione è riuscita
      */
-    public boolean accettaVoto(String idEsame) {
-        EsameSostenuto esame = trovaEsameById(idEsame);
+    public boolean accettaVoto(String idVerbale) {
+        EsameSostenuto esame = trovaEsameById(idVerbale);
         if (esame == null) {
-            throw new IllegalArgumentException("Esame non trovato: " + idEsame);
+            throw new IllegalArgumentException("Esame non trovato: " + idVerbale);
         }
 
         // Recupera lo studente e verifica la presenza
@@ -144,7 +144,7 @@ public class GestioneVotoController {
         // Rimuove gli altri esiti pendenti della stessa materia per lo stesso studente
         String matricola = esame.getMatricolaStudente();
         String codiceMateria = esame.getCodiceMateria();
-        esitiPubblicati.removeIf(e -> !e.getIdEsame().equals(idEsame)
+        esitiPubblicati.removeIf(e -> !e.getIdVerbale().equals(idVerbale)
                 && e.getMatricolaStudente().equals(matricola)
                 && e.getCodiceMateria().equals(codiceMateria)
                 && e.getNomeStato().equals("In attesa di conferma"));
@@ -156,13 +156,13 @@ public class GestioneVotoController {
      * Lo Studente rifiuta il voto. Lo stato diventa "Rifiutato"
      * e il voto non viene verbalizzato.
      *
-     * @param idEsame l'identificativo dell'esame sostenuto
+     * @param idVerbale l'identificativo del verbale dell'esame sostenuto
      * @return true se l'operazione è riuscita
      */
-    public boolean rifiutaVoto(String idEsame) {
-        EsameSostenuto esame = trovaEsameById(idEsame);
+    public boolean rifiutaVoto(String idVerbale) {
+        EsameSostenuto esame = trovaEsameById(idVerbale);
         if (esame == null) {
-            throw new IllegalArgumentException("Esame non trovato: " + idEsame);
+            throw new IllegalArgumentException("Esame non trovato: " + idVerbale);
         }
 
         esame.rifiuta();
@@ -251,9 +251,9 @@ public class GestioneVotoController {
     // METODI AUSILIARI
     // =========================================================================
 
-    private EsameSostenuto trovaEsameById(String idEsame) {
+    private EsameSostenuto trovaEsameById(String idVerbale) {
         for (EsameSostenuto esame : esitiPubblicati) {
-            if (esame.getIdEsame().equals(idEsame)) {
+            if (esame.getIdVerbale().equals(idVerbale)) {
                 return esame;
             }
         }

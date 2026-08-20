@@ -435,15 +435,15 @@ public class Unicenter {
     /**
      * Lo Studente accetta il voto.
      */
-    public boolean accettaVoto(String idEsame) {
-        return gestioneVotoController.accettaVoto(idEsame);
+    public boolean accettaVoto(String idVerbale) {
+        return gestioneVotoController.accettaVoto(idVerbale);
     }
 
     /**
      * Lo Studente rifiuta il voto.
      */
-    public boolean rifiutaVoto(String idEsame) {
-        return gestioneVotoController.rifiutaVoto(idEsame);
+    public boolean rifiutaVoto(String idVerbale) {
+        return gestioneVotoController.rifiutaVoto(idVerbale);
     }
 
     /**

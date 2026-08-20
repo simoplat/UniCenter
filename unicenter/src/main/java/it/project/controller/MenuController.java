@@ -187,22 +187,22 @@ public class MenuController {
                     console.mostraMessaggio("Esiti in attesa di conferma:");
                     stampaEsiti(esitiPendenti);
 
-                    String idEsame = console.leggiStringa(
-                            "Inserisci l'ID dell'esame per cui vuoi esprimere la scelta (0 per uscire): ");
-                    if ("0".equals(idEsame)) {
+                    String idVerbale = console.leggiStringa(
+                            "Inserisci l'ID del verbale per cui vuoi esprimere la scelta (0 per uscire): ");
+                    if ("0".equals(idVerbale)) {
                         break;
                     }
 
                     // Verifica che l'ID appartenga agli esiti pendenti
                     boolean esameValido = false;
                     for (EsameSostenuto e : esitiPendenti) {
-                        if (e.getIdEsame().equals(idEsame)) {
+                        if (e.getIdVerbale().equals(idVerbale)) {
                             esameValido = true;
                             break;
                         }
                     }
                     if (!esameValido) {
-                        console.mostraErrore("ID esame non valido o non in attesa di conferma.");
+                        console.mostraErrore("ID verbale non valido o non in attesa di conferma.");
                         break;
                     }
 
@@ -213,7 +213,7 @@ public class MenuController {
                     switch (sceltaVoto) {
                         case 1 -> {
                             try {
-                                if (unicenter.accettaVoto(idEsame)) {
+                                if (unicenter.accettaVoto(idVerbale)) {
                                     console.mostraMessaggio("Voto ACCETTATO con successo! Registrato nel libretto.");
                                 } else {
                                     console.mostraErrore("Impossibile accettare il voto.");
@@ -224,7 +224,7 @@ public class MenuController {
                         }
                         case 2 -> {
                             try {
-                                if (unicenter.rifiutaVoto(idEsame)) {
+                                if (unicenter.rifiutaVoto(idVerbale)) {
                                     console.mostraMessaggio("Voto RIFIUTATO. Potrai iscriverti a un appello futuro.");
                                 } else {
                                     console.mostraErrore("Impossibile rifiutare il voto.");
@@ -648,7 +648,7 @@ public class MenuController {
                                 voto, lode, 7 // 7 giorni di scadenza per la conferma
                         );
                         console.mostraMessaggio("Esito pubblicato con successo!");
-                        console.mostraMessaggio("ID Esame: " + esito.getIdEsame());
+                        console.mostraMessaggio("ID Verbale: " + esito.getIdVerbale());
                         console.mostraMessaggio("Stato: " + esito.getNomeStato());
                         if (esito.getNomeStato().equals("Bocciato")) {
                             console.mostraMessaggio("(Voto insufficiente - Regola di Dominio 4)");
@@ -1252,7 +1252,7 @@ public class MenuController {
                     ? " | Scadenza: " + esame.getScadenzaConferma().format(formatterStampa)
                     : "";
             console.mostraMessaggio(
-                    "ID: " + esame.getIdEsame()
+                    "ID Verbale: " + esame.getIdVerbale()
                             + " | Materia: " + esame.getCodiceMateria()
                             + " | Voto: " + esame.getVotoNumerico()
                             + (esame.isLode() ? " e Lode" : "")

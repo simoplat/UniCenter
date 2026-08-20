@@ -465,10 +465,10 @@ public class DatabasePopulator {
                 if ("In attesa di conferma".equals(esame.getNomeStato())) {
                     if (i % 3 == 0) {
                         // Accetta voto -> verbalizzato in Libretto
-                        gestioneVoto.accettaVoto(esame.getIdEsame());
+                        gestioneVoto.accettaVoto(esame.getIdVerbale());
                     } else if (i % 5 == 0) {
                         // Rifiuta voto
-                        gestioneVoto.rifiutaVoto(esame.getIdEsame());
+                        gestioneVoto.rifiutaVoto(esame.getIdVerbale());
                     }
                     // Gli altri rimangono in "In attesa di conferma" per testare la UI!
                 }

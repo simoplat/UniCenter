@@ -88,7 +88,7 @@ class GestioneVotoControllerTest {
     @DisplayName("Accettazione voto con successo")
     void testAccettaVoto_Successo() {
         EsameSostenuto esame = controller.pubblicaEsito("APP001", MATRICOLA, MATERIA, PROF_ID, 28, false, 7);
-        boolean res = controller.accettaVoto(esame.getIdEsame());
+        boolean res = controller.accettaVoto(esame.getIdVerbale());
         assertTrue(res);
         assertEquals("Approvato", esame.getNomeStato());
     }
@@ -96,7 +96,7 @@ class GestioneVotoControllerTest {
     @Test
     @DisplayName("Accettazione voto con esame inesistente lancia IllegalArgumentException")
     void testAccettaVoto_EsameInesistente() {
-        assertThrows(IllegalArgumentException.class, () -> controller.accettaVoto("ESM-99999"));
+        assertThrows(IllegalArgumentException.class, () -> controller.accettaVoto("VRB-99999"));
     }
 
     @Test
@@ -104,14 +104,14 @@ class GestioneVotoControllerTest {
     void testAccettaVoto_StudenteNonTrovato() {
         EsameSostenuto esame = controller.pubblicaEsito("APP001", "MATRICOLA_NON_ESISTE", MATERIA, PROF_ID, 28, false, 7);
         when(unicenterMock.trovaStudente("MATRICOLA_NON_ESISTE")).thenReturn(Optional.empty());
-        assertThrows(IllegalStateException.class, () -> controller.accettaVoto(esame.getIdEsame()));
+        assertThrows(IllegalStateException.class, () -> controller.accettaVoto(esame.getIdVerbale()));
     }
 
     @Test
     @DisplayName("Rifiuto voto con successo")
     void testRifiutaVoto_Successo() {
         EsameSostenuto esame = controller.pubblicaEsito("APP001", MATRICOLA, MATERIA, PROF_ID, 28, false, 7);
-        boolean res = controller.rifiutaVoto(esame.getIdEsame());
+        boolean res = controller.rifiutaVoto(esame.getIdVerbale());
         assertTrue(res);
         assertEquals("Rifiutato", esame.getNomeStato());
     }
@@ -119,6 +119,6 @@ class GestioneVotoControllerTest {
     @Test
     @DisplayName("Rifiuto voto con esame inesistente lancia IllegalArgumentException")
     void testRifiutaVoto_EsameInesistente() {
-        assertThrows(IllegalArgumentException.class, () -> controller.rifiutaVoto("ESM-99999"));
+        assertThrows(IllegalArgumentException.class, () -> controller.rifiutaVoto("VRB-99999"));
     }
 }
