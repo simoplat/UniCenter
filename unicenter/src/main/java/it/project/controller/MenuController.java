@@ -92,13 +92,14 @@ public class MenuController {
                     String codiceAppello = console
                             .leggiStringa("Inserisci il codice dell'appello al quale vuoi prenotarti: ");
 
-                    // Aggiungere i messaggi di errore per i casi in cui l'iscrizione non va a buon
-                    // fine
-
-                    if (!unicenter.iscriviStudenteAdAppello(codiceAppello)) {
-                        console.mostraMessaggio("Iscrizione non riuscita.");
-                    } else {
-                        console.mostraMessaggio("Iscrizione avvenuta con successo all'appello " + codiceAppello);
+                    try {
+                        if (unicenter.iscriviStudenteAdAppello(codiceAppello)) {
+                            console.mostraMessaggio("Iscrizione avvenuta con successo all'appello " + codiceAppello);
+                        } else {
+                            console.mostraErrore("Iscrizione non riuscita.");
+                        }
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
                     }
                 }
 
@@ -119,13 +120,13 @@ public class MenuController {
                             String codiceAppello = console.leggiStringa(
                                     "Inserisci il codice dell'appello da cui vuoi eliminare la prenotazione: ");
                             try {
-                                if (!unicenter.disiscriviStudenteDaAppello(codiceAppello)) {
-                                    console.mostraMessaggio("Codice appello non valido. Riprova.");
-                                } else {
+                                if (unicenter.disiscriviStudenteDaAppello(codiceAppello)) {
                                     console.mostraMessaggio("Prenotazione eliminata con successo.");
+                                } else {
+                                    console.mostraErrore("Impossibile eliminare la prenotazione.");
                                 }
                             } catch (Exception e) {
-                                console.mostraMessaggio(e.getMessage());
+                                console.mostraErrore(e.getMessage());
                             }
                             break;
                         }
@@ -203,17 +204,25 @@ public class MenuController {
 
                     switch (sceltaVoto) {
                         case 1 -> {
-                            if (unicenter.accettaVoto(idEsame)) {
-                                console.mostraMessaggio("Voto ACCETTATO con successo! Registrato nel libretto.");
-                            } else {
-                                console.mostraMessaggio("Impossibile accettare il voto.");
+                            try {
+                                if (unicenter.accettaVoto(idEsame)) {
+                                    console.mostraMessaggio("Voto ACCETTATO con successo! Registrato nel libretto.");
+                                } else {
+                                    console.mostraErrore("Impossibile accettare il voto.");
+                                }
+                            } catch (Exception e) {
+                                console.mostraErrore(e.getMessage());
                             }
                         }
                         case 2 -> {
-                            if (unicenter.rifiutaVoto(idEsame)) {
-                                console.mostraMessaggio("Voto RIFIUTATO. Potrai iscriverti a un appello futuro.");
-                            } else {
-                                console.mostraMessaggio("Impossibile rifiutare il voto.");
+                            try {
+                                if (unicenter.rifiutaVoto(idEsame)) {
+                                    console.mostraMessaggio("Voto RIFIUTATO. Potrai iscriverti a un appello futuro.");
+                                } else {
+                                    console.mostraErrore("Impossibile rifiutare il voto.");
+                                }
+                            } catch (Exception e) {
+                                console.mostraErrore(e.getMessage());
                             }
                         }
                         default -> console.mostraMessaggio("Opzione non valida.");
@@ -516,11 +525,16 @@ public class MenuController {
                     }
 
                     if (appelloTrovato != null) {
-                        if (unicenter.eliminaAppello(appelloTrovato.getCodiceAppello())) {
-                            console.mostraMessaggio("Appello eliminato con successo.");
-                            break;
-                        } else {
-                            console.mostraMessaggio("Errore durante l'eliminazione, riprovare.");
+                        try {
+                            if (unicenter.eliminaAppello(appelloTrovato.getCodiceAppello())) {
+                                console.mostraMessaggio("Appello eliminato con successo.");
+                                break;
+                            } else {
+                                console.mostraErrore("Errore durante l'eliminazione, riprovare.");
+                                break;
+                            }
+                        } catch (Exception e) {
+                            console.mostraErrore(e.getMessage());
                             break;
                         }
                     }

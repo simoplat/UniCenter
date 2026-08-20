@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import it.project.ConsoleUI;
 import it.project.Notifica;
 import it.project.Professore;
 import it.project.Unicenter;
@@ -26,7 +25,6 @@ public class GestioneAppelliController {
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
     Unicenter unicenter;
-    ConsoleUI console = ConsoleUI.getInstance();
 
     public GestioneAppelliController(Unicenter unicenter) {
         this.unicenter = unicenter;
@@ -108,15 +106,19 @@ public class GestioneAppelliController {
         return;
     }
 
-    public boolean iscriviStudente(Studente studente, String codiceAppello) {
+    public boolean iscriviStudente(Studente studente, String codiceAppello) throws Exception {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
 
         if (this.validatorChain == null) {
             this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         }
 
-        if (appello == null || appello.getIscritti().contains(studente)) {
-            return false; // Appello non trovato o studente già iscritto
+        if (appello == null) {
+            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
+        }
+
+        if (appello.getIscritti().contains(studente)) {
+            throw new IllegalStateException("Sei già iscritto a questo appello.");
         }
 
         // Controlla se lo studente ha un esito pendente per questa materia
@@ -124,35 +126,29 @@ public class GestioneAppelliController {
         List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
         for (EsameSostenuto esame : esitiPendenti) {
             if (esame.getCodiceMateria().equals(codiceMateria)) {
-                console.mostraErrore(
+                throw new IllegalStateException(
                         "Hai un esito pendente di questa materia. Non puoi prenotarti ad un altro appello.");
-                return false;
             }
         }
-        try {
-            // Esegue i controlli della Chain of Responsibility
-            validatorChain.validate(studente, appello);
 
-            // Se la validazione passa, registra l'iscritto
-            appello.aggiungiIscritto(studente);
-            String messaggio = "Ti sei iscritto all'appello: " + appello.toString();
-            Notifica nuovaNotifica = new Notifica("Iscrizione Appello", messaggio, LocalDateTime.now());
+        // Esegue i controlli della Chain of Responsibility (lancia eccezione in caso di violazione)
+        validatorChain.validate(studente, appello);
 
-            // Invia la notifica allo studente
-            studente.riceviNotifica(nuovaNotifica);
+        // Se la validazione passa, registra l'iscritto
+        appello.aggiungiIscritto(studente);
+        String messaggio = "Ti sei iscritto all'appello: " + appello.toString();
+        Notifica nuovaNotifica = new Notifica("Iscrizione Appello", messaggio, LocalDateTime.now());
 
-            return true;
-        } catch (Exception e) {
-            console.mostraErrore(e.getMessage());
-            return false;
-        }
+        // Invia la notifica allo studente
+        studente.riceviNotifica(nuovaNotifica);
 
+        return true;
     }
 
     public boolean disiscriviStudente(Studente studente, String codiceAppello) throws Exception {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
-            return false; // Appello non trovato
+            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
         }
 
         // Vincolo: la disiscrizione è bloccata se lo studente ha un esito pendente per
@@ -161,7 +157,7 @@ public class GestioneAppelliController {
         if (esitiPendenti != null && !esitiPendenti.isEmpty()) {
             for (EsameSostenuto esame : esitiPendenti) {
                 if (esame.getCodiceAppello().equals(codiceAppello)) {
-                    throw new Exception(
+                    throw new IllegalStateException(
                             "Impossibile annullare la prenotazione: hai un esito pendente per questo appello. Devi prima accettare o rifiutare il voto.");
                 }
             }
@@ -174,7 +170,7 @@ public class GestioneAppelliController {
             studente.riceviNotifica(nuovaNotifica);
             return true;
         } else {
-            return false;
+            throw new IllegalStateException("Non sei iscritto a questo appello.");
         }
     }
 
@@ -250,7 +246,7 @@ public class GestioneAppelliController {
 
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
-            return false; // Appello non trovato
+            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
         }
         String vincoloNormalizzato = normalizzaEValidaVincolo(vincolo);
         validateAppello(appello.getCodiceMateria(), dataOra, aula, postiDisponibili, vincoloNormalizzato,
@@ -283,7 +279,7 @@ public class GestioneAppelliController {
     public boolean eliminaAppello(String codiceAppello) {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
-            return false; // Appello non trovato
+            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
         }
 
         String oggetto = "Eliminazione appello " + codiceAppello;

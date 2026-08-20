@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.project.observer.ObserverAppello;
+
 public class Appello {
     private String codiceAppello;
     private String codiceMateria;
@@ -88,9 +90,9 @@ public class Appello {
                 + vincoloLetteraCognome + "]";
     }
 
-    public void notifica(Notifica notifica){
-        for (Studente s : iscritti){
-            s.aggiungiNotifica(notifica);   
+    public void notifica(Notifica notifica) {
+        for (ObserverAppello observer : iscritti) {
+            observer.riceviNotifica(notifica);
         }
     }
     

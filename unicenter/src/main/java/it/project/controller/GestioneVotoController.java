@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 
-import it.project.ConsoleUI;
 import it.project.EsameSostenuto;
 import it.project.Materia;
 import it.project.Professore;
@@ -27,7 +26,6 @@ public class GestioneVotoController {
     private int contatorEsami;
     private final Unicenter unicenter;
     private final GestoreMaterieController gestoreMaterie;
-    private final ConsoleUI console = ConsoleUI.getInstance();
 
     public GestioneVotoController(Unicenter unicenter, GestoreMaterieController gestoreMaterie) {
         this.unicenter = unicenter;
@@ -93,13 +91,6 @@ public class GestioneVotoController {
 
         esitiPubblicati.add(esame);
 
-        // Se bocciato, notifica subito
-        if (esame.getNomeStato().equals("Bocciato")) {
-            console.mostraMessaggio("[SISTEMA] Voto " + votoNumerico
-                    + " insufficiente per " + matricolaStudente
-                    + ": esame registrato come BOCCIATO.");
-        }
-
         return esame;
     }
 
@@ -117,33 +108,27 @@ public class GestioneVotoController {
     public boolean accettaVoto(String idEsame) {
         EsameSostenuto esame = trovaEsameById(idEsame);
         if (esame == null) {
-            console.mostraErrore("Esame non trovato: " + idEsame);
-            return false;
+            throw new IllegalArgumentException("Esame non trovato: " + idEsame);
         }
 
-        try {
-            esame.accetta();
+        esame.accetta();
 
-            // Registra nel libretto dello studente (Information Expert)
-            Studente studente = unicenter.trovaStudente(esame.getMatricolaStudente()).orElse(null);
-            if (studente != null) {
-                studente.getLibretto().registraEsame(esame);
-            }
-
-            // Rimuove gli altri esiti pendenti della stessa materia per lo stesso studente
-            String matricola = esame.getMatricolaStudente();
-            String codiceMateria = esame.getCodiceMateria();
-            esitiPubblicati.removeIf(e ->
-                    !e.getIdEsame().equals(idEsame)
-                    && e.getMatricolaStudente().equals(matricola)
-                    && e.getCodiceMateria().equals(codiceMateria)
-                    && e.getNomeStato().equals("In attesa di conferma"));
-
-            return true;
-        } catch (IllegalStateException e) {
-            console.mostraErrore(e.getMessage());
-            return false;
+        // Registra nel libretto dello studente (Information Expert)
+        Studente studente = unicenter.trovaStudente(esame.getMatricolaStudente()).orElse(null);
+        if (studente != null) {
+            studente.getLibretto().registraEsame(esame);
         }
+
+        // Rimuove gli altri esiti pendenti della stessa materia per lo stesso studente
+        String matricola = esame.getMatricolaStudente();
+        String codiceMateria = esame.getCodiceMateria();
+        esitiPubblicati.removeIf(e ->
+                !e.getIdEsame().equals(idEsame)
+                && e.getMatricolaStudente().equals(matricola)
+                && e.getCodiceMateria().equals(codiceMateria)
+                && e.getNomeStato().equals("In attesa di conferma"));
+
+        return true;
     }
 
     /**
@@ -156,17 +141,11 @@ public class GestioneVotoController {
     public boolean rifiutaVoto(String idEsame) {
         EsameSostenuto esame = trovaEsameById(idEsame);
         if (esame == null) {
-            console.mostraErrore("Esame non trovato: " + idEsame);
-            return false;
+            throw new IllegalArgumentException("Esame non trovato: " + idEsame);
         }
 
-        try {
-            esame.rifiuta();
-            return true;
-        } catch (IllegalStateException e) {
-            console.mostraErrore(e.getMessage());
-            return false;
-        }
+        esame.rifiuta();
+        return true;
     }
 
     // =========================================================================
@@ -185,9 +164,6 @@ public class GestioneVotoController {
             if (esame.isScaduto()) {
                 try {
                     esame.rifiuta();
-                    console.mostraMessaggio("[SISTEMA] Silenzio-rifiuto applicato per esame "
-                            + esame.getIdEsame() + " (studente: " + esame.getMatricolaStudente()
-                            + ", materia: " + esame.getCodiceMateria() + ")");
                     contatore++;
                 } catch (IllegalStateException e) {
                     // Stato già gestito, ignora

@@ -208,23 +208,23 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void iscriviStudente_appelloInesistente_restituisceFalse() {
+    void iscriviStudente_appelloInesistente_lanciaIllegalArgumentException() {
         Studente studente = creaStudente("M002");
-        assertFalse(controller.iscriviStudente(studente, "NON_ESISTE"));
+        assertThrows(IllegalArgumentException.class, () -> controller.iscriviStudente(studente, "NON_ESISTE"));
     }
 
     @Test
-    void iscriviStudente_studenteGiaIscritto_restituisceFalse() throws Exception {
+    void iscriviStudente_studenteGiaIscritto_lanciaIllegalStateException() throws Exception {
         Appello appello = creaAppelloValido("APP002");
         Studente studente = creaStudente("M003");
         appello.aggiungiIscritto(studente);
         aggiungiAppelloDirettamente(appello);
 
-        assertFalse(controller.iscriviStudente(studente, "APP002"));
+        assertThrows(IllegalStateException.class, () -> controller.iscriviStudente(studente, "APP002"));
     }
 
     @Test
-    void iscriviStudente_validazioneFallita_restituisceFalseENonIscrive() throws Exception {
+    void iscriviStudente_validazioneFallita_lanciaEccezioneENonIscrive() throws Exception {
         Appello appello = creaAppelloValido("APP003");
         aggiungiAppelloDirettamente(appello);
 
@@ -234,9 +234,7 @@ class GestioneAppelliControllerTest {
         iniettaValidatorChainMock(validatorMock);
 
         Studente studente = creaStudente("M004");
-        boolean risultato = controller.iscriviStudente(studente, "APP003");
-
-        assertFalse(risultato);
+        assertThrows(IllegalStateException.class, () -> controller.iscriviStudente(studente, "APP003"));
         assertFalse(appello.getIscritti().contains(studente));
         assertTrue(studente.getNotifiche().isEmpty());
     }
@@ -260,18 +258,18 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void disiscriviStudente_studenteNonIscritto_restituisceFalse() throws Exception {
+    void disiscriviStudente_studenteNonIscritto_lanciaIllegalStateException() throws Exception {
         Appello appello = creaAppelloValido("APP005");
         aggiungiAppelloDirettamente(appello);
         Studente studente = creaStudente("M006");
 
-        assertFalse(controller.disiscriviStudente(studente, "APP005"));
+        assertThrows(IllegalStateException.class, () -> controller.disiscriviStudente(studente, "APP005"));
     }
 
     @Test
-    void disiscriviStudente_appelloInesistente_restituisceFalse() throws Exception {
+    void disiscriviStudente_appelloInesistente_lanciaIllegalArgumentException() {
         Studente studente = creaStudente("M007");
-        assertFalse(controller.disiscriviStudente(studente, "NON_ESISTE"));
+        assertThrows(IllegalArgumentException.class, () -> controller.disiscriviStudente(studente, "NON_ESISTE"));
     }
 
     // =================================================================
@@ -406,11 +404,10 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void modificaAppello_appelloInesistente_nonLanciaEDaFalse() throws Exception {
-        boolean risultato = controller.modificaAppello("SCONOSCIUTO",
+    void modificaAppello_appelloInesistente_lanciaIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> controller.modificaAppello("SCONOSCIUTO",
                 LocalDateTime.now().plusDays(1), "Aula 1", 10, "A-Z",
-                LocalDate.now().plusDays(1));
-        assertFalse(risultato);
+                LocalDate.now().plusDays(1)));
     }
 
     @Test
@@ -443,7 +440,7 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void eliminaAppello_inesistente_restituisceFalse() {
-        assertFalse(controller.eliminaAppello("SCONOSCIUTO"));
+    void eliminaAppello_inesistente_lanciaIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> controller.eliminaAppello("SCONOSCIUTO"));
     }
 }

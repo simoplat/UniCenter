@@ -147,7 +147,7 @@ public class Unicenter {
         return gestioneAppelliController.trovaIscrittiByIdAppello(codiceAppello);
     }
 
-    public boolean iscriviStudenteAdAppello(String codiceAppello) {
+    public boolean iscriviStudenteAdAppello(String codiceAppello) throws Exception {
         return gestioneAppelliController.iscriviStudente((Studente) this.currentUser, codiceAppello);
     }
 
@@ -155,12 +155,9 @@ public class Unicenter {
         // Vincolo: la disiscrizione è bloccata se la data dell'esame è già passata
         Appello appello = gestioneAppelliController.trovaAppelloByIdAppello(codiceAppello);
         if (appello != null && appello.getDataOra().isBefore(LocalDateTime.now())) {
-            throw new Exception("Impossibile annullare la prenotazione: l'esame è già in corso o si è già svolto.");
+            throw new IllegalStateException("Impossibile annullare la prenotazione: l'esame è già in corso o si è già svolto.");
         }
-        if (gestioneAppelliController.disiscriviStudente((Studente) this.currentUser, codiceAppello)) {
-            return true;
-        }
-        return false;
+        return gestioneAppelliController.disiscriviStudente((Studente) this.currentUser, codiceAppello);
     }
 
     public void popolaDataBase() {
