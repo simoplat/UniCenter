@@ -28,14 +28,6 @@ public class CorsoDiLaurea {
     private boolean obsoleto;
     private boolean finalizzato;
 
-    public CorsoDiLaurea(String id, String nome, int anniAccademici) {
-        this.id = id;
-        this.nome = nome;
-        this.anniAccademici = anniAccademici;
-        this.materiePerAnno = new HashMap<>();
-        this.obsoleto = false;
-        this.finalizzato = false;
-    }
 
     public CorsoDiLaurea(String id, String nome, String tipologia, int anniAccademici) {
         this.id = id;
@@ -142,8 +134,9 @@ public class CorsoDiLaurea {
     }
 
     /**
-     * Restituisce tutte le materie del corso (flat list, senza distinzione per anno).
-     * Mantenuto per retrocompatibilità con piano di studi e altre parti del codice.
+     * Metodo di utility: restituisce tutte le materie del corso come lista piatta (flat list),
+     * aggregando le materie di tutti gli anni accademici (utilizzato ad esempio per il popolamento
+     * automatico del piano di studi e viste riassuntive).
      */
     public List<Materia> getMaterie() {
         List<Materia> tutteLeMaterie = new ArrayList<>();
@@ -151,18 +144,6 @@ public class CorsoDiLaurea {
             tutteLeMaterie.addAll(materieAnno);
         }
         return tutteLeMaterie;
-    }
-
-    /**
-     * Metodo legacy per compatibilità con il popolamento dati di test.
-     * Aggiunge una materia senza specificare l'anno (usa anno 1 come default).
-     */
-    public void aggiungiMateria(Materia materia) {
-        if (finalizzato) {
-            throw new IllegalStateException(
-                    "Impossibile modificare il corso '" + nome + "': è già finalizzato.");
-        }
-        materiePerAnno.computeIfAbsent(1, k -> new ArrayList<>()).add(materia);
     }
 
     /**

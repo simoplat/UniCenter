@@ -223,9 +223,10 @@ public class DatabasePopulator {
             for (String[] cData : corsiInfo) {
                 String idCorso = cData[0];
                 String nomeCorso = cData[1];
+                String tipologia = cData[2];
                 int anni = Integer.parseInt(cData[3]);
 
-                CorsoDiLaurea cdl = new CorsoDiLaurea(idCorso, nomeCorso, anni);
+                CorsoDiLaurea cdl = new CorsoDiLaurea(idCorso, nomeCorso, tipologia, anni);
 
                 if ("Ingegneria Informatica".equals(nomeCorso)) {
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("AM01"));
