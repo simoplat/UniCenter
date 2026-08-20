@@ -12,6 +12,7 @@ import java.util.List;
 import it.project.Notifica;
 import it.project.Professore;
 import it.project.Unicenter;
+import it.project.database.ClockProvider;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
 import it.project.generator.CodiceAppelloGenerator;
@@ -82,13 +83,14 @@ public class GestioneAppelliController {
             int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione)
             throws Exception, DataNonValidaException, PostiNonValidi {
 
-        if (dataOraStr == null || dataOraStr.isBefore(LocalDateTime.now())) {
+        if (dataOraStr == null || dataOraStr.isBefore(ClockProvider.nowLocalDateTime())) {
             throw new DataNonValidaException("La data e l'ora dell'appello non sono valide.");
         }
 
-        if (termineIscrizione == null || termineIscrizione.isAfter(dataOraStr.toLocalDate())
-                || termineIscrizione.isBefore(LocalDate.now())) {
-            throw new DataNonValidaException("La data di termine iscrizione non è valida.");
+        if (termineIscrizione == null || !termineIscrizione.isBefore(dataOraStr.toLocalDate())
+                || termineIscrizione.isBefore(ClockProvider.nowLocalDate())) {
+            throw new DataNonValidaException(
+                    "La data di termine iscrizione non è valida: deve essere compresa tra oggi e al massimo il giorno prima dell'appello.");
         }
 
         if (postiDisponibili <= 0) {
@@ -130,10 +132,12 @@ public class GestioneAppelliController {
 
         // Controlla se lo studente ha un esito pendente per questa materia
         List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
-        for (EsameSostenuto esame : esitiPendenti) {
-            if (esame.getCodiceMateria().equals(codiceMateria)) {
-                throw new IllegalStateException(
-                        "Hai un esito pendente di questa materia. Non puoi prenotarti ad un altro appello.");
+        if (esitiPendenti != null) {
+            for (EsameSostenuto esame : esitiPendenti) {
+                if (esame.getCodiceMateria().equals(codiceMateria)) {
+                    throw new IllegalStateException(
+                            "Hai un esito pendente di questa materia. Non puoi prenotarti ad un altro appello.");
+                }
             }
         }
 
@@ -143,7 +147,7 @@ public class GestioneAppelliController {
         // Se la validazione passa, registra l'iscritto
         appello.aggiungiIscritto(studente);
         String messaggio = "Ti sei iscritto all'appello: " + appello.toString();
-        Notifica nuovaNotifica = new Notifica("Iscrizione Appello", messaggio, LocalDateTime.now());
+        Notifica nuovaNotifica = new Notifica("Iscrizione Appello", messaggio, ClockProvider.nowLocalDateTime());
 
         // Invia la notifica allo studente
         studente.riceviNotifica(nuovaNotifica);
@@ -155,6 +159,14 @@ public class GestioneAppelliController {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         if (appello == null) {
             throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
+        }
+
+        // Vincolo temporale: la disiscrizione è bloccata dopo la data di termine iscrizione
+        if (appello.getTermineIscrizione() != null
+                && ClockProvider.nowLocalDate().isAfter(appello.getTermineIscrizione())) {
+            throw new IllegalStateException(
+                    "Impossibile annullare la prenotazione: il termine di iscrizione ("
+                            + appello.getTermineIscrizione() + ") è scaduto.");
         }
 
         // Vincolo: la disiscrizione è bloccata se lo studente ha un esito pendente per
@@ -172,7 +184,7 @@ public class GestioneAppelliController {
         if (appello.getIscritti().contains(studente)) {
             appello.rimuoviIscritto(studente);
             String messaggio = "Ti sei disiscritto dall'appello: " + appello.toString();
-            Notifica nuovaNotifica = new Notifica("[Disiscrizione Appello]", messaggio, LocalDateTime.now());
+            Notifica nuovaNotifica = new Notifica("[Disiscrizione Appello]", messaggio, ClockProvider.nowLocalDateTime());
             studente.riceviNotifica(nuovaNotifica);
             return true;
         } else {
@@ -199,6 +211,9 @@ public class GestioneAppelliController {
     }
 
     public List<Appello> trovaAppelliPrenotabiliByStudente(Studente studente, List<String> codiciMaterie) {
+        if (studente == null) {
+            return Collections.emptyList();
+        }
         List<Appello> appelliById = trovaAppelliByIdMateria(codiciMaterie);
         List<Appello> appelliPrenotabili = new ArrayList<>();
         if (appelliById == null || appelliById.isEmpty()) {
@@ -209,7 +224,7 @@ public class GestioneAppelliController {
             String codiceMateria = app.getCodiceMateria();
 
             // Escludi appelli di materie già superate e registrate nel libretto
-            if (studente.getLibretto().isEsameSuperato(codiceMateria)) {
+            if (studente.getLibretto() != null && studente.getLibretto().isEsameSuperato(codiceMateria)) {
                 continue;
             }
 
@@ -277,7 +292,7 @@ public class GestioneAppelliController {
         String contenuto = "L'appello " + codiceAppello + " è stato modificato.\n" +
                 "Orario: " + dataOra + "\n" +
                 "Aula: " + aula + "\n" +
-                "Posti disponibili " + postiDisponibili + "\n" +
+                "Posti disponibili " + postiRimanenti + "\n" +
                 "Vincolo cognome " + vincoloNormalizzato + "\n" +
                 "Data termine iscrizione: " + dataTermineIscrizione + "\n";
         Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());

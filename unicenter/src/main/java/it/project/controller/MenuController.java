@@ -133,7 +133,9 @@ public class MenuController {
                         case 0 -> {
                             break;
                         }
-                        default -> console.mostraMessaggio("Opzione non valida. Riprova.");
+                        default -> {
+                            break;
+                        }
                     }
 
                 }
@@ -702,7 +704,7 @@ public class MenuController {
         String cognome = console.leggiStringa("Inserisci il cognome dello studente: ");
         String email = console.leggiStringa("Inserisci l'email dello studente: ");
         String password = console.leggiStringa("Inserisci la password di almeno 4 caratteri: ");
-        String corsoDiLaurea = console.leggiStringa("Inserisci il nome delcorso di laurea : ");
+        String corsoDiLaurea = console.leggiStringa("Inserisci il nome del corso di laurea: ");
 
         CorsoDiLaurea corso = unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
 

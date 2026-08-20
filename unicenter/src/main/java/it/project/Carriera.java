@@ -62,9 +62,6 @@ public class Carriera {
 
     public void setTassePagate(boolean tassePagate) {
         this.tassePagate = tassePagate;
-        if (tassePagate) {
-            this.totaleTasse = 0.0;
-        }
     }
 
 }

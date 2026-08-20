@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.project.database.ClockProvider;
 import it.project.observer.ObserverEsitoVoto;
 import it.project.state.BocciatoState;
 import it.project.state.IStatoVoto;
@@ -58,7 +59,7 @@ public class EsameSostenuto {
         this.votoNumerico = votoNumerico;
         this.lode = lode;
         this.cfu = cfu;
-        this.dataRegistrazione = LocalDateTime.now();
+        this.dataRegistrazione = ClockProvider.nowLocalDateTime();
         this.scadenzaConferma = this.dataRegistrazione.plusDays(giorniScadenza);
         this.osservatori = new ArrayList<>();
 
@@ -103,7 +104,7 @@ public class EsameSostenuto {
      */
     public boolean isScaduto() {
         return stato.getNome().equals("In attesa di conferma")
-                && LocalDateTime.now().isAfter(scadenzaConferma);
+                && ClockProvider.nowLocalDateTime().isAfter(scadenzaConferma);
     }
 
     // =========================================================================

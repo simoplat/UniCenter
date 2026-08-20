@@ -25,12 +25,12 @@ public class NotificaEsitoObserver implements ObserverEsitoVoto {
     public void aggiornamento(EsameSostenuto esame, String nuovoStato) {
         String oggettoStudente = "Aggiornamento esito esame - " + esame.getCodiceMateria();
         String messaggioStudente = costruisciMessaggioStudente(esame, nuovoStato);
-        Notifica notificaStudente = new Notifica(oggettoStudente, messaggioStudente, LocalDateTime.now());
+        Notifica notificaStudente = new Notifica(oggettoStudente, messaggioStudente, it.project.database.ClockProvider.nowLocalDateTime());
         studente.aggiungiNotifica(notificaStudente);
 
         String oggettoProfessore = "Aggiornamento esito esame - " + esame.getCodiceMateria();
         String messaggioProfessore = costruisciMessaggioProfessore(esame, nuovoStato);
-        Notifica notificaProfessore = new Notifica(oggettoProfessore, messaggioProfessore, LocalDateTime.now());
+        Notifica notificaProfessore = new Notifica(oggettoProfessore, messaggioProfessore, it.project.database.ClockProvider.nowLocalDateTime());
         professore.aggiungiNotifica(notificaProfessore);
     }
 
@@ -54,7 +54,15 @@ public class NotificaEsitoObserver implements ObserverEsitoVoto {
     private String costruisciMessaggioProfessore(EsameSostenuto esame, String nuovoStato) {
         StringBuilder sb = new StringBuilder();
         sb.append("Lo studente ").append(esame.getMatricolaStudente());
-        sb.append(" ha ").append(nuovoStato.equalsIgnoreCase("Approvato") ? "accettato" : "rifiutato");
+
+        switch (nuovoStato) {
+            case "Approvato" -> sb.append(" ha accettato");
+            case "Rifiutato" -> sb.append(" ha rifiutato");
+            case "Bocciato" -> sb.append(" è stato bocciato per insufficienza su");
+            case "In attesa di conferma" -> sb.append(" ha ricevuto l'esito per");
+            default -> sb.append(" ha aggiornato lo stato di");
+        }
+
         sb.append(" il voto ").append(esame.getVotoNumerico());
         if (esame.isLode()) {
             sb.append(" e Lode");

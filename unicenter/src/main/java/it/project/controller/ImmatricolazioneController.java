@@ -45,7 +45,7 @@ public class ImmatricolazioneController {
     }
 
     public boolean validaDataImmatricolazione() throws DataNonValidaException {
-        Month mese = LocalDate.now().getMonth();
+        Month mese = it.project.database.ClockProvider.nowLocalDate().getMonth();
         if (mese != Month.AUGUST && mese != Month.SEPTEMBER) {
             throw new DataNonValidaException(
                     "Impossibile immatricolarsi: la finestra di immatricolazione è aperta solo dal 1° agosto al 30 settembre.");

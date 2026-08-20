@@ -79,7 +79,7 @@ public class Appello {
     }
     
     public boolean isIscrizioneAperta() {
-        LocalDate oggi = LocalDate.now();
+        LocalDate oggi = it.project.database.ClockProvider.nowLocalDate();
         return termineIscrizione != null && !oggi.isAfter(termineIscrizione);
     }
 

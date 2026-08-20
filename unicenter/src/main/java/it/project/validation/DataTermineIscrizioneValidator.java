@@ -5,11 +5,13 @@ import it.project.Studente;
 import it.project.exceptions.DataNonValidaException;
 import java.time.LocalDate;
 
+import it.project.database.ClockProvider;
+
 public class DataTermineIscrizioneValidator extends AbstractIscrizioneValidator {
 
     @Override
     public boolean validate(Studente studente, Appello appello) throws Exception {
-        LocalDate oggi = LocalDate.now();
+        LocalDate oggi = ClockProvider.nowLocalDate();
         LocalDate termineIscrizione = appello.getTermineIscrizione(); // o appello.getRegistrationDeadline()
 
         // 1. Controllo presenza del termine di iscrizione

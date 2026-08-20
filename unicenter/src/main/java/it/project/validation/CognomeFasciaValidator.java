@@ -13,7 +13,7 @@ public class CognomeFasciaValidator extends AbstractIscrizioneValidator {
             String cognome = studente.getCognome();
             
             if (cognome == null || cognome.trim().isEmpty()) {
-                return false;
+                throw new IllegalStateException("Iscrizione rifiutata: cognome dello studente non disponibile.");
             }
 
             char iniziale = Character.toUpperCase(cognome.trim().charAt(0));

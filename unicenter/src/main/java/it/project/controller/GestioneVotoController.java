@@ -11,6 +11,7 @@ import it.project.Materia;
 import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.generator.IdEsameGenerator;
 import it.project.observer.NotificaEsitoObserver;
 
 /**
@@ -23,7 +24,7 @@ import it.project.observer.NotificaEsitoObserver;
 public class GestioneVotoController {
 
     private final List<EsameSostenuto> esitiPubblicati;
-    private int contatorEsami;
+    private final IdEsameGenerator idEsameGenerator;
     private final Unicenter unicenter;
     private final GestoreMaterieController gestoreMaterie;
 
@@ -31,7 +32,7 @@ public class GestioneVotoController {
         this.unicenter = unicenter;
         this.gestoreMaterie = gestoreMaterie;
         this.esitiPubblicati = new ArrayList<>();
-        this.contatorEsami = 0;
+        this.idEsameGenerator = IdEsameGenerator.getInstance();
     }
 
     // =========================================================================
@@ -63,6 +64,16 @@ public class GestioneVotoController {
             throw new IllegalArgumentException("Il voto deve essere compreso tra 0 e 30.");
         }
 
+        // Controlla che non esista già un esito per lo stesso studente sullo stesso appello
+        for (EsameSostenuto esistente : esitiPubblicati) {
+            if (esistente.getCodiceAppello().equals(codiceAppello)
+                    && esistente.getMatricolaStudente().equals(matricolaStudente)) {
+                throw new IllegalStateException(
+                        "Esito già registrato per lo studente " + matricolaStudente
+                                + " sull'appello " + codiceAppello + ".");
+            }
+        }
+
         // Recupera i CFU della materia
         Materia materia = gestoreMaterie.trovaMaterieByCodice(codiceMateria);
         if (materia == null) {
@@ -71,7 +82,7 @@ public class GestioneVotoController {
         int cfu = materia.getCfu();
 
         // Genera ID univoco
-        String idEsame = "ESM-" + String.format("%05d", ++contatorEsami);
+        String idEsame = idEsameGenerator.generateId();
 
         // Crea l'EsameSostenuto (RD4 applicata nel costruttore)
         EsameSostenuto esame = new EsameSostenuto(
@@ -87,6 +98,10 @@ public class GestioneVotoController {
         if (studente != null && professore != null) {
             NotificaEsitoObserver observer = new NotificaEsitoObserver(studente, professore);
             esame.aggiungiOsservatore(observer);
+
+            // Notifica iniziale alla pubblicazione dell'esito (l'observer viene registrato
+            // dopo il costruttore, quindi lo stato iniziale non era mai notificato)
+            observer.aggiornamento(esame, esame.getNomeStato());
         }
 
         esitiPubblicati.add(esame);

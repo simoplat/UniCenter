@@ -104,6 +104,13 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
+    void creaNuovoAppello_conTermineIscrizioneStessoGiornoAppello_lanciaEccezione() {
+        LocalDateTime dataAppello = LocalDateTime.now().plusDays(2);
+        assertThrows(DataNonValidaException.class, () -> controller.creaNuovoAppello(MATERIA, dataAppello,
+                "Aula 1", 10, "A-Z", dataAppello.toLocalDate()));
+    }
+
+    @Test
     void creaNuovoAppello_conTermineIscrizioneNelPassato_lanciaEccezione() {
         assertThrows(DataNonValidaException.class,
                 () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(5),
