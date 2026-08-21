@@ -74,6 +74,7 @@ public class MenuController {
             console.mostraMessaggio("4. Gestione esiti esami (Accetta/Rifiuta voto)");
             console.mostraMessaggio("5. Visualizza libretto");
             console.mostraMessaggio("6. Gestione tasse universitarie (Visualizza / Paga)");
+            console.mostraMessaggio("7. Compila Piano di Studi (UC9)");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -240,28 +241,7 @@ public class MenuController {
                 // ============================================================
                 // UC3 - VISUALIZZA LIBRETTO (Information Expert)
                 // ============================================================
-                case 5 -> {
-                    console.mostraMessaggio("\n--- Il tuo Libretto ---");
-                    Libretto libretto = unicenter.getLibrettoStudente();
-                    if (libretto == null || libretto.getNumeroEsamiSuperati() == 0) {
-                        console.mostraMessaggio("Il libretto è vuoto. Nessun esame registrato.");
-                    } else {
-                        console.mostraMessaggio("Esami superati: " + libretto.getNumeroEsamiSuperati());
-                        console.mostraMessaggio("CFU totali: " + libretto.getTotaleCfu());
-                        console.mostraMessaggio(
-                                String.format("Media ponderata: %.2f/30", libretto.getMediaPonderata()));
-                        console.mostraMessaggio("------------------------------------------");
-                        for (EsameSostenuto esame : libretto.getEsamiSuperati()) {
-                            console.mostraMessaggio(
-                                    "Materia: " + esame.getCodiceMateria()
-                                            + " | Voto: " + esame.getVotoNumerico()
-                                            + (esame.isLode() ? " e Lode" : "")
-                                            + " | CFU: " + esame.getCfu()
-                                            + " | Data: " + esame.getDataRegistrazione().format(formatterStampa));
-                        }
-                        console.mostraMessaggio("------------------------------------------");
-                    }
-                }
+                case 5 -> visualizzaLibrettoStudente();
 
                 // ============================================================
                 // GESTIONE TASSE UNIVERSITARIE (Visualizza / Paga)
@@ -272,24 +252,33 @@ public class MenuController {
                     boolean pagate = unicenter.isTassePagateStudente();
 
                     console.mostraMessaggio("Importo totale tasse: " + String.format("%.2f €", importoTasse));
-                    console.mostraMessaggio("Stato pagamento: " + (pagate ? "REGOLARE (Saldate)" : "IN SOSPESO (Non saldate)"));
+                    console.mostraMessaggio(
+                            "Stato pagamento: " + (pagate ? "REGOLARE (Saldate)" : "IN SOSPESO (Non saldate)"));
 
                     if (pagate) {
                         console.mostraMessaggio("Le tasse universitarie risultano regolarmente saldate.");
                     } else {
-                        console.mostraMessaggio("\n1. Simula pagamento delle tasse (" + String.format("%.2f €", importoTasse) + ")");
+                        console.mostraMessaggio(
+                                "\n1. Simula pagamento delle tasse (" + String.format("%.2f €", importoTasse) + ")");
                         console.mostraMessaggio("0. Torna indietro");
                         int sceltaPaga = console.leggiIntero("Seleziona un'opzione: ");
                         if (sceltaPaga == 1) {
                             if (unicenter.pagaTasseStudente()) {
-                                console.mostraMessaggio("Pagamento di " + String.format("%.2f €", importoTasse) + " completato con successo!");
-                                console.mostraMessaggio("Le tasse risultano ora SALDATE. Puoi procedere con l'iscrizione agli appelli.");
+                                console.mostraMessaggio("Pagamento di " + String.format("%.2f €", importoTasse)
+                                        + " completato con successo!");
+                                console.mostraMessaggio(
+                                        "Le tasse risultano ora SALDATE. Puoi procedere con l'iscrizione agli appelli.");
                             } else {
                                 console.mostraErrore("Errore durante il pagamento delle tasse.");
                             }
                         }
                     }
                 }
+
+                // ============================================================
+                // UC9 - COMPILAZIONE PIANO DI STUDI
+                // ============================================================
+                case 7 -> gestisciCompilazionePianoStudi();
 
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
@@ -688,7 +677,8 @@ public class MenuController {
                     }
                     stampaMaterie(materieProf);
 
-                    String codMateria = console.leggiStringa("Inserisci il codice della materia per l'avviso (0 per annullare): ");
+                    String codMateria = console
+                            .leggiStringa("Inserisci il codice della materia per l'avviso (0 per annullare): ");
                     if ("0".equals(codMateria)) {
                         break;
                     }
@@ -699,14 +689,16 @@ public class MenuController {
                     }
 
                     List<Studente> destinatari = unicenter.getStudentiDestinatariComunicazione(codMateria);
-                    console.mostraMessaggio("Studenti attualmente iscritti alla materia (destinatari): " + destinatari.size());
+                    console.mostraMessaggio(
+                            "Studenti attualmente iscritti alla materia (destinatari): " + destinatari.size());
 
                     String titolo = console.leggiStringa("Inserisci il titolo/oggetto dell'avviso: ");
                     String messaggio = console.leggiStringa("Inserisci il testo della comunicazione: ");
 
                     try {
                         int notificati = unicenter.inviaComunicazioneMateria(codMateria, titolo, messaggio);
-                        console.mostraMessaggio("\n[SUCCESSO] Comunicazione pubblicata e inviata a " + notificati + " studente/i.");
+                        console.mostraMessaggio(
+                                "\n[SUCCESSO] Comunicazione pubblicata e inviata a " + notificati + " studente/i.");
                     } catch (Exception e) {
                         console.mostraErrore("Errore durante l'invio della comunicazione: " + e.getMessage());
                     }
@@ -861,6 +853,8 @@ public class MenuController {
             console.mostraMessaggio("6. Finalizza Corso di Laurea - associa materie (UC5)");
             console.mostraMessaggio("7. Associa Professore a Materia");
             console.mostraMessaggio("8. Elimina Corso di Laurea (Bozza non finalizzata o Obsoleto)");
+            console.mostraMessaggio("9. Gestione Materie Pre-Approvate (UC9)");
+            console.mostraMessaggio("10. Approva/Rifiuta Piani di Studi (UC9)");
             console.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = console.leggiIntero("Seleziona un'opzione: ");
@@ -1201,13 +1195,15 @@ public class MenuController {
                         }
                     }
                     if (eliminabili.isEmpty()) {
-                        console.mostraMessaggio("Nessun corso di laurea eliminabile (solo corsi non finalizzati o obsoleti possono essere eliminati).");
+                        console.mostraMessaggio(
+                                "Nessun corso di laurea eliminabile (solo corsi non finalizzati o obsoleti possono essere eliminati).");
                         break;
                     }
                     console.mostraMessaggio("Corsi di laurea eliminabili:");
                     stampaCorsiDiLaurea(eliminabili);
 
-                    String codice = console.leggiStringa("Inserisci il codice del corso da eliminare (0 per annullare): ");
+                    String codice = console
+                            .leggiStringa("Inserisci il codice del corso da eliminare (0 per annullare): ");
                     if ("0".equals(codice))
                         break;
 
@@ -1218,6 +1214,16 @@ public class MenuController {
                         console.mostraErrore(e.getMessage());
                     }
                 }
+
+                // ============================================================
+                // UC9 - GESTIONE MATERIE PRE-APPROVATE
+                // ============================================================
+                case 9 -> gestisciMateriePreApprovateAdmin();
+
+                // ============================================================
+                // UC9 - APPROVA / RIFIUTA PIANI DI STUDI
+                // ============================================================
+                case 10 -> gestisciApprovazionePianiAdmin();
 
                 case 0 -> back = true;
                 default -> console.mostraMessaggio("\nOpzione non valida. Riprova.");
@@ -1260,6 +1266,508 @@ public class MenuController {
                             + scadenzaStr
                             + "\n----------------------------------------");
         }
+    }
+
+    // =========================================================================
+    // UC9 - GESTIONE COMPILAZIONE PIANO DI STUDI (STUDENTE)
+    // =========================================================================
+    private void gestisciCompilazionePianoStudi() {
+        console.mostraMessaggio("\n--- Compilazione Piano di Studi (UC9) ---");
+        Studente studente = unicenter.getCurrentUser() instanceof Studente ? (Studente) unicenter.getCurrentUser()
+                : null;
+        if (studente == null) {
+            console.mostraErrore("Utente non valido o non autenticato come studente.");
+            return;
+        }
+
+        it.project.PianoDiStudi piano = studente.getPianoDiStudi();
+        if (piano == null) {
+            console.mostraErrore("Nessun piano di studi associato.");
+            return;
+        }
+
+        console.mostraMessaggio("Stato attuale del Piano: " + piano.getNomeStato());
+        console.mostraMessaggio("\nMaterie Obbligatorie (dal manifesto del corso):");
+        for (String cod : piano.getIdMaterieObbligatorie()) {
+            Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+            String nome = m != null ? m.getNome() : cod;
+            int cfu = m != null ? m.getCfu() : 0;
+            console.mostraMessaggio("  • " + cod + " - " + nome + " (" + cfu + " CFU)");
+        }
+
+        List<String> materieASceltaAttuali = piano.getIdMaterieAScelta();
+        List<String> verbalizzate = unicenter.getMaterieASceltaVerbalizzate();
+
+        if (!materieASceltaAttuali.isEmpty()) {
+            console.mostraMessaggio("\nMaterie a Scelta attualmente presenti:");
+            for (String cod : materieASceltaAttuali) {
+                Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+                String nome = m != null ? m.getNome() : cod;
+                int cfu = m != null ? m.getCfu() : 0;
+                String lock = verbalizzate.contains(cod) ? " [VERBALIZZATA 🔒]" : "";
+                console.mostraMessaggio("  • " + cod + " - " + nome + " (" + cfu + " CFU)" + lock);
+            }
+        }
+
+        if ("In Attesa".equalsIgnoreCase(piano.getNomeStato())) {
+            console.mostraMessaggio(
+                    "\nIl tuo piano di studi è attualmente IN ATTESA di approvazione da parte dell'amministratore.");
+            console.mostraMessaggio("Non è possibile modificarlo finché non viene valutato.");
+            return;
+        }
+
+        if (!"Bozza".equalsIgnoreCase(piano.getNomeStato())) {
+            console.mostraMessaggio("\nIl tuo piano di studi è attualmente in stato: " + piano.getNomeStato());
+            try {
+                unicenter.getPianoStudiController().verificaVincoloCompilazioneMaterie(studente);
+            } catch (IllegalStateException e) {
+                console.mostraErrore(e.getMessage());
+                return;
+            }
+
+            String risposta = console.leggiStringa("Desideri ricompilare il piano di studi? (S/N): ");
+            if (!risposta.equalsIgnoreCase("S") && !risposta.equalsIgnoreCase("SI")) {
+                return;
+            }
+        }
+
+        // Mostra materie disponibili
+        List<Materia> disponibili = unicenter.getMaterieASceltaDisponibili();
+        if (disponibili.isEmpty()) {
+            console.mostraMessaggio("Nessuna materia a scelta disponibile.");
+            return;
+        }
+
+        CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController()
+                .trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        if (corso == null) {
+            corso = unicenter.getGestioneCorsiLaureaController()
+                    .trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+        }
+
+        console.mostraMessaggio("\n--- Materie a Scelta Disponibili ---");
+        console.mostraMessaggio(
+                "(Requisito minimo: 12 CFU di materie a scelta. Le materie [Pre-Approvata ✓] consentono l'approvazione immediata)");
+        for (Materia m : disponibili) {
+            boolean preApprovata = (corso != null) && corso.isPreApprovata(m);
+            String tag = preApprovata ? " [Pre-Approvata ✓]" : " [Richiede Approvazione ⚠️]";
+            console.mostraMessaggio(
+                    "  " + m.getCodiceMateria() + " - " + m.getNome() + " (" + m.getCfu() + " CFU)" + tag);
+        }
+
+        List<String> scelte = new java.util.ArrayList<>();
+        int cfuSelezionati = 0;
+
+        // Se ci sono materie già verbalizzate, includile automaticamente
+        for (String verb : verbalizzate) {
+            Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(verb);
+            if (m != null) {
+                scelte.add(verb);
+                cfuSelezionati += m.getCfu();
+                console.mostraMessaggio(
+                        "Materia già superata inclusa automaticamente: " + verb + " (" + m.getCfu() + " CFU 🔒)");
+            }
+        }
+
+        while (true) {
+            console.mostraMessaggio("\nCFU a scelta selezionati finora: " + cfuSelezionati + " / min 12 CFU");
+            if (cfuSelezionati >= 12) {
+                console.mostraMessaggio(
+                        "Hai raggiunto il minimo di 12 CFU. Puoi inserire altre materie oppure digitare 'FINE' o '0' per confermare.");
+            }
+            String input = console.leggiStringa(
+                    "Inserisci il codice della materia da aggiungere (o 'FINE'/'0' per terminare, 'ANNULLA' per uscire): ");
+            if ("ANNULLA".equalsIgnoreCase(input)) {
+                console.mostraMessaggio("Compilazione annullata.");
+                return;
+            }
+            if ("FINE".equalsIgnoreCase(input) || "0".equals(input)) {
+                if (cfuSelezionati < 12) {
+                    console.mostraErrore("Non puoi confermare: hai selezionato solo " + cfuSelezionati
+                            + " CFU (minimo richiesto: 12 CFU).");
+                    continue;
+                }
+                break;
+            }
+
+            String codiceInserito = input.toUpperCase().trim();
+            if (scelte.contains(codiceInserito)) {
+                console.mostraErrore("Materia già selezionata.");
+                continue;
+            }
+            Materia materiaScelta = null;
+            for (Materia m : disponibili) {
+                if (m.getCodiceMateria().equalsIgnoreCase(codiceInserito)) {
+                    materiaScelta = m;
+                    break;
+                }
+            }
+            if (materiaScelta == null) {
+                console.mostraErrore("Codice materia non valido o non disponibile tra le materie a scelta.");
+                continue;
+            }
+
+            scelte.add(materiaScelta.getCodiceMateria());
+            cfuSelezionati += materiaScelta.getCfu();
+            console.mostraMessaggio("Aggiunta: " + materiaScelta.getNome() + " (" + materiaScelta.getCfu() + " CFU)");
+        }
+
+        try {
+            boolean ok = unicenter.compilaPianoDiStudi(scelte);
+            if (ok) {
+                it.project.PianoDiStudi pianoAggiornato = studente.getPianoDiStudi();
+                console.mostraMessaggio("\n=======================================================");
+                if (pianoAggiornato.isApprovato()) {
+                    console.mostraMessaggio("PIANO DI STUDI REGISTRATO ED APPROVATO AUTOMATICAMENTE!");
+                    console.mostraMessaggio("Tutte le materie a scelta selezionate sono pre-approvate.");
+                } else {
+                    console.mostraMessaggio("PIANO DI STUDI INVIATO IN ATTESA DI APPROVAZIONE!");
+                    console.mostraMessaggio(
+                            "Sono state scelte materie non pre-approvate che richiedono la valutazione dell'Amministratore.");
+                }
+                console.mostraMessaggio("=======================================================");
+            }
+        } catch (Exception e) {
+            console.mostraErrore("Errore durante la compilazione del piano: " + e.getMessage());
+        }
+    }
+
+    // =========================================================================
+    // UC9 - GESTIONE MATERIE PRE-APPROVATE (AMMINISTRATORE)
+    // =========================================================================
+    private void gestisciMateriePreApprovateAdmin() {
+        console.mostraMessaggio("\n--- Gestione Materie Pre-Approvate (UC9) ---");
+        List<CorsoDiLaurea> corsi = unicenter.getCorsiDiLaureaAttivi();
+        if (corsi == null || corsi.isEmpty()) {
+            console.mostraMessaggio("Nessun corso di laurea attivo disponibile.");
+            return;
+        }
+        stampaCorsiDiLaurea(corsi);
+        String codiceCorso = console
+                .leggiStringa("Inserisci il codice del corso di laurea da gestire (0 per annullare): ");
+        if ("0".equals(codiceCorso))
+            return;
+
+        CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(codiceCorso);
+        if (corso == null) {
+            corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaByNome(codiceCorso);
+        }
+        if (corso == null) {
+            console.mostraErrore("Corso non trovato.");
+            return;
+        }
+
+        boolean back = false;
+        while (!back) {
+            console.mostraMessaggio("\nCorso selezionato: " + corso.getNome() + " (" + corso.getId() + ")");
+            List<Materia> preApprovate = corso.getMateriePreApprovate();
+            console.mostraMessaggio("Materie attualmente pre-approvate (" + preApprovate.size() + "):");
+            if (preApprovate.isEmpty()) {
+                console.mostraMessaggio("  (Nessuna materia pre-approvata)");
+            } else {
+                for (Materia m : preApprovate) {
+                    console.mostraMessaggio(
+                            "  • " + m.getCodiceMateria() + " - " + m.getNome() + " (" + m.getCfu() + " CFU)");
+                }
+            }
+
+            console.mostraMessaggio("\n1. Aggiungi materia pre-approvata");
+            console.mostraMessaggio("2. Rimuovi materia pre-approvata");
+            console.mostraMessaggio("0. Torna indietro");
+            int op = console.leggiIntero("Seleziona opzione: ");
+
+            switch (op) {
+                case 1 -> {
+                    List<Materia> tutte = unicenter.getTutteLeMaterie();
+                    List<String> codiciManifesto = new java.util.ArrayList<>();
+                    for (Materia m : corso.getMaterie()) {
+                        codiciManifesto.add(m.getCodiceMateria());
+                    }
+                    List<Materia> aggiungibili = new java.util.ArrayList<>();
+                    for (Materia m : tutte) {
+                        if (!codiciManifesto.contains(m.getCodiceMateria()) && !corso.isPreApprovata(m)) {
+                            aggiungibili.add(m);
+                        }
+                    }
+                    if (aggiungibili.isEmpty()) {
+                        console.mostraMessaggio("Tutte le materie esterne al manifesto sono già pre-approvate.");
+                        break;
+                    }
+                    console.mostraMessaggio("Materie disponibili per l'aggiunta:");
+                    for (Materia m : aggiungibili) {
+                        console.mostraMessaggio(
+                                "  " + m.getCodiceMateria() + " - " + m.getNome() + " (" + m.getCfu() + " CFU)");
+                    }
+                    String cod = console.leggiStringa("Inserisci codice materia da pre-approvare (0 per annullare): ");
+                    if ("0".equals(cod))
+                        break;
+                    Materia daAggiungere = null;
+                    for (Materia m : aggiungibili) {
+                        if (m.getCodiceMateria().equalsIgnoreCase(cod)) {
+                            daAggiungere = m;
+                            break;
+                        }
+                    }
+                    if (daAggiungere == null) {
+                        console.mostraErrore("Materia non valida.");
+                        break;
+                    }
+                    try {
+                        unicenter.aggiungiMateriaPreApprovata(corso.getId(), daAggiungere);
+                        console.mostraMessaggio(
+                                "Materia '" + daAggiungere.getNome() + "' aggiunta alle pre-approvate!");
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+                case 2 -> {
+                    if (preApprovate.isEmpty()) {
+                        console.mostraMessaggio("Nessuna materia da rimuovere.");
+                        break;
+                    }
+                    String cod = console.leggiStringa(
+                            "Inserisci codice materia da rimuovere dalle pre-approvate (0 per annullare): ");
+                    if ("0".equals(cod))
+                        break;
+                    Materia daRimuovere = null;
+                    for (Materia m : preApprovate) {
+                        if (m.getCodiceMateria().equalsIgnoreCase(cod)) {
+                            daRimuovere = m;
+                            break;
+                        }
+                    }
+                    if (daRimuovere == null) {
+                        console.mostraErrore("Materia non presente tra le pre-approvate.");
+                        break;
+                    }
+                    try {
+                        unicenter.rimuoviMateriaPreApprovata(corso.getId(), daRimuovere);
+                        console.mostraMessaggio("Materia '" + daRimuovere.getNome() + "' rimossa dalle pre-approvate.");
+                    } catch (Exception e) {
+                        console.mostraErrore(e.getMessage());
+                    }
+                }
+                case 0 -> back = true;
+                default -> console.mostraMessaggio("Opzione non valida.");
+            }
+        }
+    }
+
+    // =========================================================================
+    // UC9 - VALUTAZIONE PIANI DI STUDI IN ATTESA (AMMINISTRATORE)
+    // =========================================================================
+    private void gestisciApprovazionePianiAdmin() {
+        console.mostraMessaggio("\n--- Valutazione Piani di Studi in Attesa (UC9) ---");
+        java.util.Map<String, it.project.PianoDiStudi> pianiInAttesa = unicenter.getPianiInAttesaApprovazione();
+        if (pianiInAttesa == null || pianiInAttesa.isEmpty()) {
+            console.mostraMessaggio("Nessun piano di studi in attesa di approvazione.");
+            return;
+        }
+
+        console.mostraMessaggio("Piani in attesa di approvazione (" + pianiInAttesa.size() + "):");
+        for (java.util.Map.Entry<String, it.project.PianoDiStudi> entry : pianiInAttesa.entrySet()) {
+            String matricola = entry.getKey();
+            it.project.PianoDiStudi piano = entry.getValue();
+            Studente st = unicenter.trovaStudenteByMatricola(matricola);
+            String nomeCompleto = st != null
+                    ? (st.getNome() + " " + st.getCognome() + " (" + st.getIdCorsoDiLaurea() + ")")
+                    : "N/D";
+            console.mostraMessaggio("\nMatricola: " + matricola + " - Studente: " + nomeCompleto);
+            console.mostraMessaggio("Materie a Scelta richieste:");
+            CorsoDiLaurea corso = st != null
+                    ? unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(st.getIdCorsoDiLaurea())
+                    : null;
+            if (corso == null && st != null) {
+                corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaByNome(st.getIdCorsoDiLaurea());
+            }
+            for (String cod : piano.getIdMaterieAScelta()) {
+                Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+                String nome = m != null ? m.getNome() : cod;
+                int cfu = m != null ? m.getCfu() : 0;
+                boolean pre = (corso != null && m != null) && corso.isPreApprovata(m);
+                String preTag = pre ? " [Pre-Approvata]" : " [NON Pre-Approvata ⚠️]";
+                console.mostraMessaggio("  • " + cod + " - " + nome + " (" + cfu + " CFU)" + preTag);
+            }
+        }
+
+        String matricolaScelta = console
+                .leggiStringa("\nInserisci la matricola dello studente da valutare (0 per annullare): ");
+        if ("0".equals(matricolaScelta))
+            return;
+
+        if (!pianiInAttesa.containsKey(matricolaScelta)) {
+            console.mostraErrore("Matricola non presente tra i piani in attesa.");
+            return;
+        }
+
+        console.mostraMessaggio("Cosa desideri fare per lo studente " + matricolaScelta + "?");
+        console.mostraMessaggio("1. APPROVA piano di studi");
+        console.mostraMessaggio("2. RIFIUTA piano di studi");
+        console.mostraMessaggio("0. Annulla operazione");
+        int sceltaDecisione = console.leggiIntero("Seleziona opzione: ");
+
+        try {
+            switch (sceltaDecisione) {
+                case 1 -> {
+                    unicenter.approvaPianoDiStudi(matricolaScelta);
+                    console.mostraMessaggio(
+                            "Piano di studi per la matricola " + matricolaScelta + " APPROVATO con successo!");
+                    console.mostraMessaggio(
+                            "Lo studente ha ricevuto una notifica automatica di avvenuta approvazione.");
+                }
+                case 2 -> {
+                    unicenter.rifiutaPianoDiStudi(matricolaScelta);
+                    console.mostraMessaggio("Piano di studi per la matricola " + matricolaScelta + " RIFIUTATO.");
+                    console.mostraMessaggio(
+                            "Lo studente ha ricevuto una notifica automatica di rifiuto e potrà ricompilarlo.");
+                }
+                case 0 -> console.mostraMessaggio("Operazione annullata.");
+                default -> console.mostraMessaggio("Opzione non valida.");
+            }
+        } catch (Exception e) {
+            console.mostraErrore("Errore nella valutazione del piano: " + e.getMessage());
+        }
+    }
+
+    // =========================================================================
+    // UC3 - VISUALIZZAZIONE LIBRETTO COMPLETO DI TUTTE LE MATERIE DEL PIANO
+    // =========================================================================
+    private void visualizzaLibrettoStudente() {
+        console.mostraMessaggio("\n--- Il tuo Libretto Universitario ---");
+        Studente studente = (unicenter.getCurrentUser() instanceof Studente) ? (Studente) unicenter.getCurrentUser()
+                : null;
+        if (studente == null) {
+            console.mostraErrore("Utente non valido o non autenticato come studente.");
+            return;
+        }
+
+        Libretto libretto = studente.getLibretto();
+        it.project.PianoDiStudi piano = studente.getPianoDiStudi();
+        List<String> tutteMateriePiano = (piano != null) ? piano.getIdMaterie() : java.util.Collections.emptyList();
+
+        if (tutteMateriePiano.isEmpty()) {
+            console.mostraMessaggio("Nessuna materia presente nel piano di studi.");
+            return;
+        }
+
+        CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController()
+                .trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        if (corso == null) {
+            corso = unicenter.getGestioneCorsiLaureaController()
+                    .trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+        }
+
+        final CorsoDiLaurea finalCorso = corso;
+        int maxAnni = (corso != null) ? corso.getAnniAccademici() : 3;
+
+        // Calcolo CFU totali previsti dal piano di studi
+        int cfuTotaliPiano = 0;
+        for (String cod : tutteMateriePiano) {
+            Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+            if (m != null) {
+                cfuTotaliPiano += m.getCfu();
+            }
+        }
+
+        int esamiSuperati = (libretto != null) ? libretto.getNumeroEsamiSuperati() : 0;
+        int cfuAcquisiti = (libretto != null) ? libretto.getTotaleCfu() : 0;
+
+        List<String> obbligatorie = (piano != null) ? new java.util.ArrayList<>(piano.getIdMaterieObbligatorie())
+                : new java.util.ArrayList<>();
+        List<String> aScelta = (piano != null) ? new java.util.ArrayList<>(piano.getIdMaterieAScelta())
+                : new java.util.ArrayList<>();
+
+        // Ordina le materie obbligatorie per anno di corso
+        obbligatorie.sort((cod1, cod2) -> {
+            int anno1 = (finalCorso != null) ? finalCorso.getAnnoDellaMateria(cod1) : 0;
+            int anno2 = (finalCorso != null) ? finalCorso.getAnnoDellaMateria(cod2) : 0;
+            if (anno1 != anno2) {
+                return Integer.compare(anno1, anno2);
+            }
+            return cod1.compareToIgnoreCase(cod2);
+        });
+
+        // Ordina le materie a scelta alfabeticamente per codice
+        aScelta.sort(String::compareToIgnoreCase);
+
+        console.mostraMessaggio("Riepilogo Carriera:");
+        console.mostraMessaggio("• Esami superati: " + esamiSuperati + " / " + tutteMateriePiano.size());
+        console.mostraMessaggio("• CFU acquisiti: " + cfuAcquisiti + " / " + cfuTotaliPiano + " CFU");
+        if (libretto != null && esamiSuperati > 0) {
+            console.mostraMessaggio(String.format("• Media ponderata: %.2f/30", libretto.getMediaPonderata()));
+        }
+
+        // 1. Stampa materie obbligatorie suddivise per anno
+        int ultimoAnnoStampato = -1;
+        for (String cod : obbligatorie) {
+            int annoMateria = (finalCorso != null) ? finalCorso.getAnnoDellaMateria(cod) : 0;
+            if (annoMateria == 0)
+                annoMateria = 1;
+
+            if (annoMateria != ultimoAnnoStampato) {
+                ultimoAnnoStampato = annoMateria;
+                console.mostraMessaggio("\n--- Anno " + annoMateria + " ---");
+                console.mostraMessaggio(String.format("%-10s | %-32s | %-6s | %s",
+                        "CODICE", "MATERIA", "CFU", "ESITO / VOTO"));
+                console.mostraMessaggio(
+                        "--------------------------------------------------------------------------------");
+            }
+
+            Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+            String nomeMateria = (m != null) ? m.getNome() : cod;
+            int cfu = (m != null) ? m.getCfu() : 0;
+
+            EsameSostenuto superato = (libretto != null) ? libretto.getEsameSuperato(cod) : null;
+            String statoEsame;
+            if (superato != null) {
+                String votoStr = superato.getVotoNumerico() + (superato.isLode() ? " e Lode" : "") + "/30";
+                String dataStr = (superato.getDataRegistrazione() != null)
+                        ? " (reg. " + superato.getDataRegistrazione().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                + ")"
+                        : "";
+                statoEsame = votoStr + dataStr;
+            } else {
+                statoEsame = "-";
+            }
+
+            String nomeTroncato = (nomeMateria.length() > 32) ? nomeMateria.substring(0, 29) + "..." : nomeMateria;
+            console.mostraMessaggio(String.format("%-10s | %-32s | %-6d | %s",
+                    cod, nomeTroncato, cfu, statoEsame));
+        }
+
+        // 2. Stampa sezione separata per le materie a scelta
+        console.mostraMessaggio("\n--- Materie a Scelta ---");
+        if (aScelta.isEmpty()) {
+            console.mostraMessaggio("(Nessuna materia a scelta presente nel piano di studi)");
+        } else {
+            console.mostraMessaggio(String.format("%-10s | %-32s | %-6s | %s",
+                    "CODICE", "MATERIA", "CFU", "ESITO / VOTO"));
+            console.mostraMessaggio("--------------------------------------------------------------------------------");
+            for (String cod : aScelta) {
+                Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+                String nomeMateria = (m != null) ? m.getNome() : cod;
+                int cfu = (m != null) ? m.getCfu() : 0;
+
+                EsameSostenuto superato = (libretto != null) ? libretto.getEsameSuperato(cod) : null;
+                String statoEsame;
+                if (superato != null) {
+                    String votoStr = superato.getVotoNumerico() + (superato.isLode() ? " e Lode" : "") + "/30";
+                    String dataStr = (superato.getDataRegistrazione() != null)
+                            ? " (reg. "
+                                    + superato.getDataRegistrazione().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                    + ")"
+                            : "";
+                    statoEsame = votoStr + dataStr;
+                } else {
+                    statoEsame = "-";
+                }
+
+                String nomeTroncato = (nomeMateria.length() > 32) ? nomeMateria.substring(0, 29) + "..." : nomeMateria;
+                console.mostraMessaggio(String.format("%-10s | %-32s | %-6d | %s",
+                        cod, nomeTroncato, cfu, statoEsame));
+            }
+        }
+        console.mostraMessaggio("--------------------------------------------------------------------------------");
     }
 
 }

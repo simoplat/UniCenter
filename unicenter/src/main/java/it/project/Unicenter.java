@@ -21,6 +21,7 @@ public class Unicenter {
     private final GestioneCorsiLaureaController gestioneCorsiLaureaController;
     private final GestioneVotoController gestioneVotoController;
     private final InvioComunicazioniController invioComunicazioniController;
+    private final PianoStudiController pianoStudiController;
     private final MenuController menuController;
     private Utente currentUser = null;
 
@@ -47,6 +48,12 @@ public class Unicenter {
         // 4. Inizializzazione Controller UC7 (Invio Comunicazioni)
         this.invioComunicazioniController = new InvioComunicazioniController(this, this.gestoreMaterie);
 
+        // 5. Inizializzazione Controller UC9 (Compilazione Piano di Studi)
+        this.pianoStudiController = new PianoStudiController(
+                this.gestioneCorsiLaureaController,
+                this.gestoreMaterie,
+                this.gestioneAppelliController,
+                this);
     }
 
     private static class UnicenterHolder {
@@ -95,12 +102,14 @@ public class Unicenter {
                 codiceFiscale);
         utenti.add(nuovoStudente);
 
-        // UC5: Auto-popola il piano di studi con le materie del corso
+        // UC5 & UC9: Auto-popola il piano di studi con le materie obbligatorie del corso
         if (corsoTrovato != null && corsoTrovato.isFinalizzato()) {
             PianoDiStudi pianoDiStudi = nuovoStudente.getPianoDiStudi();
             for (Materia materia : corsoTrovato.getMaterie()) {
-                pianoDiStudi.aggiungiMateria(materia.getCodiceMateria());
+                pianoDiStudi.aggiungiMateriaObbligatoria(materia.getCodiceMateria());
             }
+            // Observer: registra lo studente per ricevere notifiche su approvazione/rifiuto piano
+            pianoDiStudi.aggiungiOsservatore(nuovoStudente);
         }
 
         return nuovoStudente;
@@ -122,10 +131,16 @@ public class Unicenter {
 
         Studente studente = (Studente) this.currentUser;
         PianoDiStudi pianoDiStudi = studente.getPianoDiStudi();
-        if (pianoDiStudi == null || "IN_ATTESA".equals(pianoDiStudi.getStato())) {
-            throw new IllegalStateException("Impossibile iscrivere lo studente: il piano di studi non è approvato.");
+        if (pianoDiStudi == null) {
+            return Collections.emptyList();
         }
-        return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, pianoDiStudi.getIdMaterie());
+        // UC9: Le materie obbligatorie sono sempre iscrivibili se presenti nel piano
+        List<String> materieIscrivibili = new ArrayList<>(pianoDiStudi.getIdMaterieObbligatorie());
+        // Le materie a scelta solo se il piano è approvato (o registrato)
+        if (pianoDiStudi.isApprovato()) {
+            materieIscrivibili.addAll(pianoDiStudi.getIdMaterieAScelta());
+        }
+        return gestioneAppelliController.trovaAppelliPrenotabiliByStudente(studente, materieIscrivibili);
     }
 
     public List<Appello> trovaAppelliPrenotatiDalloStudente() {
@@ -227,6 +242,10 @@ public class Unicenter {
                 .map(u -> (Studente) u)
                 .filter(s -> s.getMatricola().equalsIgnoreCase(matricola))
                 .findFirst();
+    }
+
+    public Studente trovaStudenteByMatricola(String matricola) {
+        return trovaStudente(matricola).orElse(null);
     }
 
     public Optional<Studente> trovaStudenteByEmail(String email) {
@@ -393,10 +412,10 @@ public class Unicenter {
     }
 
     /**
-     * Cerca un Corso di Laurea per codice.
+     * Cerca un Corso di Laurea per ID (codice).
      */
-    public CorsoDiLaurea trovaCorsoDiLaureaByCodice(String codice) {
-        return gestioneCorsiLaureaController.trovaCorsoDiLaureaByCodice(codice);
+    public CorsoDiLaurea trovaCorsoDiLaureaById(String id) {
+        return gestioneCorsiLaureaController.trovaCorsoDiLaureaById(id);
     }
 
     // =========================================================================
@@ -637,6 +656,103 @@ public class Unicenter {
             throw new IllegalStateException("Solo un amministratore può associare un professore a una materia.");
         }
         gestoreMaterie.associaProfessoreAMateria(idProfessore, codiceMateria);
+    }
+
+    // =========================================================================
+    // UC9 - METODI FACADE PIANO DI STUDI
+    // =========================================================================
+
+    public PianoStudiController getPianoStudiController() {
+        return pianoStudiController;
+    }
+
+    /**
+     * Lo studente autenticato compila il proprio piano di studi selezionando
+     * materie a scelta (almeno 12 CFU).
+     */
+    public boolean compilaPianoDiStudi(List<String> codiciMaterieAScelta) {
+        if (this.currentUser == null || !(this.currentUser instanceof Studente)) {
+            throw new IllegalStateException("Solo uno studente autenticato può compilare il proprio piano di studi.");
+        }
+        Studente studente = (Studente) this.currentUser;
+        return pianoStudiController.compilaPianoDiStudi(studente, codiciMaterieAScelta);
+    }
+
+    /**
+     * L'amministratore approva un piano di studi in attesa.
+     */
+    public boolean approvaPianoDiStudi(String matricola) {
+        if (this.currentUser == null || !(this.currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può approvare un piano di studi.");
+        }
+        return pianoStudiController.approvaPianoDiStudi(matricola);
+    }
+
+    /**
+     * L'amministratore rifiuta un piano di studi in attesa.
+     */
+    public boolean rifiutaPianoDiStudi(String matricola) {
+        if (this.currentUser == null || !(this.currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può rifiutare un piano di studi.");
+        }
+        return pianoStudiController.rifiutaPianoDiStudi(matricola);
+    }
+
+    /**
+     * Restituisce la mappa dei piani in attesa di approvazione (matricola -> PianoDiStudi).
+     */
+    public java.util.Map<String, PianoDiStudi> getPianiInAttesaApprovazione() {
+        return pianoStudiController.getPianiInAttesa();
+    }
+
+    /**
+     * L'amministratore aggiunge una materia pre-approvata a un corso di laurea.
+     */
+    public void aggiungiMateriaPreApprovata(String codiceCorso, Materia materia) {
+        if (this.currentUser == null || !(this.currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può gestire le materie pre-approvate.");
+        }
+        pianoStudiController.aggiungiMateriaPreApprovata(codiceCorso, materia);
+    }
+
+    /**
+     * L'amministratore rimuove una materia pre-approvata da un corso di laurea.
+     */
+    public void rimuoviMateriaPreApprovata(String codiceCorso, Materia materia) {
+        if (this.currentUser == null || !(this.currentUser instanceof Amministratore)) {
+            throw new IllegalStateException("Solo un amministratore può gestire le materie pre-approvate.");
+        }
+        pianoStudiController.rimuoviMateriaPreApprovata(codiceCorso, materia);
+    }
+
+    /**
+     * Restituisce le materie a scelta disponibili per lo studente attualmente loggato
+     * (tutte le materie non appartenenti al manifesto del suo corso).
+     */
+    public List<Materia> getMaterieASceltaDisponibili() {
+        if (this.currentUser == null || !(this.currentUser instanceof Studente)) {
+            return Collections.emptyList();
+        }
+        Studente studente = (Studente) this.currentUser;
+        return pianoStudiController.getMaterieASceltaDisponibili(studente);
+    }
+
+    /**
+     * Restituisce le materie pre-approvate per un corso di laurea.
+     */
+    public List<Materia> getMateriePreApprovateByCorso(String codiceCorso) {
+        return pianoStudiController.getMateriePreApprovateByCorso(codiceCorso);
+    }
+
+    /**
+     * Restituisce i codici delle materie a scelta già verbalizzate per lo studente corrente.
+     */
+    public List<String> getMaterieASceltaVerbalizzate() {
+        if (this.currentUser == null || !(this.currentUser instanceof Studente)) {
+            return Collections.emptyList();
+        }
+        Studente studente = (Studente) this.currentUser;
+        return pianoStudiController.getMaterieASceltaVerbalizzate(studente);
     }
 
 }
