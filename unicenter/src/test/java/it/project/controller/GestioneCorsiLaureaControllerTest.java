@@ -34,7 +34,7 @@ class GestioneCorsiLaureaControllerTest {
         CorsoDiLaurea corso = controller.creaCorsoDiLaurea("Ingegneria Gestionale", "Triennale", 3);
         boolean eliminato = controller.eliminaCorsoDiLaurea(corso.getId());
         assertTrue(eliminato);
-        assertNull(controller.trovaCorsoDiLaureaByCodice(corso.getId()));
+        assertNull(controller.trovaCorsoDiLaureaById(corso.getId()));
     }
 
     @Test
@@ -48,7 +48,7 @@ class GestioneCorsiLaureaControllerTest {
 
         boolean eliminato = controller.eliminaCorsoDiLaurea(corso.getId());
         assertTrue(eliminato);
-        assertNull(controller.trovaCorsoDiLaureaByCodice(corso.getId()));
+        assertNull(controller.trovaCorsoDiLaureaById(corso.getId()));
     }
 
     @Test

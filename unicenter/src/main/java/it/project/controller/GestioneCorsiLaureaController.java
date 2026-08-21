@@ -9,9 +9,11 @@ import it.project.Materia;
 import it.project.factory.CorsoDiLaureaFactory;
 
 /**
- * Controller (GRASP / Facade Controller) per UC4/UC5 - Gestione Corsi di Laurea e Materie.
+ * Controller (GRASP / Facade Controller) per UC4/UC5 - Gestione Corsi di Laurea
+ * e Materie.
  * Coordina le operazioni dell'amministratore relative ai percorsi universitari:
- * creazione, aggiornamento, obsolescenza, finalizzazione e ricerca dei Corsi di Laurea.
+ * creazione, aggiornamento, obsolescenza, finalizzazione e ricerca dei Corsi di
+ * Laurea.
  */
 public class GestioneCorsiLaureaController {
     private final List<CorsoDiLaurea> corsiDiLaurea;
@@ -26,7 +28,8 @@ public class GestioneCorsiLaureaController {
 
     /**
      * Crea un nuovo Corso di Laurea tramite la Factory e lo aggiunge al sistema.
-     * La Factory applica le validazioni e genera il codice univoco (Regola di Dominio 3).
+     * La Factory applica le validazioni e genera il codice univoco (Regola di
+     * Dominio 3).
      * Il corso viene creato come "non finalizzato": non ha materie e non è visibile
      * per l'immatricolazione.
      *
@@ -37,7 +40,7 @@ public class GestioneCorsiLaureaController {
         CorsoDiLaurea esistente = trovaCorsoDiLaureaByNome(nome);
         if (esistente != null) {
             throw new IllegalArgumentException(
-                "Esiste già un corso di laurea con il nome '" + nome + "' (codice: " + esistente.getId() + ").");
+                    "Esiste già un corso di laurea con il nome '" + nome + "' (codice: " + esistente.getId() + ").");
         }
 
         // Delega la creazione alla Factory (validazione + generazione codice)
@@ -49,13 +52,13 @@ public class GestioneCorsiLaureaController {
     /**
      * Aggiorna i dati di un Corso di Laurea esistente.
      *
-     * @param codice       codice identificativo del corso da aggiornare
-     * @param nuovoNome    nuovo nome (null o vuoto per non modificare)
+     * @param codice         codice identificativo del corso da aggiornare
+     * @param nuovoNome      nuovo nome (null o vuoto per non modificare)
      * @param nuovaTipologia nuova tipologia (null o vuoto per non modificare)
      * @return true se l'aggiornamento è andato a buon fine
      */
     public boolean aggiornaCorsoDiLaurea(String codice, String nuovoNome, String nuovaTipologia) {
-        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codice);
+        CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
         if (corso == null) {
             throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
         }
@@ -66,8 +69,8 @@ public class GestioneCorsiLaureaController {
 
         if (corso.isFinalizzato()) {
             throw new IllegalStateException(
-                "Impossibile aggiornare il corso '" + corso.getNome() + "': è già finalizzato. "
-                + "È possibile solo renderlo obsoleto e crearne uno nuovo.");
+                    "Impossibile aggiornare il corso '" + corso.getNome() + "': è già finalizzato. "
+                            + "È possibile solo renderlo obsoleto e crearne uno nuovo.");
         }
 
         if (nuovoNome != null && !nuovoNome.trim().isEmpty()) {
@@ -75,7 +78,7 @@ public class GestioneCorsiLaureaController {
             CorsoDiLaurea altroCorso = trovaCorsoDiLaureaByNome(nuovoNome);
             if (altroCorso != null && !altroCorso.getId().equals(codice)) {
                 throw new IllegalArgumentException(
-                    "Esiste già un altro corso con il nome '" + nuovoNome + "'.");
+                        "Esiste già un altro corso con il nome '" + nuovoNome + "'.");
             }
             corso.setNome(nuovoNome.trim());
         }
@@ -94,7 +97,7 @@ public class GestioneCorsiLaureaController {
      * I corsi obsoleti non accettano nuove iscrizioni ma restano nel sistema.
      */
     public boolean rendiObsoletoCorsoDiLaurea(String codice) {
-        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codice);
+        CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
         if (corso == null) {
             throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
         }
@@ -108,14 +111,15 @@ public class GestioneCorsiLaureaController {
     }
 
     /**
-     * Elimina definitivamente un Corso di Laurea (se non ancora finalizzato o se già reso obsoleto).
+     * Elimina definitivamente un Corso di Laurea (se non ancora finalizzato o se
+     * già reso obsoleto).
      * I corsi attivi e finalizzati devono essere prima resi obsoleti per sicurezza.
      *
      * @param codice codice identificativo del corso da eliminare
      * @return true se eliminato con successo
      */
     public boolean eliminaCorsoDiLaurea(String codice) {
-        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codice);
+        CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
         if (corso == null) {
             throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
         }
@@ -133,7 +137,8 @@ public class GestioneCorsiLaureaController {
     // =========================================================================
 
     /**
-     * Restituisce i corsi creati ma non ancora finalizzati (senza materie associate).
+     * Restituisce i corsi creati ma non ancora finalizzati (senza materie
+     * associate).
      * Questi sono i corsi che l'amministratore può ancora configurare.
      */
     public List<CorsoDiLaurea> getCorsiNonFinalizzati() {
@@ -144,7 +149,8 @@ public class GestioneCorsiLaureaController {
 
     /**
      * Associa una materia a un anno specifico di un Corso di Laurea.
-     * Delega al CorsoDiLaurea la validazione dell'anno e dello stato di finalizzazione
+     * Delega al CorsoDiLaurea la validazione dell'anno e dello stato di
+     * finalizzazione
      * (pattern Creator GRASP).
      *
      * @param codiceCorso il codice del corso
@@ -152,7 +158,7 @@ public class GestioneCorsiLaureaController {
      * @param materia     la materia da associare
      */
     public void associaMateriaACorso(String codiceCorso, int anno, Materia materia) {
-        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codiceCorso);
+        CorsoDiLaurea corso = trovaCorsoDiLaureaById(codiceCorso);
         if (corso == null) {
             throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codiceCorso);
         }
@@ -167,7 +173,7 @@ public class GestioneCorsiLaureaController {
      * @param codiceCorso il codice del corso da finalizzare
      */
     public void finalizzaCorso(String codiceCorso) {
-        CorsoDiLaurea corso = trovaCorsoDiLaureaByCodice(codiceCorso);
+        CorsoDiLaurea corso = trovaCorsoDiLaureaById(codiceCorso);
         if (corso == null) {
             throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codiceCorso);
         }
@@ -187,9 +193,9 @@ public class GestioneCorsiLaureaController {
         return null;
     }
 
-    public CorsoDiLaurea trovaCorsoDiLaureaByCodice(String codice) {
+    public CorsoDiLaurea trovaCorsoDiLaureaById(String id) {
         for (CorsoDiLaurea corso : corsiDiLaurea) {
-            if (corso.getId().equalsIgnoreCase(codice)) {
+            if (corso.getId().equalsIgnoreCase(id)) {
                 return corso;
             }
         }
