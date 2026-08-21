@@ -624,25 +624,41 @@ async function renderStudentAppelliDisponibili(container) {
                 <th>Materia</th>
                 <th>Data & Ora</th>
                 <th>Aula</th>
-                <th>Posti</th>
+                <th>Vincolo</th>
+                <th>Posti Disponibili</th>
                 <th>Termine Iscrizione</th>
                 <th>Azione</th>
               </tr>
             </thead>
             <tbody>
-              ${list.map(a => `
-                <tr>
-                  <td><span style="font-family: var(--font-mono); color: var(--accent-primary); font-weight: 600;">${a.codiceAppello}</span></td>
-                  <td><strong>${a.nomeMateria}</strong> (${a.cfu} CFU)</td>
-                  <td>${UI.formatDate(a.dataOra)}</td>
-                  <td>${a.aula}</td>
-                  <td>${a.iscrittiCount} / ${a.posti}</td>
-                  <td>${UI.formatShortDate(a.termineIscrizione)}</td>
-                  <td>
-                    <button class="btn btn-primary btn-sm" onclick="prenotaAppello('${a.codiceAppello}')">Prenota</button>
-                  </td>
-                </tr>
-              `).join('')}
+              ${list.map(a => {
+                const postiTot = a.posti || 0;
+                const iscritti = a.iscrittiCount || 0;
+                const postiDisp = Math.max(0, postiTot - iscritti);
+                const esaurito = postiDisp === 0;
+
+                return `
+                  <tr>
+                    <td><span style="font-family: var(--font-mono); color: var(--accent-primary); font-weight: 600;">${a.codiceAppello}</span></td>
+                    <td><strong>${a.nomeMateria}</strong> (${a.cfu} CFU)</td>
+                    <td>${UI.formatDate(a.dataOra)}</td>
+                    <td>${a.aula}</td>
+                    <td><span class="badge ${a.vincolo && a.vincolo !== 'A-Z' ? 'badge-warning' : 'badge-info'}">${a.vincolo || 'A-Z'}</span></td>
+                    <td>
+                      <span class="badge ${postiDisp > 0 ? 'badge-success' : 'badge-danger'}">
+                        ${postiDisp} disponibili
+                      </span>
+                      <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.35rem;">(${postiTot} tot)</span>
+                    </td>
+                    <td>${UI.formatShortDate(a.termineIscrizione)}</td>
+                    <td>
+                      ${esaurito 
+                        ? '<button class="btn btn-secondary btn-sm" disabled>Esaurito</button>' 
+                        : `<button class="btn btn-primary btn-sm" onclick="prenotaAppello('${a.codiceAppello}')">Prenota</button>`}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>
@@ -834,13 +850,22 @@ async function rifiutaVoto(idVerbale) {
 
 async function renderStudentLibretto(container) {
   const res = await API.get('/api/student/libretto');
-  const d = res.data || {};
+  const d = res.data || { obbligatorie: [], aScelta: [] };
+
+  // Raggruppa materie obbligatorie per anno di corso
+  const anniMap = {};
+  (d.obbligatorie || []).forEach(m => {
+    const anno = m.anno || 1;
+    if (!anniMap[anno]) anniMap[anno] = [];
+    anniMap[anno].push(m);
+  });
+  const anniSorted = Object.keys(anniMap).map(Number).sort((a, b) => a - b);
 
   container.innerHTML = `
     <div class="page-header">
       <div>
         <h1 class="page-title">Il Tuo Libretto Universitario</h1>
-        <p class="page-subtitle">Riepilogo carriera e piano degli esami sostenuti e previsti</p>
+        <p class="page-subtitle">Riepilogo carriera e piano degli esami suddivisi per anno accademico</p>
       </div>
     </div>
 
@@ -871,64 +896,101 @@ async function renderStudentLibretto(container) {
       </div>
     </div>
 
-    <div class="card-panel">
-      <div class="card-panel-header">
-        <h3 class="card-panel-title">Materie Obbligatorie per Anno</h3>
-      </div>
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Anno</th>
-              <th>Codice</th>
-              <th>Materia</th>
-              <th>CFU</th>
-              <th>Esito / Voto</th>
-              <th>Data Reg.</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(d.obbligatorie || []).map(m => `
-              <tr>
-                <td><span class="badge badge-info">Anno ${m.anno}</span></td>
-                <td><span style="font-family: var(--font-mono);">${m.codice}</span></td>
-                <td><strong>${m.nome}</strong></td>
-                <td>${m.cfu} CFU</td>
-                <td>
-                  ${m.superato ? `<span class="badge badge-success">${m.voto}${m.lode ? ' e Lode' : ''}/30</span>` : '<span style="color: var(--text-muted);">-</span>'}
-                </td>
-                <td>${UI.formatShortDate(m.dataRegistrazione)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    ${anniSorted.map(anno => {
+      const materieAnno = anniMap[anno] || [];
+      const superatiAnno = materieAnno.filter(m => m.superato).length;
+      const cfuAnno = materieAnno.reduce((sum, m) => sum + (m.cfu || 0), 0);
+      const cfuAcquisitiAnno = materieAnno.filter(m => m.superato).reduce((sum, m) => sum + (m.cfu || 0), 0);
+
+      return `
+        <div class="card-panel" style="margin-bottom: 1.5rem;">
+          <div class="card-panel-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="badge badge-info" style="font-size: 0.9rem; font-weight: 700; padding: 0.35rem 0.85rem;">
+                ${anno}° ANNO DI CORSO
+              </span>
+              <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">
+                Materie Obbligatorie
+              </span>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.82rem; color: var(--text-muted);">
+              <span>Esami: <strong style="color: var(--text-primary);">${superatiAnno} / ${materieAnno.length}</strong> superati</span>
+              <span>CFU: <strong style="color: var(--accent-primary);">${cfuAcquisitiAnno} / ${cfuAnno}</strong></span>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Codice</th>
+                  <th>Insegnamento</th>
+                  <th>CFU</th>
+                  <th>Stato Esame</th>
+                  <th>Esito / Voto</th>
+                  <th>Data Registrazione</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${materieAnno.map(m => `
+                  <tr>
+                    <td><span style="font-family: var(--font-mono); color: var(--accent-primary); font-weight: 600;">${m.codice}</span></td>
+                    <td><strong>${m.nome}</strong></td>
+                    <td>${m.cfu} CFU</td>
+                    <td>
+                      ${m.superato 
+                        ? '<span class="badge badge-success">SUPERATO</span>' 
+                        : '<span class="badge badge-warning">DA SOSTENERE</span>'}
+                    </td>
+                    <td>
+                      ${m.superato ? `<strong style="color: var(--accent-success); font-size: 1rem;">${m.voto}${m.lode ? ' e Lode' : ''}</strong> / 30` : '<span style="color: var(--text-muted);">-</span>'}
+                    </td>
+                    <td>${UI.formatShortDate(m.dataRegistrazione)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }).join('')}
 
     <div class="card-panel">
-      <div class="card-panel-header">
-        <h3 class="card-panel-title">Materie a Scelta</h3>
+      <div class="card-panel-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span class="badge badge-purple" style="font-size: 0.9rem; font-weight: 700; padding: 0.35rem 0.85rem;">
+            MATERIE A SCELTA
+          </span>
+          <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">
+            Insegnamenti del Piano di Studi Individuale
+          </span>
+        </div>
       </div>
-      ${(d.aScelta || []).length === 0 ? '<p style="color: var(--text-muted);">Nessuna materia a scelta inserita nel piano di studi.</p>' : `
+      ${(d.aScelta || []).length === 0 ? '<p style="color: var(--text-muted); padding: 0.5rem 0;">Nessuna materia a scelta inserita nel piano di studi.</p>' : `
         <div class="table-responsive">
           <table class="data-table">
             <thead>
               <tr>
                 <th>Codice</th>
-                <th>Materia</th>
+                <th>Insegnamento</th>
                 <th>CFU</th>
+                <th>Stato Esame</th>
                 <th>Esito / Voto</th>
-                <th>Data Reg.</th>
+                <th>Data Registrazione</th>
               </tr>
             </thead>
             <tbody>
               ${d.aScelta.map(m => `
                 <tr>
-                  <td><span style="font-family: var(--font-mono);">${m.codice}</span></td>
+                  <td><span style="font-family: var(--font-mono); color: var(--accent-primary); font-weight: 600;">${m.codice}</span></td>
                   <td><strong>${m.nome}</strong></td>
                   <td>${m.cfu} CFU</td>
                   <td>
-                    ${m.superato ? `<span class="badge badge-success">${m.voto}${m.lode ? ' e Lode' : ''}/30</span>` : '<span style="color: var(--text-muted);">-</span>'}
+                    ${m.superato 
+                      ? '<span class="badge badge-success">SUPERATO</span>' 
+                      : '<span class="badge badge-warning">DA SOSTENERE</span>'}
+                  </td>
+                  <td>
+                    ${m.superato ? `<strong style="color: var(--accent-success); font-size: 1rem;">${m.voto}${m.lode ? ' e Lode' : ''}</strong> / 30` : '<span style="color: var(--text-muted);">-</span>'}
                   </td>
                   <td>${UI.formatShortDate(m.dataRegistrazione)}</td>
                 </tr>
@@ -1093,6 +1155,41 @@ function renderLetterOptions(selectedLetter) {
   return ALPHABET.map(l => `<option value="${l}" ${l === selectedLetter ? 'selected' : ''}>${l}</option>`).join('');
 }
 
+function formatNotificationBody(messaggio) {
+  if (!messaggio) return '';
+
+  // Controlla se contiene il pattern Appello [ ... ]
+  if (messaggio.includes('Appello [') && messaggio.includes(']')) {
+    const startIdx = messaggio.indexOf('Appello [');
+    const introText = messaggio.substring(0, startIdx).trim();
+    const appelloPart = messaggio.substring(startIdx + 9, messaggio.lastIndexOf(']'));
+
+    const props = {};
+    appelloPart.split(',').forEach(pair => {
+      const idx = pair.indexOf('=');
+      if (idx !== -1) {
+        const k = pair.substring(0, idx).trim();
+        const v = pair.substring(idx + 1).trim();
+        props[k] = v;
+      }
+    });
+
+    return `
+      ${introText ? `<div style="margin-bottom: 0.65rem; color: var(--text-primary); font-weight: 500;">${introText}</div>` : ''}
+      <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 0.85rem 1.1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+        ${props.codiceAppello ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Codice Appello</span><strong style="color: var(--accent-primary); font-family: var(--font-mono);">${props.codiceAppello}</strong></div>` : ''}
+        ${props.codiceMateria ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Materia</span><strong style="color: #fff;">${props.codiceMateria}</strong></div>` : ''}
+        ${props.dataOra ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Data & Ora</span><strong style="color: #fff;">${UI.formatDate(props.dataOra)}</strong></div>` : ''}
+        ${props.aula ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Aula</span><strong style="color: #fff;">${props.aula}</strong></div>` : ''}
+        ${props.postiDisponibili !== undefined ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Posti Disp.</span><strong style="color: var(--accent-success);">${props.postiDisponibili}</strong></div>` : ''}
+        ${props.vincoloLetteraCognome ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Vincolo Cognome</span><span class="badge ${props.vincoloLetteraCognome !== 'A-Z' && props.vincoloLetteraCognome !== 'Nessuno' ? 'badge-warning' : 'badge-info'}">${props.vincoloLetteraCognome}</span></div>` : ''}
+      </div>
+    `;
+  }
+
+  return `<div class="notification-text">${messaggio}</div>`;
+}
+
 async function renderStudentNotifiche(container) {
   const res = await API.get('/api/student/notifiche');
   const list = (res.data || []).slice();
@@ -1133,7 +1230,8 @@ async function renderStudentNotifiche(container) {
             const isAvvisoDocente = n.titolo && (n.titolo.toLowerCase().includes('avviso') || n.titolo.toLowerCase().includes('comunicazione') || n.titolo.toLowerCase().includes('lezione'));
             const isEsito = n.titolo && (n.titolo.toLowerCase().includes('esito') || n.titolo.toLowerCase().includes('voto') || n.titolo.toLowerCase().includes('esame'));
             const isTasse = n.titolo && (n.titolo.toLowerCase().includes('tasse') || n.titolo.toLowerCase().includes('pagamento'));
-            const icon = isAvvisoDocente ? '📢' : isEsito ? '🎓' : isTasse ? '💳' : '🔔';
+            const isIscrizione = n.titolo && (n.titolo.toLowerCase().includes('iscrizione') || n.titolo.toLowerCase().includes('appello'));
+            const icon = isIscrizione ? '📅' : isAvvisoDocente ? '📢' : isEsito ? '🎓' : isTasse ? '💳' : '🔔';
 
             return `
               <div class="notification-card">
@@ -1151,7 +1249,7 @@ async function renderStudentNotifiche(container) {
                       ${UI.formatDate(n.data)}
                     </span>
                   </div>
-                  <div class="notification-text">${n.messaggio}</div>
+                  ${formatNotificationBody(n.messaggio)}
                 </div>
               </div>
             `;
@@ -1551,7 +1649,7 @@ async function renderProfessorPubblicaEsito(container) {
         </div>
 
         <div class="form-group">
-          <label class="form-label">Studente Iscritto (Senza esito pendente)</label>
+          <label class="form-label">Studente Iscritto (Senza voto già verbalizzato o esito pendente)</label>
           <select id="esito-studente" class="form-select" required disabled>
             <option value="">Prima seleziona un appello...</option>
           </select>
@@ -1601,7 +1699,7 @@ async function caricaIscrittiPerEsito() {
     const list = res.data.studenti || [];
     if (list.length === 0) {
       selectStud.disabled = true;
-      selectStud.innerHTML = '<option value="">Nessuno studente iscritto o tutti con esito già pendente</option>';
+      selectStud.innerHTML = '<option value="">Nessuno studente idoneo (tutti già verbalizzati o con esito pendente)</option>';
     } else {
       selectStud.disabled = false;
       selectStud.innerHTML = `

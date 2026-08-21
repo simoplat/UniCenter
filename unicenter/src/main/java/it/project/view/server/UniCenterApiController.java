@@ -623,6 +623,9 @@ public class UniCenterApiController {
                     List<Map<String, Object>> filtrati = new ArrayList<>();
                     if (tuttiIscritti != null) {
                         for (Studente s : tuttiIscritti) {
+                            if (s.getLibretto() != null && s.getLibretto().isEsameSuperato(codMateria)) {
+                                continue;
+                            }
                             boolean haPendente = false;
                             List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(s.getMatricola());
                             if (esitiPendenti != null) {
