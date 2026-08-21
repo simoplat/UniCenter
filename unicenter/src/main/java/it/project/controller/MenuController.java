@@ -17,8 +17,12 @@ import it.project.Notifica;
 import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.exceptions.AppelloNonTrovatoException;
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
+import it.project.exceptions.EsameNonTrovatoException;
 import it.project.exceptions.PostiNonValidi;
+import it.project.exceptions.UtenteNonTrovatoException;
 import it.project.factory.CorsoDiLaureaFactory;
 
 public class MenuController {
@@ -743,16 +747,11 @@ public class MenuController {
         String password = console.leggiStringa("Inserisci la password di almeno 4 caratteri: ");
         String corsoDiLaurea = console.leggiStringa("Inserisci il nome del corso di laurea: ");
 
-        CorsoDiLaurea corso = unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
-
-        if (corso == null) {
-            console.mostraMessaggio("Corso di laurea non trovato.");
-            return;
-        }
-
-        String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
-
         try {
+            CorsoDiLaurea corso = unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
+
+            String codiceFiscale = console.leggiStringa("Inserisci il tuo codice fiscale : ");
+
             Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea,
                     codiceFiscale);
 
@@ -760,6 +759,8 @@ public class MenuController {
             console.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
             console.mostraMessaggio("Tasse da pagare: " + nuovoStudente.getTasse());
             console.mostraMessaggio("Il tuo codice fiscale è: " + codiceFiscale);
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            console.mostraErrore("Immatricolazione fallita: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             console.mostraErrore("immatricolazione fallita. " + e.getMessage());
         } catch (Exception e) {
@@ -1338,11 +1339,17 @@ public class MenuController {
             return;
         }
 
-        CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController()
-                .trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        if (corso == null) {
+        CorsoDiLaurea corso = null;
+        try {
             corso = unicenter.getGestioneCorsiLaureaController()
-                    .trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+                    .trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            try {
+                corso = unicenter.getGestioneCorsiLaureaController()
+                        .trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+            } catch (CorsoDiLaureaNonTrovatoException ex) {
+                // corso non trovato
+            }
         }
 
         console.mostraMessaggio("\n--- Materie a Scelta Disponibili ---");
@@ -1448,13 +1455,16 @@ public class MenuController {
         if ("0".equals(codiceCorso))
             return;
 
-        CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(codiceCorso);
-        if (corso == null) {
-            corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaByNome(codiceCorso);
-        }
-        if (corso == null) {
-            console.mostraErrore("Corso non trovato.");
-            return;
+        CorsoDiLaurea corso = null;
+        try {
+            corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(codiceCorso);
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            try {
+                corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaByNome(codiceCorso);
+            } catch (CorsoDiLaureaNonTrovatoException ex) {
+                console.mostraErrore("Corso non trovato.");
+                return;
+            }
         }
 
         boolean back = false;
@@ -1574,11 +1584,17 @@ public class MenuController {
                     : "N/D";
             console.mostraMessaggio("\nMatricola: " + matricola + " - Studente: " + nomeCompleto);
             console.mostraMessaggio("Materie a Scelta richieste:");
-            CorsoDiLaurea corso = st != null
-                    ? unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(st.getIdCorsoDiLaurea())
-                    : null;
-            if (corso == null && st != null) {
-                corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaByNome(st.getIdCorsoDiLaurea());
+            CorsoDiLaurea corso = null;
+            if (st != null) {
+                try {
+                    corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(st.getIdCorsoDiLaurea());
+                } catch (CorsoDiLaureaNonTrovatoException e) {
+                    try {
+                        corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaByNome(st.getIdCorsoDiLaurea());
+                    } catch (CorsoDiLaureaNonTrovatoException ex) {
+                        // corso non trovato
+                    }
+                }
             }
             for (String cod : piano.getIdMaterieAScelta()) {
                 Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
@@ -1650,11 +1666,17 @@ public class MenuController {
             return;
         }
 
-        CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController()
-                .trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        if (corso == null) {
+        CorsoDiLaurea corso = null;
+        try {
             corso = unicenter.getGestioneCorsiLaureaController()
-                    .trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+                    .trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            try {
+                corso = unicenter.getGestioneCorsiLaureaController()
+                        .trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+            } catch (CorsoDiLaureaNonTrovatoException ex) {
+                // corso non trovato
+            }
         }
 
         final CorsoDiLaurea finalCorso = corso;

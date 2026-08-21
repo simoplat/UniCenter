@@ -14,6 +14,7 @@ import it.project.Materia;
 import it.project.PianoDiStudi;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.strategy.ApprovazioneAutomatica;
 import it.project.strategy.ApprovazioneManuale;
 import it.project.strategy.PoliticaApprovazione;
@@ -120,9 +121,15 @@ public class PianoStudiController {
         }
 
         // 5. Determina corso di laurea dello studente
-        CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        if (corso == null) {
-            corso = gestioneCorsi.trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+        CorsoDiLaurea corso = null;
+        try {
+            corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            try {
+                corso = gestioneCorsi.trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+            } catch (CorsoDiLaureaNonTrovatoException ex) {
+                // corso non trovato
+            }
         }
 
         // 6. Verifica se tutte le materie a scelta sono pre-approvate
@@ -273,9 +280,6 @@ public class PianoStudiController {
      */
     public void aggiungiMateriaPreApprovata(String codiceCorso, Materia materia) {
         CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea con codice '" + codiceCorso + "' non trovato.");
-        }
         corso.aggiungiMateriaPreApprovata(materia);
     }
 
@@ -284,9 +288,6 @@ public class PianoStudiController {
      */
     public void rimuoviMateriaPreApprovata(String codiceCorso, Materia materia) {
         CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea con codice '" + codiceCorso + "' non trovato.");
-        }
         corso.rimuoviMateriaPreApprovata(materia);
     }
 
@@ -296,9 +297,15 @@ public class PianoStudiController {
      */
     public List<Materia> getMaterieASceltaDisponibili(Studente studente) {
         if (studente == null) return Collections.emptyList();
-        CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        if (corso == null) {
-            corso = gestioneCorsi.trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+        CorsoDiLaurea corso = null;
+        try {
+            corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            try {
+                corso = gestioneCorsi.trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
+            } catch (CorsoDiLaureaNonTrovatoException ex) {
+                // corso non trovato
+            }
         }
 
         List<Materia> tutte = gestoreMaterie.getTutteLeMaterie();
@@ -323,9 +330,15 @@ public class PianoStudiController {
      * Restituisce le materie pre-approvate per un corso di laurea.
      */
     public List<Materia> getMateriePreApprovateByCorso(String codiceCorso) {
-        CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
-        if (corso == null) {
-            corso = gestioneCorsi.trovaCorsoDiLaureaByNome(codiceCorso);
+        CorsoDiLaurea corso = null;
+        try {
+            corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
+        } catch (CorsoDiLaureaNonTrovatoException e) {
+            try {
+                corso = gestioneCorsi.trovaCorsoDiLaureaByNome(codiceCorso);
+            } catch (CorsoDiLaureaNonTrovatoException ex) {
+                // corso non trovato
+            }
         }
         if (corso == null) {
             return Collections.emptyList();

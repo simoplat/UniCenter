@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import it.project.CorsoDiLaurea;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.strategy.ICalcoloTasseStrategy;
 
@@ -75,14 +76,14 @@ class ImmatricolazioneControllerTest {
     }
 
     @Test
-    void immatricolaStudente_corsoNonTrovato_lanciaIllegalArgumentException() {
-        when(unicenter.trovaCorsoDiLaureaByNome("Corso Inesistente")).thenReturn(null);
+    void immatricolaStudente_corsoNonTrovato_lanciaCorsoDiLaureaNonTrovatoException() {
+        when(unicenter.trovaCorsoDiLaureaByNome("Corso Inesistente"))
+                .thenThrow(new CorsoDiLaureaNonTrovatoException("Corso di laurea non trovato: Corso Inesistente"));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        CorsoDiLaureaNonTrovatoException ex = assertThrows(CorsoDiLaureaNonTrovatoException.class,
                 () -> controller.immatricolaStudente(
                         NOME, COGNOME, EMAIL, PASSWORD, "Corso Inesistente", CODICE_FISCALE));
 
-        assertTrue(ex.getMessage().contains("corso non esistente"));
         assertTrue(ex.getMessage().contains("Corso Inesistente"));
 
         // Il builder non deve nemmeno essere invocato: nessuna ulteriore interazione

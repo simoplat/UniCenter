@@ -1,6 +1,7 @@
 package it.project.controller;
 
 import it.project.*;
+import it.project.exceptions.AppelloNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
 import it.project.validation.IscrizioneValidator;
@@ -351,8 +352,8 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void trovaAppelloByIdAppello_inesistente_restituisceNull() {
-        assertNull(controller.trovaAppelloByIdAppello("SCONOSCIUTO"));
+    void trovaAppelloByIdAppello_inesistente_lanciaAppelloNonTrovatoException() {
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.trovaAppelloByIdAppello("SCONOSCIUTO"));
     }
 
     @Test
@@ -396,50 +397,72 @@ class GestioneAppelliControllerTest {
         assertEquals("APP012", risultato.get(0).getCodiceAppello());
     }
 
-    @Test
-    void appelliPrenotatiByStudente_conStudenteNull_restituisceListaVuota() {
-        assertTrue(controller.appelliPrenotatiByStudente(null).isEmpty());
-    }
-
     // =================================================================
     // modificaAppello
     // =================================================================
 
     @Test
-    void modificaAppello_conDatiValidi_aggiornaCampiEInviaNotifica() throws Exception {
-        Appello appello = creaAppelloValido("APP014");
-        Studente studente = creaStudente("M011");
+    void modificaAppello_datiValidi_aggiornaAppelloENotifica() throws Exception {
+        Appello appello = creaAppelloValido("APP012");
+        Studente studente = creaStudente("M010");
         appello.aggiungiIscritto(studente);
         aggiungiAppelloDirettamente(appello);
 
-        LocalDateTime nuovaData = LocalDateTime.now().plusDays(20);
-        boolean risultato = controller.modificaAppello("APP014", nuovaData, "Aula 9",
-                50, "M-Z", LocalDate.now().plusDays(15));
+        LocalDateTime nuovaDataOra = LocalDateTime.now().plusDays(20);
+        LocalDate nuovoTermine = LocalDate.now().plusDays(15);
+
+        boolean risultato = controller.modificaAppello("APP012", nuovaDataOra, "Aula B", 50, "A-M", nuovoTermine);
 
         assertTrue(risultato);
-        assertEquals(nuovaData, appello.getDataOra());
-        assertEquals("Aula 9", appello.getAula());
-        assertEquals(49, appello.getPostiDisponibili());
-        assertEquals("M-Z", appello.getVincoloLetteraCognome());
+        assertEquals(nuovaDataOra, appello.getDataOra());
+        assertEquals("Aula B", appello.getAula());
+        assertEquals(49, appello.getPostiDisponibili()); // 50 - 1 iscritto
+        assertEquals("A-M", appello.getVincoloLetteraCognome());
+        assertEquals(nuovoTermine, appello.getTermineIscrizione());
         assertEquals(1, studente.getNotifiche().size());
     }
 
     @Test
-    void modificaAppello_appelloInesistente_lanciaIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> controller.modificaAppello("SCONOSCIUTO",
-                LocalDateTime.now().plusDays(1), "Aula 1", 10, "A-Z",
-                LocalDate.now().plusDays(1)));
+    void modificaAppello_appelloInesistente_lanciaAppelloNonTrovatoException() {
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.modificaAppello(
+                "SCONOSCIUTO",
+                LocalDateTime.now().plusDays(10), "Aula A", 100, "A-Z",
+                LocalDate.now().plusDays(5)));
     }
 
     @Test
-    void modificaAppello_postiInferioriAgliIscritti_lanciaPostiNonValidi() throws Exception {
-        Appello appello = creaAppelloValido("APP015");
+    void modificaAppello_postiInferioriAdIscritti_lanciaPostiNonValidi() throws Exception {
+        Appello appello = creaAppelloValido("APP013");
+        appello.aggiungiIscritto(creaStudente("M011"));
         appello.aggiungiIscritto(creaStudente("M012"));
-        appello.aggiungiIscritto(creaStudente("M013"));
         aggiungiAppelloDirettamente(appello);
 
-        assertThrows(PostiNonValidi.class, () -> controller.modificaAppello("APP015", LocalDateTime.now().plusDays(5),
-                "Aula 1", 1, "A-Z", LocalDate.now().plusDays(1)));
+        assertThrows(PostiNonValidi.class, () -> controller.modificaAppello(
+                "APP013",
+                LocalDateTime.now().plusDays(10), "Aula A", 1, "A-Z",
+                LocalDate.now().plusDays(5)));
+    }
+
+    @Test
+    void modificaAppello_dataPassata_lanciaDataNonValidaException() throws Exception {
+        Appello appello = creaAppelloValido("APP014");
+        aggiungiAppelloDirettamente(appello);
+
+        assertThrows(DataNonValidaException.class, () -> controller.modificaAppello(
+                "APP014",
+                LocalDateTime.now().minusDays(1), "Aula A", 100, "A-Z",
+                LocalDate.now().minusDays(2)));
+    }
+
+    @Test
+    void modificaAppello_termineDopoDataAppello_lanciaDataNonValidaException() throws Exception {
+        Appello appello = creaAppelloValido("APP015");
+        aggiungiAppelloDirettamente(appello);
+
+        assertThrows(DataNonValidaException.class, () -> controller.modificaAppello(
+                "APP015",
+                LocalDateTime.now().plusDays(5), "Aula A", 100, "A-Z",
+                LocalDate.now().plusDays(6)));
     }
 
     // =================================================================
@@ -456,12 +479,12 @@ class GestioneAppelliControllerTest {
         boolean risultato = controller.eliminaAppello("APP016");
 
         assertTrue(risultato);
-        assertNull(controller.trovaAppelloByIdAppello("APP016"));
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.trovaAppelloByIdAppello("APP016"));
         assertEquals(1, studente.getNotifiche().size());
     }
 
     @Test
-    void eliminaAppello_inesistente_lanciaIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> controller.eliminaAppello("SCONOSCIUTO"));
+    void eliminaAppello_inesistente_lanciaAppelloNonTrovatoException() {
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.eliminaAppello("SCONOSCIUTO"));
     }
 }

@@ -3,6 +3,7 @@ package it.project;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import it.project.exceptions.EsameNonTrovatoException;
 
 /**
  * Information Expert (GRASP): Libretto è l'esperto dell'informazione che
@@ -48,23 +49,26 @@ public class Libretto {
      * @return true se la materia è già presente nel libretto
      */
     public boolean isEsameSuperato(String codiceMateria) {
-        return getEsameSuperato(codiceMateria) != null;
+        if (codiceMateria == null) return false;
+        return esamiSuperati.stream()
+                .anyMatch(e -> e.getCodiceMateria().equalsIgnoreCase(codiceMateria));
     }
 
     /**
-     * Restituisce l'esame superato per una specifica materia, oppure null se non ancora superato.
+     * Restituisce l'esame superato per una specifica materia, oppure lancia EsameNonTrovatoException se non ancora superato.
      *
      * @param codiceMateria il codice della materia
-     * @return EsameSostenuto corrispondente o null
+     * @return EsameSostenuto corrispondente
      */
     public EsameSostenuto getEsameSuperato(String codiceMateria) {
-        if (codiceMateria == null) return null;
-        for (EsameSostenuto e : esamiSuperati) {
-            if (e.getCodiceMateria().equalsIgnoreCase(codiceMateria)) {
-                return e;
+        if (codiceMateria != null) {
+            for (EsameSostenuto e : esamiSuperati) {
+                if (e.getCodiceMateria().equalsIgnoreCase(codiceMateria)) {
+                    return e;
+                }
             }
         }
-        return null;
+        throw new EsameNonTrovatoException("Nessun esame superato trovato per la materia: " + codiceMateria);
     }
 
     /**

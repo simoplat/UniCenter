@@ -13,6 +13,7 @@ import it.project.Notifica;
 import it.project.Professore;
 import it.project.Unicenter;
 import it.project.database.ClockProvider;
+import it.project.exceptions.AppelloNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.PostiNonValidi;
 import it.project.generator.CodiceAppelloGenerator;
@@ -115,10 +116,6 @@ public class GestioneAppelliController {
             this.validatorChain = ValidationChainBuilder.buildDefaultChain();
         }
 
-        if (appello == null) {
-            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
-        }
-
         if (appello.getIscritti().contains(studente)) {
             throw new IllegalStateException("Sei già iscritto a questo appello.");
         }
@@ -158,9 +155,6 @@ public class GestioneAppelliController {
 
     public boolean disiscriviStudente(Studente studente, String codiceAppello) throws Exception {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
-        if (appello == null) {
-            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
-        }
 
         // Vincolo temporale: la disiscrizione è bloccata dopo la data di termine
         // iscrizione
@@ -242,15 +236,14 @@ public class GestioneAppelliController {
     }
 
     public Appello trovaAppelloByIdAppello(String codiceAppello) {
-        if (appelli == null || appelli.isEmpty()) {
-            return null;
-        }
-        for (Appello app : appelli) {
-            if (app.getCodiceAppello().equals(codiceAppello)) {
-                return app;
+        if (appelli != null && codiceAppello != null) {
+            for (Appello app : appelli) {
+                if (app.getCodiceAppello().equals(codiceAppello)) {
+                    return app;
+                }
             }
         }
-        return null;
+        throw new AppelloNonTrovatoException("Appello non trovato: " + codiceAppello);
     }
 
     public String generaCodiceAppello() {
@@ -259,9 +252,6 @@ public class GestioneAppelliController {
 
     public List<Studente> trovaIscrittiByIdAppello(String codiceAppello) {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
-        if (appello == null) {
-            return Collections.emptyList();
-        }
         return appello.getIscritti();
     }
 
@@ -269,9 +259,6 @@ public class GestioneAppelliController {
             String vincolo, LocalDate dataTermineIscrizione) throws Exception, DataNonValidaException, PostiNonValidi {
 
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
-        if (appello == null) {
-            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
-        }
         String vincoloNormalizzato = normalizzaEValidaVincolo(vincolo);
         validateAppello(appello.getCodiceMateria(), dataOra, aula, postiDisponibili, vincoloNormalizzato,
                 dataTermineIscrizione);
@@ -305,9 +292,6 @@ public class GestioneAppelliController {
 
     public boolean eliminaAppello(String codiceAppello) {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
-        if (appello == null) {
-            throw new IllegalArgumentException("Appello non trovato: " + codiceAppello);
-        }
 
         String oggetto = "Eliminazione appello " + codiceAppello;
         String contenuto = "L'appello " + codiceAppello + " è stato eliminato.";

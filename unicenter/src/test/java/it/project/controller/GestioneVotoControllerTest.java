@@ -5,6 +5,7 @@ import it.project.Materia;
 import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.exceptions.EsameNonTrovatoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,9 +95,9 @@ class GestioneVotoControllerTest {
     }
 
     @Test
-    @DisplayName("Accettazione voto con esame inesistente lancia IllegalArgumentException")
+    @DisplayName("Accettazione voto con esame inesistente lancia EsameNonTrovatoException")
     void testAccettaVoto_EsameInesistente() {
-        assertThrows(IllegalArgumentException.class, () -> controller.accettaVoto("VRB-99999"));
+        assertThrows(EsameNonTrovatoException.class, () -> controller.accettaVoto("VRB-99999"));
     }
 
     @Test
@@ -117,8 +118,8 @@ class GestioneVotoControllerTest {
     }
 
     @Test
-    @DisplayName("Rifiuto voto con esame inesistente lancia IllegalArgumentException")
+    @DisplayName("Rifiuto voto con esame inesistente lancia EsameNonTrovatoException")
     void testRifiutaVoto_EsameInesistente() {
-        assertThrows(IllegalArgumentException.class, () -> controller.rifiutaVoto("VRB-99999"));
+        assertThrows(EsameNonTrovatoException.class, () -> controller.rifiutaVoto("VRB-99999"));
     }
 }

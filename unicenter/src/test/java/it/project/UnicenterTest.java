@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.UtenteNonTrovatoException;
 
@@ -103,8 +104,9 @@ class UnicenterTest {
     }
 
     @Test
-    void trovaCorsoDiLaureaByNome_corsoInesistente_ritornaNull() {
-        assertNull(unicenter.trovaCorsoDiLaureaByNome("Corso Che Non Esiste " + UUID.randomUUID()));
+    void trovaCorsoDiLaureaByNome_corsoInesistente_lanciaEccezione() {
+        assertThrows(CorsoDiLaureaNonTrovatoException.class,
+                () -> unicenter.trovaCorsoDiLaureaByNome("Corso Che Non Esiste " + UUID.randomUUID()));
     }
 
     // ---------------------------------------------------------------

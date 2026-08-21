@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import it.project.CorsoDiLaurea;
 import it.project.Materia;
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.factory.CorsoDiLaureaFactory;
 
 /**
@@ -37,10 +38,11 @@ public class GestioneCorsiLaureaController {
      */
     public CorsoDiLaurea creaCorsoDiLaurea(String nome, String tipologia, int anniAccademici) {
         // Controlla duplicati per nome
-        CorsoDiLaurea esistente = trovaCorsoDiLaureaByNome(nome);
-        if (esistente != null) {
+        boolean giaPresente = corsiDiLaurea.stream()
+                .anyMatch(c -> c.getNome().equalsIgnoreCase(nome));
+        if (giaPresente) {
             throw new IllegalArgumentException(
-                    "Esiste già un corso di laurea con il nome '" + nome + "' (codice: " + esistente.getId() + ").");
+                    "Esiste già un corso di laurea con il nome '" + nome + "'.");
         }
 
         // Delega la creazione alla Factory (validazione + generazione codice)
@@ -59,9 +61,6 @@ public class GestioneCorsiLaureaController {
      */
     public boolean aggiornaCorsoDiLaurea(String codice, String nuovoNome, String nuovaTipologia) {
         CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
-        }
 
         if (corso.isObsoleto()) {
             throw new IllegalStateException("Impossibile aggiornare un corso obsoleto (codice: " + codice + ").");
@@ -75,8 +74,9 @@ public class GestioneCorsiLaureaController {
 
         if (nuovoNome != null && !nuovoNome.trim().isEmpty()) {
             // Verifica che il nuovo nome non sia già usato da un altro corso
-            CorsoDiLaurea altroCorso = trovaCorsoDiLaureaByNome(nuovoNome);
-            if (altroCorso != null && !altroCorso.getId().equals(codice)) {
+            boolean nomeGiaUsato = corsiDiLaurea.stream()
+                    .anyMatch(c -> c.getNome().equalsIgnoreCase(nuovoNome.trim()) && !c.getId().equalsIgnoreCase(codice));
+            if (nomeGiaUsato) {
                 throw new IllegalArgumentException(
                         "Esiste già un altro corso con il nome '" + nuovoNome + "'.");
             }
@@ -98,9 +98,6 @@ public class GestioneCorsiLaureaController {
      */
     public boolean rendiObsoletoCorsoDiLaurea(String codice) {
         CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
-        }
 
         if (corso.isObsoleto()) {
             throw new IllegalStateException("Il corso '" + corso.getNome() + "' è già obsoleto.");
@@ -120,9 +117,6 @@ public class GestioneCorsiLaureaController {
      */
     public boolean eliminaCorsoDiLaurea(String codice) {
         CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codice);
-        }
 
         if (corso.isFinalizzato() && !corso.isObsoleto()) {
             throw new IllegalStateException(
@@ -159,9 +153,6 @@ public class GestioneCorsiLaureaController {
      */
     public void associaMateriaACorso(String codiceCorso, int anno, Materia materia) {
         CorsoDiLaurea corso = trovaCorsoDiLaureaById(codiceCorso);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codiceCorso);
-        }
         // Delega al CorsoDiLaurea (Creator) che valida anno e stato finalizzazione
         corso.aggiungiMateriaAdAnno(anno, materia);
     }
@@ -174,9 +165,6 @@ public class GestioneCorsiLaureaController {
      */
     public void finalizzaCorso(String codiceCorso) {
         CorsoDiLaurea corso = trovaCorsoDiLaureaById(codiceCorso);
-        if (corso == null) {
-            throw new IllegalArgumentException("Corso di laurea non trovato con codice: " + codiceCorso);
-        }
         corso.finalizza();
     }
 
@@ -185,21 +173,25 @@ public class GestioneCorsiLaureaController {
     // =========================================================================
 
     public CorsoDiLaurea trovaCorsoDiLaureaByNome(String nome) {
-        for (CorsoDiLaurea corso : corsiDiLaurea) {
-            if (corso.getNome().equalsIgnoreCase(nome)) {
-                return corso;
+        if (nome != null) {
+            for (CorsoDiLaurea corso : corsiDiLaurea) {
+                if (corso.getNome().equalsIgnoreCase(nome)) {
+                    return corso;
+                }
             }
         }
-        return null;
+        throw new CorsoDiLaureaNonTrovatoException("Corso di laurea non trovato: " + nome);
     }
 
     public CorsoDiLaurea trovaCorsoDiLaureaById(String id) {
-        for (CorsoDiLaurea corso : corsiDiLaurea) {
-            if (corso.getId().equalsIgnoreCase(id)) {
-                return corso;
+        if (id != null) {
+            for (CorsoDiLaurea corso : corsiDiLaurea) {
+                if (corso.getId().equalsIgnoreCase(id)) {
+                    return corso;
+                }
             }
         }
-        return null;
+        throw new CorsoDiLaureaNonTrovatoException("Nessun corso di laurea trovato con ID: " + id);
     }
 
     /**

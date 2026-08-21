@@ -24,10 +24,10 @@ class ValidationChainBuilderTest {
     // ---------------------------------------------------------------
 
     @Test
-    void build_senzaValidatori_ritornaNull() {
+    void build_senzaValidatori_lanciaIllegalStateException() {
         ValidationChainBuilder builder = new ValidationChainBuilder();
 
-        assertNull(builder.build());
+        assertThrows(IllegalStateException.class, () -> builder.build());
     }
 
     @Test

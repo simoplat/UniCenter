@@ -28,9 +28,6 @@ public class ImmatricolazioneController {
             String codiceFisale) {
 
         CorsoDiLaurea corsoTrovato = unicenter.trovaCorsoDiLaureaByNome(corso);
-        if (corsoTrovato == null) {
-            throw new IllegalArgumentException("Impossibile immatricolarsi: corso non esistente (" + corso + ")");
-        }
 
         Studente studente = new StudenteBuilder()
                 .setNome(nome)

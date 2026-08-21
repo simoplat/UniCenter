@@ -2,6 +2,7 @@ package it.project.controller;
 
 import it.project.CorsoDiLaurea;
 import it.project.Materia;
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ class GestioneCorsiLaureaControllerTest {
         CorsoDiLaurea corso = controller.creaCorsoDiLaurea("Ingegneria Gestionale", "Triennale", 3);
         boolean eliminato = controller.eliminaCorsoDiLaurea(corso.getId());
         assertTrue(eliminato);
-        assertNull(controller.trovaCorsoDiLaureaById(corso.getId()));
+        assertThrows(CorsoDiLaureaNonTrovatoException.class, () -> controller.trovaCorsoDiLaureaById(corso.getId()));
     }
 
     @Test
@@ -48,7 +49,7 @@ class GestioneCorsiLaureaControllerTest {
 
         boolean eliminato = controller.eliminaCorsoDiLaurea(corso.getId());
         assertTrue(eliminato);
-        assertNull(controller.trovaCorsoDiLaureaById(corso.getId()));
+        assertThrows(CorsoDiLaureaNonTrovatoException.class, () -> controller.trovaCorsoDiLaureaById(corso.getId()));
     }
 
     @Test
@@ -63,8 +64,8 @@ class GestioneCorsiLaureaControllerTest {
     }
 
     @Test
-    @DisplayName("Eliminazione corso di laurea inesistente lancia IllegalArgumentException")
+    @DisplayName("Eliminazione corso di laurea inesistente lancia CorsoDiLaureaNonTrovatoException")
     void testEliminaCorsoDiLaurea_Inesistente_LanciaEccezione() {
-        assertThrows(IllegalArgumentException.class, () -> controller.eliminaCorsoDiLaurea("NON_ESISTE"));
+        assertThrows(CorsoDiLaureaNonTrovatoException.class, () -> controller.eliminaCorsoDiLaurea("NON_ESISTE"));
     }
 }

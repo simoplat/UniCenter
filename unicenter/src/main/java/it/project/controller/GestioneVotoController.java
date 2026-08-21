@@ -10,6 +10,7 @@ import it.project.Materia;
 import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.exceptions.EsameNonTrovatoException;
 import it.project.generator.IdVerbaleGenerator;
 import it.project.observer.NotificaEsitoObserver;
 
@@ -123,9 +124,6 @@ public class GestioneVotoController {
      */
     public boolean accettaVoto(String idVerbale) {
         EsameSostenuto esame = trovaEsameById(idVerbale);
-        if (esame == null) {
-            throw new IllegalArgumentException("Esame non trovato: " + idVerbale);
-        }
 
         // Recupera lo studente e verifica la presenza
         Studente studente = unicenter.trovaStudente(esame.getMatricolaStudente())
@@ -161,10 +159,6 @@ public class GestioneVotoController {
      */
     public boolean rifiutaVoto(String idVerbale) {
         EsameSostenuto esame = trovaEsameById(idVerbale);
-        if (esame == null) {
-            throw new IllegalArgumentException("Esame non trovato: " + idVerbale);
-        }
-
         esame.rifiuta();
         return true;
     }
@@ -252,18 +246,18 @@ public class GestioneVotoController {
     // =========================================================================
 
     private EsameSostenuto trovaEsameById(String idVerbale) {
-        for (EsameSostenuto esame : esitiPubblicati) {
-            if (esame.getIdVerbale().equals(idVerbale)) {
-                return esame;
+        if (idVerbale != null) {
+            for (EsameSostenuto esame : esitiPubblicati) {
+                if (esame.getIdVerbale().equals(idVerbale)) {
+                    return esame;
+                }
             }
         }
-        return null;
+        throw new EsameNonTrovatoException("Verbale d'esame non trovato: " + idVerbale);
     }
 
     private Professore trovaProfessore(String idProfessore) {
-        List<Studente> studenti = unicenter.getStudentiIscritti();
-        // Cerchiamo tra gli utenti generici (hack: usiamo il metodo di Unicenter)
-        // Il professore non è tra gli studenti, usiamo il metodo di ricerca generico
-        return unicenter.trovaProfessore(idProfessore).orElse(null);
+        return unicenter.trovaProfessore(idProfessore)
+                .orElseThrow(() -> new IllegalArgumentException("Professore non trovato con ID: " + idProfessore));
     }
 }

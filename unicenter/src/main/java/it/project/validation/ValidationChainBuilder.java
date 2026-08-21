@@ -13,7 +13,7 @@ public class ValidationChainBuilder {
 
     public IscrizioneValidator build() {
         if (validators.isEmpty()) {
-            return null;
+            throw new IllegalStateException("Nessun validatore presente nella catena di validazione.");
         }
         for (int i = 0; i < validators.size() - 1; i++) {
             validators.get(i).setNext(validators.get(i + 1));

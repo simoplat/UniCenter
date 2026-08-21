@@ -245,7 +245,8 @@ public class Unicenter {
     }
 
     public Studente trovaStudenteByMatricola(String matricola) {
-        return trovaStudente(matricola).orElse(null);
+        return trovaStudente(matricola)
+                .orElseThrow(() -> new IllegalArgumentException("Nessun studente trovato con matricola: " + matricola));
     }
 
     public Optional<Studente> trovaStudenteByEmail(String email) {
@@ -510,7 +511,7 @@ public class Unicenter {
      */
     public Libretto getLibrettoStudente() {
         if (!(currentUser instanceof Studente)) {
-            return null;
+            throw new IllegalStateException("Nessuno studente autenticato per accedere al libretto.");
         }
         return ((Studente) currentUser).getLibretto();
     }
