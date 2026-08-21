@@ -48,12 +48,23 @@ public class Libretto {
      * @return true se la materia è già presente nel libretto
      */
     public boolean isEsameSuperato(String codiceMateria) {
+        return getEsameSuperato(codiceMateria) != null;
+    }
+
+    /**
+     * Restituisce l'esame superato per una specifica materia, oppure null se non ancora superato.
+     *
+     * @param codiceMateria il codice della materia
+     * @return EsameSostenuto corrispondente o null
+     */
+    public EsameSostenuto getEsameSuperato(String codiceMateria) {
+        if (codiceMateria == null) return null;
         for (EsameSostenuto e : esamiSuperati) {
-            if (e.getCodiceMateria().equals(codiceMateria)) {
-                return true;
+            if (e.getCodiceMateria().equalsIgnoreCase(codiceMateria)) {
+                return e;
             }
         }
-        return false;
+        return null;
     }
 
     /**

@@ -27,7 +27,7 @@ public class CorsoDiLaurea {
     private int anniAccademici;
     private boolean obsoleto;
     private boolean finalizzato;
-
+    private List<Materia> materiePreApprovate; // UC9: materie a scelta pre-approvate
 
     public CorsoDiLaurea(String id, String nome, String tipologia, int anniAccademici) {
         this.id = id;
@@ -37,6 +37,7 @@ public class CorsoDiLaurea {
         this.materiePerAnno = new HashMap<>();
         this.obsoleto = false;
         this.finalizzato = false;
+        this.materiePreApprovate = new ArrayList<>();
     }
 
     public String getNome() {
@@ -134,6 +135,22 @@ public class CorsoDiLaurea {
     }
 
     /**
+     * Restituisce l'anno accademico (1-based) in cui è prevista la materia nel corso,
+     * oppure 0 se non è presente nel manifesto.
+     */
+    public int getAnnoDellaMateria(String codiceMateria) {
+        if (codiceMateria == null) return 0;
+        for (Map.Entry<Integer, List<Materia>> entry : materiePerAnno.entrySet()) {
+            for (Materia m : entry.getValue()) {
+                if (m.getCodiceMateria().equalsIgnoreCase(codiceMateria)) {
+                    return entry.getKey();
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
      * Metodo di utility: restituisce tutte le materie del corso come lista piatta (flat list),
      * aggregando le materie di tutti gli anni accademici (utilizzato ad esempio per il popolamento
      * automatico del piano di studi e viste riassuntive).
@@ -156,6 +173,85 @@ public class CorsoDiLaurea {
 
     public boolean isObsoleto() {
         return obsoleto;
+    }
+
+    // =========================================================================
+    // UC9 - INFORMATION EXPERT: Materie Pre-Approvate
+    // =========================================================================
+
+    /**
+     * Information Expert: CorsoDiLaurea sa se una materia è pre-approvata.
+     *
+     * @param materia la materia da verificare
+     * @return true se la materia è pre-approvata per questo corso
+     */
+    public boolean isPreApprovata(Materia materia) {
+        if (materia == null) return false;
+        return isPreApprovataByCodice(materia.getCodiceMateria());
+    }
+
+    /**
+     * Verifica se una materia è pre-approvata dato il suo codice.
+     *
+     * @param codiceMateria il codice della materia
+     * @return true se pre-approvata
+     */
+    public boolean isPreApprovataByCodice(String codiceMateria) {
+        if (codiceMateria == null) return false;
+        return materiePreApprovate.stream()
+                .anyMatch(m -> m.getCodiceMateria().equalsIgnoreCase(codiceMateria));
+    }
+
+    /**
+     * Aggiunge una materia all'elenco delle materie pre-approvate del corso.
+     *
+     * @param materia la materia da aggiungere
+     */
+    public void aggiungiMateriaPreApprovata(Materia materia) {
+        if (materia == null) {
+            throw new IllegalArgumentException("Materia non valida.");
+        }
+        if (!isPreApprovataByCodice(materia.getCodiceMateria())) {
+            materiePreApprovate.add(materia);
+        }
+    }
+
+    /**
+     * Rimuove una materia dall'elenco delle materie pre-approvate.
+     *
+     * @param materia la materia da rimuovere
+     */
+    public void rimuoviMateriaPreApprovata(Materia materia) {
+        if (materia != null) {
+            materiePreApprovate.removeIf(m -> m.getCodiceMateria().equalsIgnoreCase(materia.getCodiceMateria()));
+        }
+    }
+
+    /**
+     * Restituisce la lista immutabile delle materie pre-approvate per il corso.
+     *
+     * @return lista immutabile di materie pre-approvate
+     */
+    public List<Materia> getMateriePreApprovate() {
+        return Collections.unmodifiableList(materiePreApprovate);
+    }
+
+    /**
+     * Verifica se tutte le materie a scelta passate sono pre-approvate per questo corso.
+     *
+     * @param materieAScelta la lista delle materie a scelta da verificare
+     * @return true se tutte sono pre-approvate, false altrimenti
+     */
+    public boolean tuttePreApprovate(List<Materia> materieAScelta) {
+        if (materieAScelta == null || materieAScelta.isEmpty()) {
+            return true;
+        }
+        for (Materia m : materieAScelta) {
+            if (!isPreApprovata(m)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

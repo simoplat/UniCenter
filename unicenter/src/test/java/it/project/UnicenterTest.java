@@ -278,17 +278,17 @@ class UnicenterTest {
     }
 
     @Test
-    void trovaAppelliStudentePrenotabili_pianoStudiNonApprovato_lanciaIllegalStateException() {
+    void trovaAppelliStudentePrenotabili_pianoStudiNonApprovato_mostraSoloMaterieObbligatorie() {
         unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
         Studente studente = (Studente) unicenter.getCurrentUser();
-        studente.getPianoDiStudi().setStato("IN_ATTESA");
+        studente.getPianoDiStudi().setStato(new it.project.state.StatoInAttesaPiano());
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> unicenter.trovaAppelliStudentePrenotabili());
-        assertTrue(ex.getMessage().contains("piano di studi non è approvato"));
+        // UC9: con piano in attesa, le materie obbligatorie sono comunque prenotabili
+        List<Appello> appelli = unicenter.trovaAppelliStudentePrenotabili();
+        assertNotNull(appelli);
 
         // Ripristina lo stato del piano di studi per i successivi test
-        studente.getPianoDiStudi().setStato("APPROVATO");
+        studente.getPianoDiStudi().setStato(new it.project.state.StatoApprovatoPiano());
     }
 
     @Test
