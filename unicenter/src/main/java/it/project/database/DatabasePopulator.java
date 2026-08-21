@@ -242,12 +242,26 @@ public class DatabasePopulator {
                     cdl.aggiungiMateriaAdAnno(3, gestoreMaterie.trovaMaterieByCodice("SIC01"));
                     cdl.aggiungiMateriaAdAnno(3, gestoreMaterie.trovaMaterieByCodice("IA01"));
                     cdl.finalizza();
+
+                    // UC9: Materie a scelta pre-approvate per Ingegneria Informatica
+                    cdl.aggiungiMateriaPreApprovata(gestoreMaterie.trovaMaterieByCodice("ML01"));
+                    cdl.aggiungiMateriaPreApprovata(gestoreMaterie.trovaMaterieByCodice("WEB01"));
+                    cdl.aggiungiMateriaPreApprovata(gestoreMaterie.trovaMaterieByCodice("CLOUD01"));
+                    cdl.aggiungiMateriaPreApprovata(gestoreMaterie.trovaMaterieByCodice("IOT01"));
+                    cdl.aggiungiMateriaPreApprovata(gestoreMaterie.trovaMaterieByCodice("ROB01"));
+                    cdl.aggiungiMateriaPreApprovata(gestoreMaterie.trovaMaterieByCodice("GRAF01"));
                 } else if (!"Ingegneria Navale".equals(nomeCorso) && !"Scienze dei Materiali Antica".equals(nomeCorso)) {
                     // Associa materie base di default per ogni corso
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("AM01"));
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("FIS01"));
                     cdl.aggiungiMateriaAdAnno(2, gestoreMaterie.trovaMaterieByCodice("STAT01"));
                     cdl.finalizza();
+
+                    // UC9: Pre-approva materie opzionali per altri corsi
+                    Materia ling = gestoreMaterie.trovaMaterieByCodice("LING01");
+                    if (ling != null) cdl.aggiungiMateriaPreApprovata(ling);
+                    Materia web = gestoreMaterie.trovaMaterieByCodice("WEB01");
+                    if (web != null) cdl.aggiungiMateriaPreApprovata(web);
                 }
 
                 if ("Scienze dei Materiali Antica".equals(nomeCorso)) {
