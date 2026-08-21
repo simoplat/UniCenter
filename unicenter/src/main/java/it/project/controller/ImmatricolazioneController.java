@@ -33,7 +33,7 @@ public class ImmatricolazioneController {
                 .setNome(nome)
                 .setCognome(cognome)
                 .setEmail(email)
-                .setCorsoDiLaurea(corso)
+                .setCorsoDiLaurea(corsoTrovato.getId())
                 .setPassword(password)
                 .setCodiceFiscale(codiceFisale)
                 .build();

@@ -2,17 +2,15 @@ package it.project.controller;
 
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 
-import it.project.ConsoleUI;
 import it.project.Unicenter;
 import it.project.exceptions.DataNonValidaException;
+import it.project.view.UniCenterView;
 
 @DisplayName("Test Unitari - MenuController")
 class MenuControllerTest {
@@ -21,28 +19,14 @@ class MenuControllerTest {
     private Unicenter unicenterMock;
 
     @Mock
-    private ConsoleUI consoleUIMock;
+    private UniCenterView viewMock;
 
-    private MockedStatic<ConsoleUI> consoleUIStaticMock;
     private MenuController menuController;
 
     @BeforeEach
     void setUp() {
-        // Inizializza i mock annotati
         MockitoAnnotations.openMocks(this);
-
-        // Mock del Singleton ConsoleUI usato internamente da MenuController
-        consoleUIStaticMock = mockStatic(ConsoleUI.class);
-        consoleUIStaticMock.when(ConsoleUI::getInstance).thenReturn(consoleUIMock);
-
-        // Ora possiamo istanziare in sicurezza il controller iniettando Unicenter
-        menuController = new MenuController(unicenterMock);
-    }
-
-    @AfterEach
-    void tearDown() {
-        // Fondamentale chiudere il mock statico per evitare conflitti tra i test
-        consoleUIStaticMock.close();
+        menuController = spy(new MenuController(unicenterMock, viewMock));
     }
 
     // ==========================================
@@ -54,14 +38,14 @@ class MenuControllerTest {
     void testLoginUtente_EmailNonRegistrata() {
         // Arrange
         String emailTest = "inesistente@example.com";
-        when(consoleUIMock.leggiStringa("Inserisci email: ")).thenReturn(emailTest);
+        doReturn(emailTest).when(menuController).leggiStringa("Inserisci email: ");
         when(unicenterMock.esisteUtente(emailTest)).thenReturn(false);
 
         // Act
         menuController.loginUtente();
 
         // Assert
-        verify(consoleUIMock).mostraMessaggio("Email non registrata. Riprova.");
+        verify(viewMock).mostraMessaggio("Email non registrata. Riprova.");
         verify(unicenterMock, never()).passwordCorretta(anyString(), anyString());
     }
 
@@ -71,10 +55,10 @@ class MenuControllerTest {
         // Arrange
         String emailTest = "studente@example.com";
         String passTest = "errata";
-        
-        when(consoleUIMock.leggiStringa("Inserisci email: ")).thenReturn(emailTest);
-        when(consoleUIMock.leggiStringa("Inserisci password: ")).thenReturn(passTest);
-        
+
+        doReturn(emailTest).when(menuController).leggiStringa("Inserisci email: ");
+        doReturn(passTest).when(menuController).leggiStringa("Inserisci password: ");
+
         when(unicenterMock.esisteUtente(emailTest)).thenReturn(true);
         when(unicenterMock.passwordCorretta(emailTest, passTest)).thenReturn(false);
 
@@ -82,7 +66,7 @@ class MenuControllerTest {
         menuController.loginUtente();
 
         // Assert
-        verify(consoleUIMock).mostraMessaggio("Password errata. Riprova.");
+        verify(viewMock).mostraMessaggio("Password errata. Riprova.");
     }
 
     // ==========================================
@@ -94,27 +78,12 @@ class MenuControllerTest {
     void testGestisciImmatricolazione_DataNonValida() throws DataNonValidaException {
         // Arrange
         String messaggioErrore = "La finestra temporale per le immatricolazioni è chiusa.";
-        
-        // Simula il lancio dell'eccezione quando viene validata la data
         doThrow(new DataNonValidaException(messaggioErrore)).when(unicenterMock).validaDataImmatricolazione();
 
         // Act
-        // Il metodo gestisciImmatricolazione() non solleva l'eccezione ma la cattura e la stampa
-        try {
-            // Nota: Poiché gestisciImmatricolazione è privato nella classe originale, 
-            // occorre renderlo 'package-private' (togliendo 'private') o testarlo tramite la chiamata generica del menu. 
-            // In Java, una buona pratica è modificare la visibilità a 'protected' o package-private per i test.
-            // Per questo esempio, usiamo la Reflection per accedere al metodo se non si vuole modificare la sorgente.
-            java.lang.reflect.Method method = MenuController.class.getDeclaredMethod("gestisciImmatricolazione");
-            method.setAccessible(true);
-            method.invoke(menuController);
-            
-        } catch (Exception e) {
-            // L'eccezione è gestita all'interno del metodo richiamato tramite reflection
-        }
+        menuController.gestisciImmatricolazione();
 
         // Assert
-        // Verifica che il controller abbia intercettato l'eccezione e mostrato l'errore sulla ConsoleUI
-        verify(consoleUIMock).mostraErrore(messaggioErrore);
+        verify(viewMock).mostraErrore(messaggioErrore);
     }
 }

@@ -7,7 +7,6 @@ import java.util.List;
 
 import it.project.Amministratore;
 import it.project.Appello;
-import it.project.ConsoleUI;
 import it.project.CorsoDiLaurea;
 import it.project.EsameSostenuto;
 import it.project.Materia;
@@ -32,7 +31,6 @@ import it.project.factory.CorsoDiLaureaFactory;
 public class DatabasePopulator {
 
     private final Unicenter unicenter;
-    private final ConsoleUI console = ConsoleUI.getInstance();
 
     public DatabasePopulator(Unicenter unicenter) {
         this.unicenter = unicenter;
@@ -44,7 +42,7 @@ public class DatabasePopulator {
         }
 
         try {
-            console.mostraMessaggio("[DB POPULATION] Avvio popolamento database strutturato con simulazione temporale...");
+            System.out.println("[DB POPULATION] Avvio popolamento database strutturato con simulazione temporale...");
 
             GestoreMaterieController gestoreMaterie = unicenter.getGestoreMaterie();
             GestioneCorsiLaureaController gestioneCorsi = unicenter.getGestioneCorsiLaureaController();
@@ -54,7 +52,7 @@ public class DatabasePopulator {
             // =========================================================================
             // 1. INSERIMENTO MATERIE (36 Materie >= 30)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Creazione di 36 materie...");
+            System.out.println("[DB POPULATION] Creazione di 36 materie...");
             List<Materia> materieList = new ArrayList<>();
             Object[][] materieData = {
                 {"IS01", "Ingegneria del Software", 9},
@@ -104,7 +102,7 @@ public class DatabasePopulator {
             // =========================================================================
             // 2. INSERIMENTO DOCENTI E AMMINISTRATORI (12 Docenti + 2 Admin)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Creazione docenti e amministratori...");
+            System.out.println("[DB POPULATION] Creazione docenti e amministratori...");
             List<Professore> docenti = new ArrayList<>();
 
             docenti.add(new Professore("1", "Mario", "Rossi", "mario.rossi@unicenter.it", "pass123", "RSSMRA80A01H501U"));
@@ -183,7 +181,7 @@ public class DatabasePopulator {
             // =========================================================================
             // 3. CREAZIONE CORSI DI LAUREA (32 Corsi >= 30)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Creazione di 32 corsi di laurea...");
+            System.out.println("[DB POPULATION] Creazione di 32 corsi di laurea...");
 
             String[][] corsiInfo = {
                 {"ING-INF", "Ingegneria Informatica", "Laurea Triennale", "3"},
@@ -274,7 +272,7 @@ public class DatabasePopulator {
             // =========================================================================
             // SIMULAZIONE TEMPORALE CON CLOCK: FASE 1 - IMMATRICOLAZIONI (Agosto 2026)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Finestra Immatricolazioni (Agosto 2026)...");
+            System.out.println("[DB POPULATION] Simulazione temporale: Finestra Immatricolazioni (Agosto 2026)...");
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 1, 10, 0));
 
             // IMMATRICOLAZIONE STUDENTI (32 Studenti >= 30)
@@ -325,7 +323,7 @@ public class DatabasePopulator {
             // =========================================================================
             // SIMULAZIONE TEMPORALE: FASE 2 - CREAZIONE APPELLI (2 Agosto 2026)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Creazione appelli futuri d'esame (Agosto 2026)...");
+            System.out.println("[DB POPULATION] Simulazione temporale: Creazione appelli futuri d'esame (Agosto 2026)...");
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 2, 9, 0));
 
             // CREAZIONE APPELLI (32 Appelli con appelli per il 15 Agosto e date successive)
@@ -378,7 +376,7 @@ public class DatabasePopulator {
             // =========================================================================
             // SIMULAZIONE TEMPORALE: FASE 3 - ISCRIZIONE STUDENTI AGLI APPELLI (5 Agosto 2026)
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Iscrizioni studenti agli appelli (Agosto 2026)...");
+            System.out.println("[DB POPULATION] Simulazione temporale: Iscrizioni studenti agli appelli (Agosto 2026)...");
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 5, 12, 0));
 
             List<Appello> appelliIS01 = gestioneAppelli.trovaAppelliByIdMateria(List.of("IS01"));
@@ -418,7 +416,7 @@ public class DatabasePopulator {
             // =========================================================================
             // SIMULAZIONE TEMPORALE: FASE 4 - SVOLGIMENTO ESAMI E PUBBLICAZIONE ESITI
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Svolgimento esami e pubblicazione esiti...");
+            System.out.println("[DB POPULATION] Simulazione temporale: Svolgimento esami e pubblicazione esiti...");
 
             // 10 Agosto 2026: Giorno appello IS01
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 10, 18, 0));
@@ -470,7 +468,7 @@ public class DatabasePopulator {
             // =========================================================================
             // SIMULAZIONE TEMPORALE: FASE 5 - ACCETTAZIONE / RIFIUTO VOTI E LIBRETTO
             // =========================================================================
-            console.mostraMessaggio("[DB POPULATION] Simulazione temporale: Registrazione scelte studenti nel libretto...");
+            System.out.println("[DB POPULATION] Simulazione temporale: Registrazione scelte studenti nel libretto...");
             ClockProvider.setFixedDateTime(LocalDateTime.of(2026, 8, 16, 11, 0));
 
             // Alcuni studenti accettano il voto (verbalizzato nel libretto), altri lo rifiutano, altri rimangono pendenti
@@ -488,19 +486,19 @@ public class DatabasePopulator {
                 }
             }
 
-            console.mostraMessaggio("[DB POPULATION] Popolamento completato con successo!");
-            console.mostraMessaggio("[DB POPULATION] Totale Materie: " + gestoreMaterie.getTutteLeMaterie().size());
-            console.mostraMessaggio("[DB POPULATION] Totale Corsi di Laurea: " + gestioneCorsi.getTuttiCorsi().size());
-            console.mostraMessaggio("[DB POPULATION] Totale Studenti Immatricolati: " + unicenter.getStudentiIscritti().size());
-            console.mostraMessaggio("[DB POPULATION] Totale Appelli Creati: " + gestioneAppelli.trovaAppelliByIdMateria(List.of("IS01", "BD01", "AR01", "AM01", "PRG01")).size() + "+");
-            console.mostraMessaggio("[DB POPULATION] Totale Esiti Pubblicati: " + gestioneVoto.getTuttiGliEsiti().size());
+            System.out.println("[DB POPULATION] Popolamento completato con successo!");
+            System.out.println("[DB POPULATION] Totale Materie: " + gestoreMaterie.getTutteLeMaterie().size());
+            System.out.println("[DB POPULATION] Totale Corsi di Laurea: " + gestioneCorsi.getTuttiCorsi().size());
+            System.out.println("[DB POPULATION] Totale Studenti Immatricolati: " + unicenter.getStudentiIscritti().size());
+            System.out.println("[DB POPULATION] Totale Appelli Creati: " + gestioneAppelli.trovaAppelliByIdMateria(List.of("IS01", "BD01", "AR01", "AM01", "PRG01")).size() + "+");
+            System.out.println("[DB POPULATION] Totale Esiti Pubblicati: " + gestioneVoto.getTuttiGliEsiti().size());
 
         } catch (Exception e) {
-            console.mostraMessaggio("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
+            System.out.println("[DB POPULATION ERROR] Errore durante il popolamento: " + e.getMessage());
         } finally {
             // Ripristino rigoroso del clock al tempo reale di sistema
             ClockProvider.resetClock();
-            console.mostraMessaggio("[DB POPULATION] Clock di sistema ripristinato al tempo reale.");
+            System.out.println("[DB POPULATION] Clock di sistema ripristinato al tempo reale.");
         }
     }
 }

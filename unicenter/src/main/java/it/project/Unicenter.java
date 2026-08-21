@@ -25,8 +25,6 @@ public class Unicenter {
     private final MenuController menuController;
     private Utente currentUser = null;
 
-    ConsoleUI console = ConsoleUI.getInstance();
-
     private Unicenter() {
         this.utenti = new ArrayList<>();
         this.menuController = new MenuController(this);
@@ -65,7 +63,7 @@ public class Unicenter {
     }
 
     public void avvia() {
-        console.mostraMessaggio("[UNICENTER] Avvio del sistema UniCenter...");
+        System.out.println("[UNICENTER] Avvio del sistema UniCenter...");
         popolaDataBase();
         menuController.avvia();
     }

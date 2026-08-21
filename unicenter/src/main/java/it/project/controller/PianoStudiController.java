@@ -121,16 +121,7 @@ public class PianoStudiController {
         }
 
         // 5. Determina corso di laurea dello studente
-        CorsoDiLaurea corso = null;
-        try {
-            corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        } catch (CorsoDiLaureaNonTrovatoException e) {
-            try {
-                corso = gestioneCorsi.trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
-            } catch (CorsoDiLaureaNonTrovatoException ex) {
-                // corso non trovato
-            }
-        }
+        CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
 
         // 6. Verifica se tutte le materie a scelta sono pre-approvate
         boolean tuttePreApprovate = (corso != null) && corso.tuttePreApprovate(materieScelte);
@@ -297,16 +288,7 @@ public class PianoStudiController {
      */
     public List<Materia> getMaterieASceltaDisponibili(Studente studente) {
         if (studente == null) return Collections.emptyList();
-        CorsoDiLaurea corso = null;
-        try {
-            corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        } catch (CorsoDiLaureaNonTrovatoException e) {
-            try {
-                corso = gestioneCorsi.trovaCorsoDiLaureaByNome(studente.getIdCorsoDiLaurea());
-            } catch (CorsoDiLaureaNonTrovatoException ex) {
-                // corso non trovato
-            }
-        }
+        CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
 
         List<Materia> tutte = gestoreMaterie.getTutteLeMaterie();
         List<Materia> disponibili = new ArrayList<>();
@@ -330,19 +312,7 @@ public class PianoStudiController {
      * Restituisce le materie pre-approvate per un corso di laurea.
      */
     public List<Materia> getMateriePreApprovateByCorso(String codiceCorso) {
-        CorsoDiLaurea corso = null;
-        try {
-            corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
-        } catch (CorsoDiLaureaNonTrovatoException e) {
-            try {
-                corso = gestioneCorsi.trovaCorsoDiLaureaByNome(codiceCorso);
-            } catch (CorsoDiLaureaNonTrovatoException ex) {
-                // corso non trovato
-            }
-        }
-        if (corso == null) {
-            return Collections.emptyList();
-        }
+        CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
         return corso.getMateriePreApprovate();
     }
 }
