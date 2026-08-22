@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class GestioneAppelliControllerTest {
@@ -216,9 +217,9 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void iscriviStudente_appelloInesistente_lanciaIllegalArgumentException() {
+    void iscriviStudente_appelloInesistente_lanciaAppelloNonTrovatoException() {
         Studente studente = creaStudente("M002");
-        assertThrows(IllegalArgumentException.class, () -> controller.iscriviStudente(studente, "NON_ESISTE"));
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.iscriviStudente(studente, "NON_ESISTE"));
     }
 
     @Test
@@ -253,7 +254,8 @@ class GestioneAppelliControllerTest {
         aggiungiAppelloDirettamente(appello);
 
         Studente studente = creaStudente("M020");
-        EsameSostenuto esameSuperato = new EsameSostenuto("ESM-001", "APP_OLD", "M020", MATERIA, "P001", 28, false, 9, 7);
+        EsameSostenuto esameSuperato = new EsameSostenuto("ESM-001", "APP_OLD", "M020", MATERIA, "P001", 28, false, 9,
+                7);
         esameSuperato.accetta();
         studente.getLibretto().registraEsame(esameSuperato);
 
@@ -289,9 +291,9 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void disiscriviStudente_appelloInesistente_lanciaIllegalArgumentException() {
+    void disiscriviStudente_appelloInesistente_lanciaAppelloNonTrovatoException() {
         Studente studente = creaStudente("M007");
-        assertThrows(IllegalArgumentException.class, () -> controller.disiscriviStudente(studente, "NON_ESISTE"));
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.disiscriviStudente(studente, "NON_ESISTE"));
     }
 
     // =================================================================
@@ -370,8 +372,8 @@ class GestioneAppelliControllerTest {
     }
 
     @Test
-    void trovaIscrittiByIdAppello_appelloInesistente_restituisceListaVuota() {
-        assertTrue(controller.trovaIscrittiByIdAppello("SCONOSCIUTO").isEmpty());
+    void trovaIscrittiByIdAppello_appelloInesistente_lanciaAppelloNonTrovatoException() {
+        assertThrows(AppelloNonTrovatoException.class, () -> controller.trovaIscrittiByIdAppello("SCONOSCIUTO"));
     }
 
     @Test

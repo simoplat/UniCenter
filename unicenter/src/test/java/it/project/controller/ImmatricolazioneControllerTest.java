@@ -58,6 +58,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_corsoTrovato_creaStudenteConDatiCorretti() {
+        when(corsoDiLaureaMock.getId()).thenReturn(CORSO);
         when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
         Studente studente = controller.immatricolaStudente(
@@ -114,6 +115,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_passwordTroppoCorta_propagaEccezioneDalBuilder() {
+        when(corsoDiLaureaMock.getId()).thenReturn(CORSO);
         when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
         assertThrows(IllegalArgumentException.class,
@@ -123,6 +125,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_usaStrategyPerCalcolareTotaleTasse_conMockIniettataViaReflection() throws Exception {
+        when(corsoDiLaureaMock.getId()).thenReturn(CORSO);
         when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
 
         // La strategy è istanziata internamente dal controller (new

@@ -90,28 +90,27 @@ class PianoStudiLibrettoTest {
     @Test
     @DisplayName("Rifiuto del piano mantiene eventuali materie a scelta già verbalizzate nel libretto")
     void testRifiutoPianoMantieneMaterieVerbalizzate() {
-        // Supponiamo che lo studente avesse già superato e verbalizzato OPZ01
-        EsameSostenuto esame = new EsameSostenuto("VERB01", "APP01", "M123", "OPZ01", "1", 28, false, 6, 7);
+        Studente st = new Studente("M_VERB", "Mario", "Rossi", "mario.verb@studenti.it", "pass123", "CF_VERB", "CS01");
+        st.setTassePagate(true);
+        unicenter.addUtente(st);
+
+        EsameSostenuto esame = new EsameSostenuto("VERB01", "APP01", "M_VERB", "OPZ01", "1", 28, false, 6, 7);
         esame.accetta();
-        studente.getLibretto().registraEsame(esame);
+        st.getLibretto().registraEsame(esame);
 
-        // Aggiungiamo OPZ01 e una nuova materia OPZ02
-        studente.getPianoDiStudi().aggiungiMateriaAScelta("OPZ01");
-        pianoStudiController.compilaPianoDiStudi(studente, List.of("OPZ02"));
+        st.getPianoDiStudi().aggiungiMateriaAScelta("OPZ01");
+        pianoStudiController.compilaPianoDiStudi(st, List.of("OPZ02"));
 
-        assertEquals("In Attesa", studente.getPianoDiStudi().getNomeStato());
-        assertTrue(studente.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ01"));
-        assertTrue(studente.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ02"));
+        assertEquals("In Attesa", st.getPianoDiStudi().getNomeStato());
+        assertTrue(st.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ01"));
+        assertTrue(st.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ02"));
 
-        // Admin rifiuta
-        pianoStudiController.rifiutaPianoDiStudi(studente.getMatricola());
+        pianoStudiController.rifiutaPianoDiStudi(st.getMatricola());
 
-        assertEquals("Rifiutato", studente.getPianoDiStudi().getNomeStato());
-        // OPZ01 (verbalizzata) deve essere rimasta, OPZ02 (non verbalizzata) deve
-        // essere stata rimossa
-        assertEquals(1, studente.getPianoDiStudi().getIdMaterieAScelta().size());
-        assertTrue(studente.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ01"));
-        assertFalse(studente.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ02"));
+        assertEquals("Rifiutato", st.getPianoDiStudi().getNomeStato());
+        assertEquals(1, st.getPianoDiStudi().getIdMaterieAScelta().size());
+        assertTrue(st.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ01"));
+        assertFalse(st.getPianoDiStudi().getIdMaterieAScelta().contains("OPZ02"));
     }
 
     @Test

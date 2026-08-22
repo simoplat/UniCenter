@@ -198,11 +198,11 @@ class UnicenterTest {
     }
 
     @Test
-    void immatricolaStudente_corsoInesistente_lanciaIllegalArgumentException() {
+    void immatricolaStudente_corsoInesistente_lanciaCorsoDiLaureaNonTrovatoException() {
         String email = "nuovo-" + UUID.randomUUID() + "@studenti.it";
         String cf = "CF-" + UUID.randomUUID();
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(CorsoDiLaureaNonTrovatoException.class,
                 () -> unicenter.immatricolaStudente("Nuovo", "Studente", email, "pass123",
                         "Corso Inesistente " + UUID.randomUUID(), cf));
     }
