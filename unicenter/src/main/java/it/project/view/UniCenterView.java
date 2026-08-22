@@ -18,4 +18,6 @@ public interface UniCenterView {
     void stampaStudenti(List<Studente> studenti);
     void stampaCorsiDiLaurea(List<CorsoDiLaurea> corsi);
     void stampaEsiti(List<EsameSostenuto> esiti);
+    void stampaAlberoMateriali(it.project.materiale.Cartella radice);
 }
+

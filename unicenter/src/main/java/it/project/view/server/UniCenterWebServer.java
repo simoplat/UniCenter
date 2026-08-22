@@ -179,6 +179,36 @@ public class UniCenterWebServer {
                 }
             }
 
+            // GESTIONE DOWNLOAD BINARIO DIRETTO (PDF, TXT, SLIDE, ECC.)
+            if ("/api/materiale/download".equals(path) && "GET".equalsIgnoreCase(method)) {
+                String id = queryParams.get("id");
+                if (id == null) id = queryParams.get("idElemento");
+                try {
+                    var downloadResp = unicenter.scaricaMaterialeDidattico(id);
+                    byte[] fileBytes = downloadResp.getBytes();
+                    String mime = downloadResp.getMimeType() != null ? downloadResp.getMimeType() : "application/octet-stream";
+                    String filename = downloadResp.getNomeFile();
+
+                    Headers respHeaders = exchange.getResponseHeaders();
+                    respHeaders.set("Content-Type", mime);
+                    respHeaders.set("Content-Disposition", "inline; filename=\"" + filename + "\"");
+                    exchange.sendResponseHeaders(200, fileBytes.length);
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(fileBytes);
+                    }
+                    return;
+                } catch (Exception e) {
+                    exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                    Map<String, Object> errResp = Map.of("success", false, "error", "Download fallito: " + e.getMessage());
+                    byte[] errBytes = JsonHelper.toJson(errResp).getBytes(StandardCharsets.UTF_8);
+                    exchange.sendResponseHeaders(404, errBytes.length);
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(errBytes);
+                    }
+                    return;
+                }
+            }
+
             Map<String, Object> response = apiController.handleRequest(path, method, body, queryParams);
             String jsonResp = JsonHelper.toJson(response);
             byte[] bytes = jsonResp.getBytes(StandardCharsets.UTF_8);

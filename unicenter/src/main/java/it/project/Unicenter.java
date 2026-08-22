@@ -22,6 +22,7 @@ public class Unicenter {
     private final GestioneVotoController gestioneVotoController;
     private final InvioComunicazioniController invioComunicazioniController;
     private final PianoStudiController pianoStudiController;
+    private final MaterialeDidatticoController materialeDidatticoController;
     private final MenuController menuController;
     private Utente currentUser = null;
 
@@ -52,6 +53,9 @@ public class Unicenter {
                 this.gestoreMaterie,
                 this.gestioneAppelliController,
                 this);
+
+        // 6. Inizializzazione Controller UC6 & UC10 (Materiale Didattico)
+        this.materialeDidatticoController = new MaterialeDidatticoController(this, this.gestoreMaterie);
     }
 
     private static class UnicenterHolder {
@@ -759,4 +763,88 @@ public class Unicenter {
         return pianoStudiController.getMaterieASceltaVerbalizzate(studente);
     }
 
+    // =========================================================================
+    // UC6 & UC10 - FACADE METHODS (Materiale Didattico)
+    // =========================================================================
+
+    public MaterialeDidatticoController getMaterialeDidatticoController() {
+        return materialeDidatticoController;
+    }
+
+    /**
+     * UC6: Il professore autenticato crea una sottocartella in una materia.
+     */
+    public it.project.materiale.Cartella creaCartellaMateriale(String codiceMateria, String idCartellaGenitore,
+                                                               String nomeCartella, String descrizione) {
+        if (!(currentUser instanceof Professore)) {
+            throw new IllegalStateException("Solo un professore autenticato può creare cartelle di materiale.");
+        }
+        return materialeDidatticoController.creaCartella((Professore) currentUser, codiceMateria, idCartellaGenitore, nomeCartella, descrizione);
+    }
+
+    /**
+     * UC6: Il professore autenticato carica un materiale didattico.
+     */
+    public it.project.materiale.MaterialeDidattico caricaMaterialeDidattico(String codiceMateria, String idCartellaGenitore,
+                                                                           String nomeFile, String descrizione,
+                                                                           it.project.materiale.TipoMateriale tipo,
+                                                                           byte[] contenuto) {
+        if (!(currentUser instanceof Professore)) {
+            throw new IllegalStateException("Solo un professore autenticato può caricare materiale didattico.");
+        }
+        return materialeDidatticoController.caricaMateriale((Professore) currentUser, codiceMateria, idCartellaGenitore, nomeFile, descrizione, tipo, contenuto);
+    }
+
+    /**
+     * UC6: Il professore autenticato elimina un proprio materiale o sottocartella.
+     */
+    public boolean eliminaMaterialeDidattico(String codiceMateria, String idElemento) {
+        if (!(currentUser instanceof Professore)) {
+            throw new IllegalStateException("Solo un professore autenticato può eliminare materiale didattico.");
+        }
+        return materialeDidatticoController.eliminaElemento((Professore) currentUser, codiceMateria, idElemento);
+    }
+
+    /**
+     * UC10: Restituisce l'albero Composite dei materiali per una materia.
+     */
+    public it.project.materiale.Cartella getAlberoMaterialeMateria(String codiceMateria) {
+        return materialeDidatticoController.getAlberoMateria(codiceMateria);
+    }
+
+    /**
+     * UC10: Consulta l'anteprima polimorfica di un elemento.
+     */
+    public it.project.materiale.AnteprimaRisultato consultaMaterialeDidattico(String idElemento) {
+        return materialeDidatticoController.consultaMateriale(idElemento);
+    }
+
+    /**
+     * UC10: Scarica il contenuto binario del materiale.
+     */
+    public MaterialeDidatticoController.DownloadResponse scaricaMaterialeDidattico(String idElemento) {
+        return materialeDidatticoController.scaricaMateriale(idElemento);
+    }
+
+    /**
+     * UC10: Aggiunge/rimuove un elemento dai preferiti dello studente autenticato.
+     */
+    public boolean togglePreferitoMateriale(String idElemento) {
+        if (!(currentUser instanceof Studente)) {
+            throw new IllegalStateException("Solo uno studente autenticato può gestire i propri preferiti.");
+        }
+        return materialeDidatticoController.togglePreferito((Studente) currentUser, idElemento);
+    }
+
+    /**
+     * UC10: Restituisce i materiali e le cartelle preferite dello studente autenticato.
+     */
+    public List<it.project.materiale.ElementoDidattico> getPreferitiMaterialeStudente() {
+        if (!(currentUser instanceof Studente)) {
+            return Collections.emptyList();
+        }
+        return materialeDidatticoController.getPreferitiStudente((Studente) currentUser);
+    }
+
 }
+

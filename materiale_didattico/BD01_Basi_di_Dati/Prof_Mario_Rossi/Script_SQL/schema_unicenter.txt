@@ -1,0 +1,9 @@
+-- Schema Database UniCenter Esempio
+CREATE TABLE Studente (
+    matricola VARCHAR(10) PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL,
+    cognome VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+INSERT INTO Studente VALUES ('MAT-00001', 'Mario', 'Rossi', 'mario.rossi@studenti.it');

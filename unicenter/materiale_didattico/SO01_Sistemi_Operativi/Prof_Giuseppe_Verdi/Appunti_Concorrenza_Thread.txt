@@ -1,0 +1,6 @@
+=== APPUNTI SISTEMI OPERATIVI ===
+Argomento: Concorrenza, Thread e Sincronizzazione
+
+1. Mutua Esclusione (Mutex)
+2. Semafori di Dijkstra (P, V)
+3. Deadlock: Condizioni di Coffman e prevenzione.

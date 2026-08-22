@@ -20,6 +20,16 @@ const API = {
   }
 };
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Global App State
 const state = {
   user: null,
@@ -411,6 +421,12 @@ function renderAuthenticatedView() {
       <a class="nav-item ${state.activeTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
         <span>📊 Dashboard</span>
       </a>
+      <a class="nav-item ${state.activeTab === 'materiale' ? 'active' : ''}" onclick="switchTab('materiale')">
+        <span>📁 Materiale Didattico</span>
+      </a>
+      <a class="nav-item ${state.activeTab === 'preferiti' ? 'active' : ''}" onclick="switchTab('preferiti')">
+        <span>⭐ I Miei Preferiti</span>
+      </a>
       <a class="nav-item ${state.activeTab === 'appelli-disponibili' ? 'active' : ''}" onclick="switchTab('appelli-disponibili')">
         <span>📝 Prenota Appelli</span>
       </a>
@@ -438,6 +454,9 @@ function renderAuthenticatedView() {
       <div class="nav-section-title">Area Docente</div>
       <a class="nav-item ${state.activeTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
         <span>📊 Dashboard</span>
+      </a>
+      <a class="nav-item ${state.activeTab === 'materiale' ? 'active' : ''}" onclick="switchTab('materiale')">
+        <span>📁 Materiale Didattico</span>
       </a>
       <a class="nav-item ${state.activeTab === 'crea-appello' ? 'active' : ''}" onclick="switchTab('crea-appello')">
         <span>➕ Crea Nuovo Appello</span>
@@ -479,7 +498,18 @@ function renderAuthenticatedView() {
   main.innerHTML = `
     <div class="main-wrapper">
       <aside class="sidebar">
-        ${navItemsHtml}
+        <div class="user-pill-sidebar">
+          <div class="avatar-circle ${role}">
+            ${state.user.nome.charAt(0)}${state.user.cognome ? state.user.cognome.charAt(0) : ''}
+          </div>
+          <div class="user-pill-info">
+            <span class="user-pill-name">${state.user.nome} ${state.user.cognome || ''}</span>
+            <span class="badge badge-role ${role}">${role.toUpperCase()}</span>
+          </div>
+        </div>
+        <nav class="nav-menu">
+          ${navItemsHtml}
+        </nav>
       </aside>
       <section class="content-area" id="tab-content">
         <div style="text-align: center; padding: 3rem;">Caricamento sezione...</div>
@@ -506,6 +536,8 @@ async function loadActiveTabContent() {
   try {
     if (role === 'studente') {
       if (tab === 'dashboard') await renderStudentDashboard(container);
+      else if (tab === 'materiale') await renderMaterialeDidattico(container);
+      else if (tab === 'preferiti') await renderPreferitiStudente(container);
       else if (tab === 'appelli-disponibili') await renderStudentAppelliDisponibili(container);
       else if (tab === 'appelli-prenotati') await renderStudentAppelliPrenotati(container);
       else if (tab === 'esiti') await renderStudentEsiti(container);
@@ -515,6 +547,7 @@ async function loadActiveTabContent() {
       else if (tab === 'notifiche') await renderStudentNotifiche(container);
     } else if (role === 'professore') {
       if (tab === 'dashboard') await renderProfessorDashboard(container);
+      else if (tab === 'materiale') await renderMaterialeDidattico(container);
       else if (tab === 'crea-appello') await renderProfessorCreaAppello(container);
       else if (tab === 'gestione-appelli') await renderProfessorGestioneAppelli(container);
       else if (tab === 'pubblica-esito') await renderProfessorPubblicaEsito(container);
@@ -2408,3 +2441,694 @@ async function rifiutaPianoAdmin(matricola) {
     UI.toast(res.error || 'Errore rifiuto', 'error');
   }
 }
+
+// ==========================================================================
+// UC6 & UC10: MATERIALE DIDATTICO & PREFERITI
+// ==========================================================================
+
+const matState = {
+  selectedMateria: null,
+  currentFolderId: null,
+  folderHistory: [], // array di { id, nome }
+  materie: [],
+  rootTree: null
+};
+
+async function renderMaterialeDidattico(container) {
+  const isProf = state.user.ruolo === 'professore';
+  const isStudente = state.user.ruolo === 'studente';
+
+  // 1. Carica elenco materie
+  const resMaterie = await API.get('/api/materiale/materie');
+  matState.materie = resMaterie.data || [];
+
+  if (matState.materie.length === 0) {
+    container.innerHTML = `
+      <div class="card-panel" style="text-align: center; padding: 3rem 1.5rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
+        <h2>Nessuna Materia Disponibile</h2>
+        <p style="color: var(--text-secondary);">Non risultano materie associate al tuo profilo per la gestione del materiale didattico.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Seleziona la prima materia di default se non selezionata
+  if (!matState.selectedMateria || !matState.materie.some(m => m.codice === matState.selectedMateria)) {
+    matState.selectedMateria = matState.materie[0].codice;
+    matState.currentFolderId = null;
+    matState.folderHistory = [];
+  }
+
+  // 2. Carica albero composite della materia selezionata
+  const resAlbero = await API.get(`/api/materiale/albero?codiceMateria=${matState.selectedMateria}`);
+  matState.rootTree = resAlbero.data || null;
+
+  if (!matState.rootTree) {
+    container.innerHTML = `<div class="card-panel"><p style="color: var(--accent-danger);">Impossibile caricare i contenuti della materia.</p></div>`;
+    return;
+  }
+
+  // Se la cartella corrente non è definita, posizionati alla radice
+  if (!matState.currentFolderId) {
+    matState.currentFolderId = matState.rootTree.id;
+    matState.folderHistory = [{ id: matState.rootTree.id, nome: matState.rootTree.nome }];
+  }
+
+  // Trova la cartella attualmente visualizzata nel Composite
+  const currentFolder = trovaCartellaNelTree(matState.rootTree, matState.currentFolderId) || matState.rootTree;
+
+  // Separa elementi figli: cartelle e file
+  const elementiFigli = currentFolder.elementi || [];
+  const sottocartelle = elementiFigli.filter(e => e.isCartella);
+  const fileList = elementiFigli.filter(e => !e.isCartella);
+
+  const materiaAttuale = matState.materie.find(m => m.codice === matState.selectedMateria) || {};
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">📁 Materiale Didattico</h1>
+        <p class="page-subtitle">
+          ${isProf ? 'Organizza, carica ed elimina il materiale per i tuoi corsi.' : 'Consulta, visualizza in anteprima e scarica le risorse delle tue materie.'}
+        </p>
+      </div>
+      ${isStudente ? `
+        <button class="btn btn-secondary" onclick="switchTab('preferiti')">
+          ⭐ I Miei Preferiti
+        </button>
+      ` : ''}
+    </div>
+
+    <!-- SELETTORE MATERIE -->
+    <div style="display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1.25rem;">
+      ${matState.materie.map(m => `
+        <button class="btn ${m.codice === matState.selectedMateria ? 'btn-primary' : 'btn-secondary'}" 
+                style="padding: 0.65rem 1.1rem; border-radius: var(--radius-lg); flex-shrink: 0;"
+                onclick="cambiaMateriaMateriale('${m.codice}')">
+          <span><strong>${m.codice}</strong> • ${m.nome}</span>
+          <span class="badge badge-subtle" style="margin-left: 0.5rem; font-size: 0.75rem;">${m.cfu} CFU</span>
+        </button>
+      `).join('')}
+    </div>
+
+    <div class="file-explorer">
+      <!-- HEADER EXPLORER & BREADCRUMBS -->
+      <div class="explorer-header">
+        <div class="breadcrumbs">
+          <span style="font-size: 1.1rem; margin-right: 0.2rem;">📂</span>
+          ${matState.folderHistory.map((item, idx) => `
+            ${idx > 0 ? '<span class="breadcrumb-separator">/</span>' : ''}
+            <span class="breadcrumb-item ${idx === matState.folderHistory.length - 1 ? 'active' : ''}" 
+                  onclick="navigaBreadcrumb(${idx})">
+              ${item.nome}
+            </span>
+          `).join('')}
+        </div>
+
+        <div class="explorer-actions">
+          ${isProf ? `
+            <button class="btn btn-secondary btn-sm" onclick="apriModalNuovaCartella('${currentFolder.id}', '${escapeHtml(currentFolder.nome)}')">
+              📁➕ Nuova Cartella
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="apriModalUploadMateriale('${currentFolder.id}', '${escapeHtml(currentFolder.nome)}')">
+              ⬆️ Carica Materiale
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- INFORMAZIONI CARTELLA CORRENTE -->
+      ${currentFolder.descrizione ? `
+        <div style="font-size: 0.88rem; color: var(--text-secondary); padding: 0 0.5rem;">
+          ℹ️ ${currentFolder.descrizione}
+        </div>
+      ` : ''}
+
+      <!-- SOTTOCARTELLE -->
+      ${sottocartelle.length > 0 ? `
+        <div style="margin-top: 0.5rem;">
+          <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
+            Cartelle (${sottocartelle.length})
+          </h3>
+          <div class="explorer-grid">
+            ${sottocartelle.map(f => `
+              <div class="folder-card" onclick="apriSottoCartella('${f.id}', '${escapeHtml(f.nome)}')">
+                <div class="folder-icon">📁</div>
+                <div class="folder-info">
+                  <div class="folder-title" title="${f.nome}">${f.nome}</div>
+                  <div class="folder-meta">
+                    ${(f.elementi || []).length} elementi • ${(f.dimensioneBytes / 1024).toFixed(1)} KB
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.35rem;" onclick="event.stopPropagation()">
+                  ${isStudente ? `
+                    <button class="star-btn ${f.isPreferito ? 'active' : ''}" 
+                            title="${f.isPreferito ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}"
+                            onclick="togglePreferitoMateriale('${f.id}', this)">
+                      ${f.isPreferito ? '★' : '☆'}
+                    </button>
+                  ` : ''}
+                  ${isProf && f.ownerProfessoreId === state.user.idProfessore ? `
+                    <button class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" 
+                            title="Elimina cartella"
+                            onclick="eliminaElementoDidattico('${f.id}', '${escapeHtml(f.nome)}', true)">
+                      🗑️
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- FILE & RISORSE DIDATTICHE -->
+      <div style="margin-top: 0.75rem;">
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
+          File e Risorse Didattiche (${fileList.length})
+        </h3>
+
+        ${fileList.length === 0 && sottocartelle.length === 0 ? `
+          <div class="card-panel" style="text-align: center; padding: 2.5rem 1.5rem;">
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Questa cartella è vuota.</p>
+            ${isProf ? `
+              <div style="margin-top: 1rem;">
+                <button class="btn btn-primary btn-sm" onclick="apriModalUploadMateriale('${currentFolder.id}', '${escapeHtml(currentFolder.nome)}')">
+                  Carica il primo materiale
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        ${fileList.length > 0 ? `
+          <div class="explorer-grid">
+            ${fileList.map(m => `
+              <div class="file-card">
+                <div class="file-card-top">
+                  <div class="file-card-icon">${m.icona || '📄'}</div>
+                  <div class="file-card-actions">
+                    ${isStudente ? `
+                      <button class="star-btn ${m.isPreferito ? 'active' : ''}" 
+                              title="${m.isPreferito ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}"
+                              onclick="togglePreferitoMateriale('${m.id}', this)">
+                        ${m.isPreferito ? '★' : '☆'}
+                      </button>
+                    ` : ''}
+                    ${isProf && m.ownerProfessoreId === state.user.idProfessore ? `
+                      <button class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" 
+                              title="Elimina risorsa"
+                              onclick="eliminaElementoDidattico('${m.id}', '${escapeHtml(m.nome)}', false)">
+                        🗑️
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+
+                <div class="file-card-body">
+                  <div class="file-card-title" title="${m.nome}">${m.nome}</div>
+                  <div class="file-card-desc">${m.descrizione || 'Nessuna descrizione specificata.'}</div>
+                </div>
+
+                <div class="file-card-footer">
+                  <span class="file-badge ${(m.tipo || '').toLowerCase()}">
+                    ${m.tipoDescrizione || m.tipo}
+                  </span>
+                  <span>${(m.dimensioneBytes / 1024).toFixed(1)} KB</span>
+                </div>
+
+                <div style="display: flex; gap: 0.45rem; margin-top: 0.75rem;">
+                  <button class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.78rem;" 
+                          onclick="apriModalAnteprimaMateriale('${m.id}')">
+                    👁️ Anteprima
+                  </button>
+                  <a href="${m.downloadUrl}" target="_blank" download="${m.nome}" 
+                     class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.78rem; text-decoration: none; text-align: center;">
+                    ⬇️ Scarica
+                  </a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// FUNZIONI DI NAVIGAZIONE COMPOSITE
+// ==========================================
+
+function trovaCartellaNelTree(nodo, idCercato) {
+  if (!nodo || !idCercato) return null;
+  if (nodo.id === idCercato) return nodo;
+  if (nodo.elementi && nodo.elementi.length > 0) {
+    for (const child of nodo.elementi) {
+      if (child.isCartella) {
+        const found = trovaCartellaNelTree(child, idCercato);
+        if (found) return found;
+      }
+    }
+  }
+  return null;
+}
+
+function apriSottoCartella(folderId, folderNome) {
+  matState.currentFolderId = folderId;
+  matState.folderHistory.push({ id: folderId, nome: folderNome });
+  const container = document.getElementById('tab-content');
+  if (container) renderMaterialeDidattico(container);
+}
+
+function navigaBreadcrumb(index) {
+  if (index >= 0 && index < matState.folderHistory.length) {
+    matState.folderHistory = matState.folderHistory.slice(0, index + 1);
+    matState.currentFolderId = matState.folderHistory[index].id;
+    const container = document.getElementById('tab-content');
+    if (container) renderMaterialeDidattico(container);
+  }
+}
+
+function cambiaMateriaMateriale(codice) {
+  matState.selectedMateria = codice;
+  matState.currentFolderId = null;
+  matState.folderHistory = [];
+  const container = document.getElementById('tab-content');
+  if (container) renderMaterialeDidattico(container);
+}
+
+// ==========================================
+// MODALI UC6 (PROFESSORE)
+// ==========================================
+
+function apriModalNuovaCartella(idCartellaGenitore, nomeGenitore) {
+  UI.modal('📁 Crea Nuova Sottocartella', `
+    <form id="form-nuova-cartella" onsubmit="handleCreaCartella(event)">
+      <input type="hidden" name="codiceMateria" value="${matState.selectedMateria}" />
+      <input type="hidden" name="idCartellaGenitore" value="${idCartellaGenitore}" />
+
+      <div class="form-group">
+        <label class="form-label">Cartella di Destinazione</label>
+        <input type="text" class="form-control" value="${nomeGenitore}" readonly style="background: var(--bg-surface); opacity: 0.8;" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nome della Cartella *</label>
+        <input type="text" name="nome" class="form-control" placeholder="es. Esercitazioni_2026, Slide_Capitolo_1" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descrizione / Note (opzionale)</label>
+        <textarea name="descrizione" class="form-control" rows="2" placeholder="Breve descrizione del contenuto..."></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="UI.closeModal()">Annulla</button>
+        <button type="submit" class="btn btn-primary">Crea Cartella</button>
+      </div>
+    </form>
+  `);
+}
+
+async function handleCreaCartella(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    codiceMateria: form.codiceMateria.value,
+    idCartellaGenitore: form.idCartellaGenitore.value,
+    nome: form.nome.value,
+    descrizione: form.descrizione.value
+  };
+
+  const res = await API.post('/api/materiale/cartella', data);
+  if (res.success) {
+    UI.closeModal();
+    UI.toast(res.data.message || 'Cartella creata!', 'success');
+    const container = document.getElementById('tab-content');
+    if (container) renderMaterialeDidattico(container);
+  } else {
+    UI.toast(res.error || 'Errore creazione cartella', 'error');
+  }
+}
+
+function apriModalUploadMateriale(idCartellaGenitore, nomeGenitore) {
+  UI.modal('⬆️ Carica Materiale Didattico', `
+    <form id="form-upload-materiale" onsubmit="handleUploadMateriale(event)">
+      <input type="hidden" name="codiceMateria" value="${matState.selectedMateria}" />
+      <input type="hidden" name="idCartellaGenitore" value="${idCartellaGenitore}" />
+
+      <div class="form-group">
+        <label class="form-label">Cartella di Destinazione</label>
+        <input type="text" class="form-control" value="${nomeGenitore}" readonly style="background: var(--bg-surface); opacity: 0.8;" />
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Tipologia Risorsa *</label>
+          <select name="tipo" class="form-control" id="upload-tipo-select" onchange="aggiornaCampiUpload()" required>
+            <option value="SLIDE">📊 Slide / Presentazione</option>
+            <option value="DISPENSA">📚 Dispensa del Corso</option>
+            <option value="PDF">📄 Documento PDF</option>
+            <option value="TESTO">📝 File di Testo (.txt / codice)</option>
+            <option value="LINK">🔗 Link / Risorsa Web</option>
+            <option value="VIDEO">🎥 Video / Registrazione</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nome File / Titolo *</label>
+          <input type="text" name="nome" id="upload-nome-input" class="form-control" placeholder="es. Lezione_03_Composite.pdf" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descrizione / Note</label>
+        <input type="text" name="descrizione" class="form-control" placeholder="Breve spiegazione del contenuto..." />
+      </div>
+
+      <!-- SEZIONE FILE UPLOAD (PDF, SLIDE, DISPENSA, FILE) -->
+      <div id="sezione-file-picker" class="form-group">
+        <label class="form-label">Seleziona File dal Computer</label>
+        <input type="file" id="upload-file-input" class="form-control" onchange="gestisciSelezioneFile(this)" />
+        <small style="color: var(--text-muted); display: block; margin-top: 0.35rem;">
+          Se non selezioni un file, verrà creato un documento dimostrativo valido per il test.
+        </small>
+      </div>
+
+      <!-- SEZIONE TESTO DIRETTO (TESTO) -->
+      <div id="sezione-testo-editor" class="form-group" style="display: none;">
+        <label class="form-label">Contenuto Testuale</label>
+        <textarea name="contenutoTesto" class="form-control" rows="6" placeholder="Scrivi o incolla qui il testo, codice o appunti..."></textarea>
+      </div>
+
+      <!-- SEZIONE URL (LINK, VIDEO) -->
+      <div id="sezione-url-input" class="form-group" style="display: none;">
+        <label class="form-label">Indirizzo Web (URL)</label>
+        <input type="url" name="url" class="form-control" placeholder="https://..." />
+      </div>
+
+      <input type="hidden" name="contenutoBase64" id="upload-base64-input" value="" />
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="UI.closeModal()">Annulla</button>
+        <button type="submit" class="btn btn-primary">Carica Risorsa</button>
+      </div>
+    </form>
+  `);
+}
+
+function aggiornaCampiUpload() {
+  const tipo = document.getElementById('upload-tipo-select').value;
+  const filePicker = document.getElementById('sezione-file-picker');
+  const testoEditor = document.getElementById('sezione-testo-editor');
+  const urlInput = document.getElementById('sezione-url-input');
+
+  if (tipo === 'LINK' || tipo === 'VIDEO') {
+    filePicker.style.display = 'none';
+    testoEditor.style.display = 'none';
+    urlInput.style.display = 'block';
+  } else if (tipo === 'TESTO') {
+    filePicker.style.display = 'block';
+    testoEditor.style.display = 'block';
+    urlInput.style.display = 'none';
+  } else {
+    filePicker.style.display = 'block';
+    testoEditor.style.display = 'none';
+    urlInput.style.display = 'none';
+  }
+}
+
+function gestisciSelezioneFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const nomeInput = document.getElementById('upload-nome-input');
+  if (nomeInput && !nomeInput.value) {
+    nomeInput.value = file.name;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result.split(',')[1];
+    const b64Input = document.getElementById('upload-base64-input');
+    if (b64Input) b64Input.value = base64;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function handleUploadMateriale(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    codiceMateria: form.codiceMateria.value,
+    idCartellaGenitore: form.idCartellaGenitore.value,
+    nome: form.nome.value,
+    descrizione: form.descrizione.value,
+    tipo: form.tipo.value,
+    contenutoBase64: form.contenutoBase64.value,
+    contenutoTesto: form.contenutoTesto ? form.contenutoTesto.value : '',
+    url: form.url ? form.url.value : ''
+  };
+
+  const res = await API.post('/api/materiale/upload', data);
+  if (res.success) {
+    UI.closeModal();
+    UI.toast(res.data.message || 'Materiale caricato con successo!', 'success');
+    const container = document.getElementById('tab-content');
+    if (container) renderMaterialeDidattico(container);
+  } else {
+    UI.toast(res.error || 'Errore caricamento materiale', 'error');
+  }
+}
+
+async function eliminaElementoDidattico(idElemento, nomeElemento, isCartella) {
+  const msg = isCartella
+    ? `Sei sicuro di voler eliminare la cartella '${nomeElemento}' e TUTTI i suoi contenuti?`
+    : `Sei sicuro di voler eliminare il file '${nomeElemento}'?`;
+
+  if (!confirm(msg)) return;
+
+  const res = await API.post('/api/materiale/elimina', {
+    codiceMateria: matState.selectedMateria,
+    idElemento: idElemento
+  });
+
+  if (res.success) {
+    UI.toast('Elemento eliminato con successo!', 'info');
+    const container = document.getElementById('tab-content');
+    if (container) renderMaterialeDidattico(container);
+  } else {
+    UI.toast(res.error || 'Errore durante l\'eliminazione', 'error');
+  }
+}
+
+// ==========================================
+// ANTEPRIMA POLIMORFICA (UC10)
+// ==========================================
+
+async function apriModalAnteprimaMateriale(idElemento) {
+  const res = await API.get(`/api/materiale/anteprima?id=${idElemento}`);
+  if (!res.success) {
+    UI.toast(res.error || 'Impossibile visualizzare l\'anteprima', 'error');
+    return;
+  }
+
+  const d = res.data;
+  let viewerHtml = '';
+
+  if (d.tipo === 'TESTO') {
+    viewerHtml = `
+      <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+        <span class="file-badge testo">File di Testo</span>
+        <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('text-preview-content').innerText); UI.toast('Testo copiato negli appunti!', 'info');">
+          📋 Copia Testo
+        </button>
+      </div>
+      <div class="text-viewer-box" id="text-preview-content">${escapeHtml(d.contenutoTestuale || '')}</div>
+    `;
+  } else if (d.tipo === 'PDF' || d.tipo === 'SLIDE' || d.tipo === 'DISPENSA') {
+    viewerHtml = `
+      <div class="pdf-preview-box">
+        <div style="font-size: 3.5rem; color: #f87171;">📄</div>
+        <div>
+          <h3 style="margin-bottom: 0.5rem;">${escapeHtml(d.nome)}</h3>
+          <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.25rem;">
+            ${escapeHtml(d.contenutoTestuale || '')}
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <a href="${d.downloadUrl}" target="_blank" class="btn btn-secondary">
+              🔍 Apri nel Visualizzatore PDF del Browser
+            </a>
+            <a href="${d.downloadUrl}" download="${d.nome}" class="btn btn-primary">
+              ⬇️ Scarica File (${(d.dimensioneBytes / 1024).toFixed(1)} KB)
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (d.tipo === 'LINK') {
+    viewerHtml = `
+      <div class="pdf-preview-box" style="background: rgba(6, 182, 212, 0.08);">
+        <div style="font-size: 3.5rem; color: #22d3ee;">🔗</div>
+        <div>
+          <h3 style="margin-bottom: 0.5rem;">${escapeHtml(d.nome)}</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Risorsa Web Esterna: <a href="${d.urlEsterno}" target="_blank" style="color: var(--accent-info); font-weight: 600;">${d.urlEsterno}</a>
+          </p>
+          <a href="${d.urlEsterno}" target="_blank" class="btn btn-primary">
+            🌐 Visita Sito Web / Repository
+          </a>
+        </div>
+      </div>
+    `;
+  } else if (d.tipo === 'VIDEO') {
+    viewerHtml = `
+      <div class="pdf-preview-box" style="background: rgba(236, 72, 153, 0.08);">
+        <div style="font-size: 3.5rem; color: #f472b6;">🎥</div>
+        <div>
+          <h3 style="margin-bottom: 0.5rem;">${escapeHtml(d.nome)}</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Streaming video lezione: <a href="${d.urlEsterno}" target="_blank" style="color: #f472b6; font-weight: 600;">${d.urlEsterno}</a>
+          </p>
+          <a href="${d.urlEsterno}" target="_blank" class="btn btn-primary">
+            ▶️ Guarda Registrazione
+          </a>
+        </div>
+      </div>
+    `;
+  } else {
+    viewerHtml = `
+      <div class="card-panel">
+        <p>${escapeHtml(d.contenutoTestuale || 'Anteprima non disponibile.')}</p>
+        ${d.downloadUrl ? `<a href="${d.downloadUrl}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">⬇️ Scarica</a>` : ''}
+      </div>
+    `;
+  }
+
+  UI.modal(`Anteprima: ${d.nome}`, `
+    <div>
+      ${viewerHtml}
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
+        <button class="btn btn-secondary" onclick="UI.closeModal()">Chiudi</button>
+      </div>
+    </div>
+  `);
+}
+
+// ==========================================
+// PREFERITI STUDENTE (UC10)
+// ==========================================
+
+async function togglePreferitoMateriale(idElemento, btn) {
+  const res = await API.post('/api/materiale/preferiti/toggle', { idElemento });
+  if (res.success) {
+    const pref = res.data.preferito;
+    if (btn) {
+      if (pref) {
+        btn.classList.add('active');
+        btn.innerText = '★';
+        btn.title = 'Rimuovi dai preferiti';
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = '☆';
+        btn.title = 'Aggiungi ai preferiti';
+      }
+    }
+    UI.toast(res.data.message || (pref ? 'Aggiunto ai preferiti!' : 'Rimosso dai preferiti.'), 'info');
+  } else {
+    UI.toast(res.error || 'Errore aggiornamento preferito', 'error');
+  }
+}
+
+async function renderPreferitiStudente(container) {
+  const res = await API.get('/api/materiale/preferiti');
+  const preferiti = res.data || [];
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">⭐ I Miei Preferiti</h1>
+        <p class="page-subtitle">Accesso rapido a tutte le risorse e cartelle che hai contrassegnato con la stella.</p>
+      </div>
+      <button class="btn btn-secondary" onclick="switchTab('materiale')">
+        📁 Torna a Materiale Didattico
+      </button>
+    </div>
+
+    ${preferiti.length === 0 ? `
+      <div class="card-panel" style="text-align: center; padding: 3rem 1.5rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>
+        <h2>Nessun Preferito Salvato</h2>
+        <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+          Puoi contrassegnare con una stella qualsiasi cartella, slide, dispensa o appunto durante la consultazione del materiale didattico.
+        </p>
+        <button class="btn btn-primary" onclick="switchTab('materiale')">
+          Sfoglia Materiale Didattico
+        </button>
+      </div>
+    ` : `
+      <div class="explorer-grid">
+        ${preferiti.map(item => `
+          <div class="file-card">
+            <div class="file-card-top">
+              <div class="file-card-icon">${item.isCartella ? '📁' : (item.icona || '📄')}</div>
+              <button class="star-btn active" title="Rimuovi dai preferiti"
+                      onclick="rimuoviPreferitoDallaLista('${item.id}')">
+                ★
+              </button>
+            </div>
+
+            <div class="file-card-body">
+              <div class="file-card-title">${item.nome}</div>
+              <div class="file-card-desc">${item.descrizione || (item.isCartella ? 'Cartella salvata tra i preferiti' : 'File didattico salvato tra i preferiti')}</div>
+            </div>
+
+            <div class="file-card-footer">
+              <span class="file-badge ${(item.tipo || '').toLowerCase()}">
+                ${item.isCartella ? 'CARTELLA' : (item.tipoDescrizione || item.tipo)}
+              </span>
+              <span>${(item.dimensioneBytes / 1024).toFixed(1)} KB</span>
+            </div>
+
+            <div style="display: flex; gap: 0.45rem; margin-top: 0.75rem;">
+              ${!item.isCartella ? `
+                <button class="btn btn-secondary btn-sm" style="flex: 1; font-size: 0.78rem;" 
+                        onclick="apriModalAnteprimaMateriale('${item.id}')">
+                  👁️ Anteprima
+                </button>
+                <a href="${item.downloadUrl}" target="_blank" download="${item.nome}" 
+                   class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.78rem; text-decoration: none; text-align: center;">
+                  ⬇️ Scarica
+                </a>
+              ` : `
+                <button class="btn btn-primary btn-sm" style="width: 100%; font-size: 0.78rem;"
+                        onclick="vaiACartellaMateria('${item.codiceMateria}', '${item.id}', '${escapeHtml(item.nome)}')">
+                  📂 Apri Cartella
+                </button>
+              `}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `}
+  `;
+}
+
+async function rimuoviPreferitoDallaLista(idElemento) {
+  const res = await API.post('/api/materiale/preferiti/toggle', { idElemento });
+  if (res.success) {
+    UI.toast('Elemento rimosso dai preferiti.', 'info');
+    const container = document.getElementById('tab-content');
+    if (container) renderPreferitiStudente(container);
+  }
+}
+
+function vaiACartellaMateria(codiceMateria, folderId, folderNome) {
+  matState.selectedMateria = codiceMateria;
+  matState.currentFolderId = folderId;
+  matState.folderHistory = [{ id: folderId, nome: folderNome }];
+  switchTab('materiale');
+}
+

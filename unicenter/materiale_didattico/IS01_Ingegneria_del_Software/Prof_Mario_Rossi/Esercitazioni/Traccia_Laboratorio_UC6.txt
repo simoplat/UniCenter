@@ -1,0 +1,13 @@
+========================================
+   LABORATORIO INGEGNERIA DEL SOFTWARE
+========================================
+
+Obiettivo: Implementare il sottosistema per UC6 (Gestione Materiale Didattico).
+Requisiti:
+1. Pattern Composite per la gerarchia cartelle/file.
+2. Pattern Polymorphism per i diversi tipi di materiale.
+3. Pure Fabrication con MaterialeDidatticoRepository per I/O.
+4. Facade Controller per coordinare tutte le richieste.
+
+Buon lavoro!
+Prof. Mario Rossi

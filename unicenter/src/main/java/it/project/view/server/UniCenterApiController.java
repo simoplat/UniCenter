@@ -986,12 +986,238 @@ public class UniCenterApiController {
                 }
             }
 
+            // ==========================================
+            // MATERIALE DIDATTICO (UC6 & UC10)
+            // ==========================================
+            if (path.startsWith("/api/materiale/")) {
+                Utente user = unicenter.getCurrentUser();
+
+                // 1. Materie disponibili per materiale didattico
+                if (path.equals("/api/materiale/materie") && "GET".equalsIgnoreCase(method)) {
+                    List<Materia> materie;
+                    if (user instanceof Professore) {
+                        materie = unicenter.getMaterieDelProfessore();
+                    } else if (user instanceof Studente s && s.getPianoDiStudi() != null) {
+                        List<String> codici = new ArrayList<>(s.getPianoDiStudi().getIdMaterieObbligatorie());
+                        codici.addAll(s.getPianoDiStudi().getIdMaterieAScelta());
+                        materie = new ArrayList<>();
+                        for (String cod : codici) {
+                            Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+                            if (m != null && !materie.contains(m)) materie.add(m);
+                        }
+                        // Se il piano è vuoto, mostra tutte le materie
+                        if (materie.isEmpty()) {
+                            materie = unicenter.getTutteLeMaterie();
+                        }
+                    } else {
+                        materie = unicenter.getTutteLeMaterie();
+                    }
+
+                    List<Map<String, Object>> result = new ArrayList<>();
+                    for (Materia m : materie) {
+                        it.project.materiale.Cartella radice = unicenter.getAlberoMaterialeMateria(m.getCodiceMateria());
+                        List<String> docentiIds = unicenter.getGestoreMaterie().trovaProfessoriDellaMateria(m.getCodiceMateria());
+                        List<String> docentiNomi = new ArrayList<>();
+                        for (String idDoc : docentiIds) {
+                            unicenter.trovaProfessore(idDoc).ifPresent(p -> docentiNomi.add("Prof. " + p.getNome() + " " + p.getCognome()));
+                        }
+
+                        result.add(Map.of(
+                                "codice", m.getCodiceMateria(),
+                                "nome", m.getNome(),
+                                "cfu", m.getCfu(),
+                                "docenti", docentiNomi,
+                                "totaleElementi", radice.elenca().size(),
+                                "dimensioneBytes", radice.getDimensioneBytes()
+                        ));
+                    }
+                    return ok(result);
+                }
+
+                // 2. Albero Composite di una materia
+                if (path.equals("/api/materiale/albero") && "GET".equalsIgnoreCase(method)) {
+                    String codMateria = queryParams.get("codiceMateria");
+                    if (codMateria == null || codMateria.trim().isEmpty()) {
+                        return error("Parametro 'codiceMateria' obbligatorio.");
+                    }
+                    it.project.materiale.Cartella radice = unicenter.getAlberoMaterialeMateria(codMateria);
+                    Studente st = (user instanceof Studente) ? (Studente) user : null;
+                    return ok(serializeElemento(radice, st));
+                }
+
+                // 3. Creazione cartella (Professore UC6)
+                if (path.equals("/api/materiale/cartella") && "POST".equalsIgnoreCase(method)) {
+                    if (!(user instanceof Professore)) {
+                        return error("Solo un professore può creare cartelle.");
+                    }
+                    String codMateria = (String) body.get("codiceMateria");
+                    String idCartellaGenitore = (String) body.get("idCartellaGenitore");
+                    String nome = (String) body.get("nome");
+                    String descrizione = (String) body.get("descrizione");
+
+                    it.project.materiale.Cartella nuova = unicenter.creaCartellaMateriale(codMateria, idCartellaGenitore, nome, descrizione);
+                    return ok(Map.of(
+                            "message", "Cartella creata con successo!",
+                            "cartella", serializeElemento(nuova, null)
+                    ));
+                }
+
+                // 4. Upload materiale didattico (Professore UC6)
+                if (path.equals("/api/materiale/upload") && "POST".equalsIgnoreCase(method)) {
+                    if (!(user instanceof Professore)) {
+                        return error("Solo un professore può caricare materiale didattico.");
+                    }
+                    String codMateria = (String) body.get("codiceMateria");
+                    String idCartellaGenitore = (String) body.get("idCartellaGenitore");
+                    String nome = (String) body.get("nome");
+                    String descrizione = (String) body.get("descrizione");
+                    String tipoStr = (String) body.get("tipo");
+                    String contenutoTesto = (String) body.get("contenutoTesto");
+                    String contenutoBase64 = (String) body.get("contenutoBase64");
+                    String url = (String) body.get("url");
+
+                    it.project.materiale.TipoMateriale tipo;
+                    try {
+                        tipo = it.project.materiale.TipoMateriale.valueOf(tipoStr.toUpperCase());
+                    } catch (Exception e) {
+                        tipo = it.project.materiale.TipoMateriale.TESTO;
+                    }
+
+                    byte[] bytes = new byte[0];
+                    if (contenutoBase64 != null && !contenutoBase64.trim().isEmpty()) {
+                        try {
+                            bytes = Base64.getDecoder().decode(contenutoBase64);
+                        } catch (IllegalArgumentException ex) {
+                            bytes = contenutoBase64.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        }
+                    } else if (contenutoTesto != null) {
+                        bytes = contenutoTesto.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    } else if (url != null) {
+                        bytes = url.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    }
+
+                    it.project.materiale.MaterialeDidattico mat = unicenter.caricaMaterialeDidattico(
+                            codMateria, idCartellaGenitore, nome, descrizione, tipo, bytes);
+
+                    return ok(Map.of(
+                            "message", "Materiale didattico caricato con successo!",
+                            "materiale", serializeElemento(mat, null)
+                    ));
+                }
+
+                // 5. Eliminazione materiale o cartella (Professore UC6)
+                if ((path.equals("/api/materiale/elimina") || path.equals("/api/materiale/rimuovi")) &&
+                        ("DELETE".equalsIgnoreCase(method) || "POST".equalsIgnoreCase(method))) {
+                    if (!(user instanceof Professore)) {
+                        return error("Solo un professore può eliminare materiale didattico.");
+                    }
+                    String codMateria = (String) body.get("codiceMateria");
+                    if (codMateria == null) codMateria = queryParams.get("codiceMateria");
+
+                    String idElemento = (String) body.get("idElemento");
+                    if (idElemento == null) idElemento = queryParams.get("idElemento");
+
+                    boolean rimosso = unicenter.eliminaMaterialeDidattico(codMateria, idElemento);
+                    if (rimosso) {
+                        return ok(Map.of("message", "Elemento eliminato con successo!"));
+                    } else {
+                        return error("Impossibile eliminare l'elemento selezionato.");
+                    }
+                }
+
+                // 6. Anteprima polimorfica (UC10)
+                if (path.equals("/api/materiale/anteprima") && "GET".equalsIgnoreCase(method)) {
+                    String id = queryParams.get("id");
+                    if (id == null) id = queryParams.get("idElemento");
+                    if (id == null) return error("Parametro 'id' mancante.");
+
+                    it.project.materiale.AnteprimaRisultato ant = unicenter.consultaMaterialeDidattico(id);
+                    Map<String, Object> antMap = new HashMap<>();
+                    antMap.put("id", ant.getId());
+                    antMap.put("nome", ant.getNome());
+                    antMap.put("descrizione", ant.getDescrizione());
+                    antMap.put("tipo", ant.getTipo() != null ? ant.getTipo().name() : "CARTELLA");
+                    antMap.put("mimeType", ant.getMimeType());
+                    antMap.put("contenutoTestuale", ant.getContenutoTestuale());
+                    antMap.put("urlEsterno", ant.getUrlEsterno());
+                    antMap.put("downloadUrl", ant.getDownloadUrl());
+                    antMap.put("dimensioneBytes", ant.getDimensioneBytes());
+                    antMap.put("metadati", ant.getMetadatiExtra());
+
+                    return ok(antMap);
+                }
+
+                // 7. Gestione Preferiti Studente (UC10)
+                if (path.equals("/api/materiale/preferiti") && "GET".equalsIgnoreCase(method)) {
+                    if (!(user instanceof Studente s)) {
+                        return error("Solo uno studente autenticato può accedere alla sezione preferiti.");
+                    }
+                    List<it.project.materiale.ElementoDidattico> prefs = unicenter.getPreferitiMaterialeStudente();
+                    List<Map<String, Object>> result = new ArrayList<>();
+                    for (it.project.materiale.ElementoDidattico e : prefs) {
+                        result.add(serializeElemento(e, s));
+                    }
+                    return ok(result);
+                }
+
+                // 8. Toggle Preferito Studente (UC10)
+                if (path.equals("/api/materiale/preferiti/toggle") && "POST".equalsIgnoreCase(method)) {
+                    if (!(user instanceof Studente)) {
+                        return error("Solo uno studente autenticato può salvare preferiti.");
+                    }
+                    String idElemento = (String) body.get("idElemento");
+                    if (idElemento == null) return error("Parametro 'idElemento' mancante.");
+
+                    boolean preferito = unicenter.togglePreferitoMateriale(idElemento);
+                    return ok(Map.of(
+                            "preferito", preferito,
+                            "message", preferito ? "Elemento aggiunto ai tuoi preferiti!" : "Elemento rimosso dai preferiti."
+                    ));
+                }
+            }
+
             return error("Endpoint non trovato: " + path);
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {
             return error(e.getMessage());
         } catch (Exception e) {
             return error("Errore interno del server: " + e.getMessage());
         }
+    }
+
+    private Map<String, Object> serializeElemento(it.project.materiale.ElementoDidattico elem, Studente currentStudent) {
+        if (elem == null) return Collections.emptyMap();
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", elem.getId());
+        map.put("nome", elem.getNome());
+        map.put("descrizione", elem.getDescrizione());
+        map.put("pathRelativo", elem.getPathRelativo());
+        map.put("dataCreazione", elem.getDataCreazione() != null ? elem.getDataCreazione().toString() : "");
+        map.put("dimensioneBytes", elem.getDimensioneBytes());
+        map.put("isCartella", elem.isCartella());
+        map.put("ownerProfessoreId", elem.getOwnerProfessoreId());
+        map.put("codiceMateria", elem.getCodiceMateria());
+
+        if (currentStudent != null) {
+            map.put("isPreferito", currentStudent.isPreferito(elem.getId()));
+        } else {
+            map.put("isPreferito", false);
+        }
+
+        if (elem instanceof it.project.materiale.Cartella c) {
+            List<Map<String, Object>> figli = new ArrayList<>();
+            for (it.project.materiale.ElementoDidattico child : c.elenca()) {
+                figli.add(serializeElemento(child, currentStudent));
+            }
+            map.put("elementi", figli);
+            map.put("tipo", "CARTELLA");
+            map.put("icona", "📁");
+        } else if (elem instanceof it.project.materiale.MaterialeDidattico m) {
+            map.put("tipo", m.getTipo().name());
+            map.put("tipoDescrizione", m.getTipo().getDescrizione());
+            map.put("mimeType", m.getMimeType());
+            map.put("icona", m.getTipo().getIcona());
+        }
+        return map;
     }
 
     private Map<String, Object> buildUserData(Utente user) {

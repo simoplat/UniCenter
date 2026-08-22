@@ -10,6 +10,7 @@ public class Studente extends Utente implements ObserverNotifica {
     private List<Notifica> notifiche;
     private Carriera carriera;
     private Libretto libretto;
+    private List<String> preferitiMaterialeIds;
 
     public Studente(String matricola, String nome,
             String cognome, String email,
@@ -19,6 +20,7 @@ public class Studente extends Utente implements ObserverNotifica {
         this.setCognome(cognome);
         this.setEmail(email);
         this.notifiche = new ArrayList<>();
+        this.preferitiMaterialeIds = new ArrayList<>();
         this.carriera = new Carriera(matricola, idCorsoDiLaurea);
         this.libretto = new Libretto();
     }
@@ -37,6 +39,41 @@ public class Studente extends Utente implements ObserverNotifica {
 
     public List<Notifica> getNotifiche() {
         return notifiche;
+    }
+
+    // =========================================================================
+    // UC10: GESTIONE PREFERITI MATERIALE DIDATTICO (Information Expert)
+    // =========================================================================
+
+    public List<String> getPreferitiMaterialeIds() {
+        return new ArrayList<>(preferitiMaterialeIds);
+    }
+
+    public boolean isPreferito(String idElemento) {
+        return idElemento != null && preferitiMaterialeIds.contains(idElemento);
+    }
+
+    public boolean togglePreferito(String idElemento) {
+        if (idElemento == null) return false;
+        if (preferitiMaterialeIds.contains(idElemento)) {
+            preferitiMaterialeIds.remove(idElemento);
+            return false; // non più preferito
+        } else {
+            preferitiMaterialeIds.add(idElemento);
+            return true; // adesso preferito
+        }
+    }
+
+    public void aggiungiPreferito(String idElemento) {
+        if (idElemento != null && !preferitiMaterialeIds.contains(idElemento)) {
+            preferitiMaterialeIds.add(idElemento);
+        }
+    }
+
+    public void rimuoviPreferito(String idElemento) {
+        if (idElemento != null) {
+            preferitiMaterialeIds.remove(idElemento);
+        }
     }
 
     @Override

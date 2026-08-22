@@ -107,4 +107,26 @@ public class ConsoleView implements UniCenterView {
                             : ""));
         }
     }
+
+    @Override
+    public void stampaAlberoMateriali(it.project.materiale.Cartella radice) {
+        if (radice == null) {
+            mostraMessaggio("Nessun materiale presente.");
+            return;
+        }
+        mostraMessaggio("\n📂 Albero Materiale Didattico: " + radice.getNome());
+        stampaRicorsivo(radice, 0);
+    }
+
+    private void stampaRicorsivo(it.project.materiale.ElementoDidattico elem, int depth) {
+        String indent = "  ".repeat(depth);
+        if (elem.isCartella()) {
+            mostraMessaggio(indent + "📁 " + elem.getNome() + " (" + (elem.getDimensioneBytes() / 1024) + " KB)");
+            for (it.project.materiale.ElementoDidattico child : elem.elenca()) {
+                stampaRicorsivo(child, depth + 1);
+            }
+        } else if (elem instanceof it.project.materiale.MaterialeDidattico mat) {
+            mostraMessaggio(indent + mat.getTipo().getIcona() + " " + mat.getNome() + " [" + mat.getTipo().getDescrizione() + ", " + (mat.getDimensioneBytes() / 1024 + 1) + " KB]");
+        }
+    }
 }

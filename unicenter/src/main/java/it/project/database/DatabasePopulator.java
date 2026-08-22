@@ -486,6 +486,133 @@ public class DatabasePopulator {
                 }
             }
 
+            // =========================================================================
+            // SIMULAZIONE: FASE 6 - MATERIALE DIDATTICO (UC6 & UC10)
+            // =========================================================================
+            System.out.println("[DB POPULATION] Popolamento materiale didattico su filesystem (UC6 / UC10)...");
+            it.project.controller.MaterialeDidatticoController matCtrl = unicenter.getMaterialeDidatticoController();
+            Professore profMario = unicenter.trovaProfessore("1").orElse(null);
+            Professore profVerdi = unicenter.trovaProfessore("2").orElse(null);
+
+            // Generatore di PDF valido minimale
+            byte[] pdfValido = ("%PDF-1.4\n" +
+                    "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n" +
+                    "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n" +
+                    "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n" +
+                    "4 0 obj << /Length 58 >> stream\n" +
+                    "BT /F1 20 Tf 70 700 Td (UniCenter - Materiale Didattico Ufficiale) Tj ET\n" +
+                    "endstream endobj\n" +
+                    "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n" +
+                    "xref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000057 00000 n \n0000000114 00000 n \n0000000244 00000 n \n0000000353 00000 n \n" +
+                    "trailer << /Size 6 /Root 1 0 R >>\nstartxref\n424\n%%EOF\n").getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+            // 1. IS01 - Ingegneria del Software (Prof. Mario Rossi)
+            if (profMario != null) {
+                // Inizializza materia
+                Materia is01 = gestoreMaterie.trovaMaterieByCodice("IS01");
+                matCtrl.inizializzaMateria(is01);
+
+                // Sottocartella Slide
+                it.project.materiale.Cartella cartellaSlide = matCtrl.creaCartella(
+                        profMario, "IS01", null, "Slide", "Raccolta slide delle lezioni frontali");
+                it.project.materiale.MaterialeDidattico slide1 = matCtrl.caricaMateriale(
+                        profMario, "IS01", cartellaSlide.getId(), "Lezione_01_Introduzione_Design_Patterns.pdf",
+                        "Panoramica sui pattern GRASP e GoF", it.project.materiale.TipoMateriale.SLIDE, pdfValido);
+                matCtrl.caricaMateriale(
+                        profMario, "IS01", cartellaSlide.getId(), "Lezione_02_Composite_e_Polymorphism.pdf",
+                        "Approfondimento sul pattern Composite e Polimorfismo", it.project.materiale.TipoMateriale.SLIDE, pdfValido);
+
+                // Sottocartella Esercitazioni
+                it.project.materiale.Cartella cartellaEsercizi = matCtrl.creaCartella(
+                        profMario, "IS01", null, "Esercitazioni", "Tracce e specifiche di laboratorio");
+
+                String testoTraccia = "========================================\n" +
+                        "   LABORATORIO INGEGNERIA DEL SOFTWARE\n" +
+                        "========================================\n\n" +
+                        "Obiettivo: Implementare il sottosistema per UC6 (Gestione Materiale Didattico).\n" +
+                        "Requisiti:\n" +
+                        "1. Pattern Composite per la gerarchia cartelle/file.\n" +
+                        "2. Pattern Polymorphism per i diversi tipi di materiale.\n" +
+                        "3. Pure Fabrication con MaterialeDidatticoRepository per I/O.\n" +
+                        "4. Facade Controller per coordinare tutte le richieste.\n\n" +
+                        "Buon lavoro!\nProf. Mario Rossi";
+
+                it.project.materiale.MaterialeDidattico traccia = matCtrl.caricaMateriale(
+                        profMario, "IS01", cartellaEsercizi.getId(), "Traccia_Laboratorio_UC6.txt",
+                        "Traccia esercitazione sul pattern Composite", it.project.materiale.TipoMateriale.TESTO,
+                        testoTraccia.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                // Dispensa radice prof
+                it.project.materiale.MaterialeDidattico dispensa = matCtrl.caricaMateriale(
+                        profMario, "IS01", null, "Dispensa_Architettura_Software_2026.pdf",
+                        "Compendio completo di Architettura e Design Patterns", it.project.materiale.TipoMateriale.DISPENSA, pdfValido);
+
+                // Link utile
+                matCtrl.caricaMateriale(
+                        profMario, "IS01", null, "Documentazione_Java_21_Standard.url",
+                        "Riferimento alle API ufficiali Java 21 LTS", it.project.materiale.TipoMateriale.LINK,
+                        "https://docs.oracle.com/en/java/javase/21/".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                // Aggiungiamo alcuni preferiti per lo studente Mario Rossi (index 0)
+                Studente studenteMario = studentiList.get(0);
+                if (studenteMario != null) {
+                    studenteMario.aggiungiPreferito(dispensa.getId());
+                    studenteMario.aggiungiPreferito(slide1.getId());
+                    studenteMario.aggiungiPreferito(traccia.getId());
+                    studenteMario.aggiungiPreferito(cartellaSlide.getId());
+                }
+
+                // 2. BD01 - Basi di Dati (Prof. Mario Rossi)
+                Materia bd01 = gestoreMaterie.trovaMaterieByCodice("BD01");
+                matCtrl.inizializzaMateria(bd01);
+                it.project.materiale.Cartella cartellaSql = matCtrl.creaCartella(
+                        profMario, "BD01", null, "Script_SQL", "Script DDL e DML di esempio");
+
+                String scriptSql = "-- Schema Database UniCenter Esempio\n" +
+                        "CREATE TABLE Studente (\n" +
+                        "    matricola VARCHAR(10) PRIMARY KEY,\n" +
+                        "    nome VARCHAR(50) NOT NULL,\n" +
+                        "    cognome VARCHAR(50) NOT NULL,\n" +
+                        "    email VARCHAR(100) UNIQUE NOT NULL\n" +
+                        ");\n\n" +
+                        "INSERT INTO Studente VALUES ('MAT-00001', 'Mario', 'Rossi', 'mario.rossi@studenti.it');\n";
+
+                matCtrl.caricaMateriale(
+                        profMario, "BD01", cartellaSql.getId(), "schema_unicenter.txt",
+                        "DDL SQL per la creazione tabelle", it.project.materiale.TipoMateriale.TESTO,
+                        scriptSql.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                matCtrl.caricaMateriale(
+                        profMario, "BD01", null, "Guida_SQL_e_Algebra_Relazionale.pdf",
+                        "Dispensa riassuntiva di Basi di Dati", it.project.materiale.TipoMateriale.PDF, pdfValido);
+            }
+
+            // 3. SO01 - Sistemi Operativi (Prof. Giuseppe Verdi)
+            if (profVerdi != null) {
+                Materia so01 = gestoreMaterie.trovaMaterieByCodice("SO01");
+                matCtrl.inizializzaMateria(so01);
+
+                String appuntiThread = "=== APPUNTI SISTEMI OPERATIVI ===\n" +
+                        "Argomento: Concorrenza, Thread e Sincronizzazione\n\n" +
+                        "1. Mutua Esclusione (Mutex)\n" +
+                        "2. Semafori di Dijkstra (P, V)\n" +
+                        "3. Deadlock: Condizioni di Coffman e prevenzione.\n";
+
+                matCtrl.caricaMateriale(
+                        profVerdi, "SO01", null, "Appunti_Concorrenza_Thread.txt",
+                        "Note di studio su concorrenza e semafori", it.project.materiale.TipoMateriale.TESTO,
+                        appuntiThread.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+                matCtrl.caricaMateriale(
+                        profVerdi, "SO01", null, "Slide_Kernel_e_Memoria_Virtuale.pdf",
+                        "Slide su architettura del kernel e paginazione", it.project.materiale.TipoMateriale.SLIDE, pdfValido);
+
+                matCtrl.caricaMateriale(
+                        profVerdi, "SO01", null, "Video_Lezione_Processi.mp4",
+                        "Registrazione lezione su fork() e exec()", it.project.materiale.TipoMateriale.VIDEO,
+                        "https://streaming.unicenter.it/so01/lezione_03".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+
             System.out.println("[DB POPULATION] Popolamento completato con successo!");
             System.out.println("[DB POPULATION] Totale Materie: " + gestoreMaterie.getTutteLeMaterie().size());
             System.out.println("[DB POPULATION] Totale Corsi di Laurea: " + gestioneCorsi.getTuttiCorsi().size());
