@@ -100,13 +100,15 @@ public class Unicenter {
                 codiceFiscale);
         utenti.add(nuovoStudente);
 
-        // UC5 & UC9: Auto-popola il piano di studi con le materie obbligatorie del corso
+        // UC5 & UC9: Auto-popola il piano di studi con le materie obbligatorie del
+        // corso
         if (corsoTrovato != null && corsoTrovato.isFinalizzato()) {
             PianoDiStudi pianoDiStudi = nuovoStudente.getPianoDiStudi();
             for (Materia materia : corsoTrovato.getMaterie()) {
                 pianoDiStudi.aggiungiMateriaObbligatoria(materia.getCodiceMateria());
             }
-            // Observer: registra lo studente per ricevere notifiche su approvazione/rifiuto piano
+            // Observer: registra lo studente per ricevere notifiche su approvazione/rifiuto
+            // piano
             pianoDiStudi.aggiungiOsservatore(nuovoStudente);
         }
 
@@ -698,7 +700,8 @@ public class Unicenter {
     }
 
     /**
-     * Restituisce la mappa dei piani in attesa di approvazione (matricola -> PianoDiStudi).
+     * Restituisce la mappa dei piani in attesa di approvazione (matricola ->
+     * PianoDiStudi).
      */
     public java.util.Map<String, PianoDiStudi> getPianiInAttesaApprovazione() {
         return pianoStudiController.getPianiInAttesa();
@@ -725,7 +728,8 @@ public class Unicenter {
     }
 
     /**
-     * Restituisce le materie a scelta disponibili per lo studente attualmente loggato
+     * Restituisce le materie a scelta disponibili per lo studente attualmente
+     * loggato
      * (tutte le materie non appartenenti al manifesto del suo corso).
      */
     public List<Materia> getMaterieASceltaDisponibili() {
@@ -744,7 +748,8 @@ public class Unicenter {
     }
 
     /**
-     * Restituisce i codici delle materie a scelta già verbalizzate per lo studente corrente.
+     * Restituisce i codici delle materie a scelta già verbalizzate per lo studente
+     * corrente.
      */
     public List<String> getMaterieASceltaVerbalizzate() {
         if (this.currentUser == null || !(this.currentUser instanceof Studente)) {

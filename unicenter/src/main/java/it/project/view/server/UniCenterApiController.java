@@ -314,7 +314,22 @@ public class UniCenterApiController {
                 if (path.equals("/api/student/libretto")) {
                     Libretto libretto = studente.getLibretto();
                     PianoDiStudi piano = studente.getPianoDiStudi();
-                    List<String> tutteMateriePiano = (piano != null) ? piano.getIdMaterie() : Collections.emptyList();
+                    String statoPiano = (piano != null) ? piano.getNomeStato() : "N/D";
+                    boolean isRifiutato = "Rifiutato".equalsIgnoreCase(statoPiano);
+
+                    List<String> obbligatorie = (piano != null) ? new ArrayList<>(piano.getIdMaterieObbligatorie()) : new ArrayList<>();
+                    List<String> aScelta = (piano != null && !isRifiutato) ? new ArrayList<>(piano.getIdMaterieAScelta()) : new ArrayList<>();
+                    // Se rifiutato ma ci sono esami verbalizzati tra le materie a scelta, mostrali comunque
+                    if (piano != null && isRifiutato && libretto != null) {
+                        for (String cod : piano.getIdMaterieAScelta()) {
+                            if (libretto.isEsameSuperato(cod)) {
+                                aScelta.add(cod);
+                            }
+                        }
+                    }
+
+                    List<String> tutteMateriePiano = new ArrayList<>(obbligatorie);
+                    tutteMateriePiano.addAll(aScelta);
 
                     CorsoDiLaurea corso = unicenter.getGestioneCorsiLaureaController().trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
 
@@ -327,9 +342,6 @@ public class UniCenterApiController {
                     int esamiSuperati = (libretto != null) ? libretto.getNumeroEsamiSuperati() : 0;
                     int cfuAcquisiti = (libretto != null) ? libretto.getTotaleCfu() : 0;
                     double media = (libretto != null && esamiSuperati > 0) ? libretto.getMediaPonderata() : 0.0;
-
-                    List<String> obbligatorie = (piano != null) ? new ArrayList<>(piano.getIdMaterieObbligatorie()) : new ArrayList<>();
-                    List<String> aScelta = (piano != null) ? new ArrayList<>(piano.getIdMaterieAScelta()) : new ArrayList<>();
 
                     final CorsoDiLaurea finalCorso = corso;
                     obbligatorie.sort((c1, c2) -> {
@@ -380,7 +392,8 @@ public class UniCenterApiController {
                             "cfuTotali", cfuTotaliPiano,
                             "mediaPonderata", media,
                             "obbligatorie", obbList,
-                            "aScelta", sceltaList
+                            "aScelta", sceltaList,
+                            "statoPiano", statoPiano
                     ));
                 }
 

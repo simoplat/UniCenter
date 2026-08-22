@@ -955,7 +955,7 @@ async function renderStudentLibretto(container) {
     }).join('')}
 
     <div class="card-panel">
-      <div class="card-panel-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; margin-bottom: 1rem;">
+      <div class="card-panel-header" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span class="badge badge-purple" style="font-size: 0.9rem; font-weight: 700; padding: 0.35rem 0.85rem;">
             MATERIE A SCELTA
@@ -964,8 +964,30 @@ async function renderStudentLibretto(container) {
             Insegnamenti del Piano di Studi Individuale
           </span>
         </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Stato Piano di Studi:</span>
+          ${(() => {
+            const st = (d.statoPiano || '').toLowerCase();
+            if (st === 'approvato' || st === 'registrato') {
+              return '<span class="badge badge-success" style="font-size: 0.85rem; padding: 0.3rem 0.75rem; font-weight: 700;">Approvato</span>';
+            } else if (st === 'in attesa' || st === 'in_attesa') {
+              return '<span class="badge badge-warning" style="font-size: 0.85rem; padding: 0.3rem 0.75rem; font-weight: 700;">In attesa</span>';
+            } else if (st === 'rifiutato') {
+              return '<span class="badge badge-danger" style="font-size: 0.85rem; padding: 0.3rem 0.75rem; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">Rifiutato</span>';
+            } else {
+              return `<span class="badge badge-purple" style="font-size: 0.85rem; padding: 0.3rem 0.75rem; font-weight: 700;">${d.statoPiano || 'Non compilato'}</span>`;
+            }
+          })()}
+        </div>
       </div>
-      ${(d.aScelta || []).length === 0 ? '<p style="color: var(--text-muted); padding: 0.5rem 0;">Nessuna materia a scelta inserita nel piano di studi.</p>' : `
+      ${(d.statoPiano === 'Rifiutato' || (d.aScelta || []).length === 0) ? `
+        <div style="padding: 1rem 0; color: var(--text-muted); font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <p style="margin: 0; color: var(--text-secondary); font-weight: 500;">Nessuna materia a scelta selezionata, compilare il piano di studi per inserirle.</p>
+          <button class="btn btn-secondary" onclick="switchTab('piano-studi')" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+            Compila Piano di Studi
+          </button>
+        </div>
+      ` : `
         <div class="table-responsive">
           <table class="data-table">
             <thead>

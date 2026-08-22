@@ -242,19 +242,21 @@ public class PianoStudiController {
      */
     public boolean rifiutaPianoDiStudi(String matricolaStudente) {
         PianoDiStudi piano = pianiInAttesa.get(matricolaStudente);
+        Studente st = null;
+        if (unicenter != null) {
+            st = unicenter.trovaStudenteByMatricola(matricolaStudente);
+        }
         if (piano == null) {
-            if (unicenter != null) {
-                Studente st = unicenter.trovaStudenteByMatricola(matricolaStudente);
-                if (st != null && st.getPianoDiStudi() != null && "In Attesa".equalsIgnoreCase(st.getPianoDiStudi().getNomeStato())) {
-                    piano = st.getPianoDiStudi();
-                }
+            if (st != null && st.getPianoDiStudi() != null && "In Attesa".equalsIgnoreCase(st.getPianoDiStudi().getNomeStato())) {
+                piano = st.getPianoDiStudi();
             }
         }
         if (piano == null) {
             throw new IllegalArgumentException("Nessun piano in attesa trovato per la matricola: " + matricolaStudente);
         }
 
-        piano.rifiuta();
+        List<String> verbalizzate = (st != null) ? getMaterieASceltaVerbalizzate(st) : Collections.emptyList();
+        piano.rifiuta(verbalizzate);
         pianiInAttesa.remove(matricolaStudente);
         return true;
     }

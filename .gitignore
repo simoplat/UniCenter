@@ -23,6 +23,11 @@
 hs_err_pid*
 replay_pid*
 
+
 # Maven
 target/
 /unicenter/nbproject/
+unicenter/.mvn/
+unicenter/mvnw
+unicenter/mvnw.cmd
+

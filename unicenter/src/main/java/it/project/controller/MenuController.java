@@ -14,6 +14,7 @@ import it.project.EsameSostenuto;
 import it.project.Libretto;
 import it.project.Materia;
 import it.project.Notifica;
+import it.project.PianoDiStudi;
 import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
@@ -25,8 +26,10 @@ import it.project.view.UniCenterView;
 import it.project.view.server.UniCenterWebServer;
 
 /**
- * Controller per la gestione dei flussi e dell'avvio dell'interfaccia utente (Web Browser e Console).
- * Riprogettato con separazione delle responsabilità verso le componenti View e Server,
+ * Controller per la gestione dei flussi e dell'avvio dell'interfaccia utente
+ * (Web Browser e Console).
+ * Riprogettato con separazione delle responsabilità verso le componenti View e
+ * Server,
  * mantenendo inalterata la logica di business e tutti i controlli del dominio.
  */
 public class MenuController {
@@ -58,7 +61,8 @@ public class MenuController {
     public int leggiIntero(String prompt) {
         while (true) {
             System.out.print(prompt);
-            if (!scanner.hasNextLine()) return 0;
+            if (!scanner.hasNextLine())
+                return 0;
             String input = scanner.nextLine().trim();
             try {
                 return Integer.parseInt(input);
@@ -160,7 +164,8 @@ public class MenuController {
                     view.mostraMessaggio("Inserisci altro valore intero per uscire.");
 
                     if (leggiIntero("Seleziona un'opzione: ") == 1) {
-                        String codiceAppello = leggiStringa("Inserisci il codice dell'appello da cui vuoi eliminare la prenotazione: ");
+                        String codiceAppello = leggiStringa(
+                                "Inserisci il codice dell'appello da cui vuoi eliminare la prenotazione: ");
                         try {
                             if (unicenter.disiscriviStudenteDaAppello(codiceAppello)) {
                                 view.mostraMessaggio("Prenotazione eliminata con successo.");
@@ -189,7 +194,8 @@ public class MenuController {
                     view.mostraMessaggio("\n--- Gestione Esiti Esami ---");
                     int rifiutatiAuto = unicenter.verificaScadenzeVoti();
                     if (rifiutatiAuto > 0) {
-                        view.mostraMessaggio("[SISTEMA] " + rifiutatiAuto + " esito/i rifiutato/i automaticamente per scadenza.");
+                        view.mostraMessaggio(
+                                "[SISTEMA] " + rifiutatiAuto + " esito/i rifiutato/i automaticamente per scadenza.");
                     }
 
                     List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiStudente();
@@ -206,8 +212,10 @@ public class MenuController {
                     view.mostraMessaggio("Esiti in attesa di conferma:");
                     stampaEsiti(esitiPendenti);
 
-                    String idVerbale = leggiStringa("Inserisci l'ID del verbale per cui vuoi esprimere la scelta (0 per uscire): ");
-                    if ("0".equals(idVerbale)) break;
+                    String idVerbale = leggiStringa(
+                            "Inserisci l'ID del verbale per cui vuoi esprimere la scelta (0 per uscire): ");
+                    if ("0".equals(idVerbale))
+                        break;
 
                     boolean esameValido = false;
                     for (EsameSostenuto e : esitiPendenti) {
@@ -260,18 +268,22 @@ public class MenuController {
                     boolean pagate = unicenter.isTassePagateStudente();
 
                     view.mostraMessaggio("Importo totale tasse: " + String.format("%.2f €", importoTasse));
-                    view.mostraMessaggio("Stato pagamento: " + (pagate ? "REGOLARE (Saldate)" : "IN SOSPESO (Non saldate)"));
+                    view.mostraMessaggio(
+                            "Stato pagamento: " + (pagate ? "REGOLARE (Saldate)" : "IN SOSPESO (Non saldate)"));
 
                     if (pagate) {
                         view.mostraMessaggio("Le tasse universitarie risultano regolarmente saldate.");
                     } else {
-                        view.mostraMessaggio("\n1. Simula pagamento delle tasse (" + String.format("%.2f €", importoTasse) + ")");
+                        view.mostraMessaggio(
+                                "\n1. Simula pagamento delle tasse (" + String.format("%.2f €", importoTasse) + ")");
                         view.mostraMessaggio("0. Torna indietro");
                         int sceltaPaga = leggiIntero("Seleziona un'opzione: ");
                         if (sceltaPaga == 1) {
                             if (unicenter.pagaTasseStudente()) {
-                                view.mostraMessaggio("Pagamento di " + String.format("%.2f €", importoTasse) + " completato con successo!");
-                                view.mostraMessaggio("Le tasse risultano ora SALDATE. Puoi procedere con l'iscrizione agli appelli.");
+                                view.mostraMessaggio("Pagamento di " + String.format("%.2f €", importoTasse)
+                                        + " completato con successo!");
+                                view.mostraMessaggio(
+                                        "Le tasse risultano ora SALDATE. Puoi procedere con l'iscrizione agli appelli.");
                             } else {
                                 view.mostraErrore("Errore durante il pagamento delle tasse.");
                             }
@@ -317,36 +329,43 @@ public class MenuController {
                         break;
                     }
                     stampaMaterie(materieDelProfessore);
-                    String codiceMateria = leggiStringa("Inserisci il codice della materia per la quale vuoi creare l'appello: ");
+                    String codiceMateria = leggiStringa(
+                            "Inserisci il codice della materia per la quale vuoi creare l'appello: ");
                     if (!unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
                         view.mostraMessaggio("Il codice inserito non è valido. Riprova.");
                         break;
                     }
 
-                    String dataOraStr = leggiStringa("Inserisci la data e ora dell'appello (formato: dd/MM/yyyy HH:mm): ");
+                    String dataOraStr = leggiStringa(
+                            "Inserisci la data e ora dell'appello (formato: dd/MM/yyyy HH:mm): ");
                     LocalDateTime dataOra;
                     try {
                         dataOra = LocalDateTime.parse(dataOraStr, formatterInput);
                     } catch (DateTimeParseException e) {
-                        view.mostraErrore("Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
+                        view.mostraErrore(
+                                "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
                         break;
                     }
 
                     String aula = leggiStringa("Inserisci l'aula dell'appello: ");
                     int posti = leggiIntero("Inserisci il numero di posti disponibili: ");
-                    String vincoloCognome = leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
+                    String vincoloCognome = leggiStringa(
+                            "Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
 
-                    String termineIscrizione = leggiStringa("Inserisci la data di termine iscrizione (formato: dd/MM/yyyy): ");
+                    String termineIscrizione = leggiStringa(
+                            "Inserisci la data di termine iscrizione (formato: dd/MM/yyyy): ");
                     LocalDate dataTermineIscrizione;
                     try {
                         dataTermineIscrizione = LocalDate.parse(termineIscrizione, formatterInputData);
                     } catch (DateTimeParseException e) {
-                        view.mostraErrore("Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
+                        view.mostraErrore(
+                                "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
                         break;
                     }
 
                     try {
-                        unicenter.creaNuovoAppello(codiceMateria, dataOra, aula, posti, vincoloCognome, dataTermineIscrizione);
+                        unicenter.creaNuovoAppello(codiceMateria, dataOra, aula, posti, vincoloCognome,
+                                dataTermineIscrizione);
                         view.mostraMessaggio("Appello creato con successo!");
                     } catch (DataNonValidaException | PostiNonValidi e) {
                         view.mostraErrore(e.getMessage());
@@ -395,8 +414,10 @@ public class MenuController {
                     }
                     StampaAppelli(appelliProfessore);
 
-                    String idApp = leggiStringa("Seleziona il codice dell'appello da modificare (inserisci 0 per annullare): ");
-                    if ("0".equals(idApp)) break;
+                    String idApp = leggiStringa(
+                            "Seleziona il codice dell'appello da modificare (inserisci 0 per annullare): ");
+                    if ("0".equals(idApp))
+                        break;
 
                     Appello appelloTrovato = null;
                     for (Appello a : appelliProfessore) {
@@ -411,30 +432,36 @@ public class MenuController {
                         break;
                     }
 
-                    String nuovaDataOraStr = leggiStringa("Inserisci la data e ora dell'appello (formato: dd/MM/yyyy HH:mm): ");
+                    String nuovaDataOraStr = leggiStringa(
+                            "Inserisci la data e ora dell'appello (formato: dd/MM/yyyy HH:mm): ");
                     LocalDateTime nuovaDataOra;
                     try {
                         nuovaDataOra = LocalDateTime.parse(nuovaDataOraStr, formatterInput);
                     } catch (DateTimeParseException e) {
-                        view.mostraErrore("Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
+                        view.mostraErrore(
+                                "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy HH:mm (es. 10/06/2026 09:30).");
                         break;
                     }
 
                     String nuovaAula = leggiStringa("Inserisci aula dell'appello: ");
                     int nuoviPosti = leggiIntero("Inserisci posti disponibili: ");
-                    String nuovoVincolo = leggiStringa("Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
+                    String nuovoVincolo = leggiStringa(
+                            "Inserisci eventuale vincolo sul cognome (lascia vuoto se non necessario): ");
 
-                    String nuovoTermineIscrizioneStr = leggiStringa("Inserisci la nuova data di termine iscrizione (formato: dd/MM/yyyy): ");
+                    String nuovoTermineIscrizioneStr = leggiStringa(
+                            "Inserisci la nuova data di termine iscrizione (formato: dd/MM/yyyy): ");
                     LocalDate nuovoTermineIscrizione;
                     try {
                         nuovoTermineIscrizione = LocalDate.parse(nuovoTermineIscrizioneStr, formatterInputData);
                     } catch (DateTimeParseException e) {
-                        view.mostraErrore("Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
+                        view.mostraErrore(
+                                "Formato data non valido! Assicurati di usare il formato dd/MM/yyyy (es. 10/06/2026).");
                         break;
                     }
 
                     try {
-                        if (unicenter.modificaAppello(appelloTrovato.getCodiceAppello(), nuovaDataOra, nuovaAula, nuoviPosti, nuovoVincolo, nuovoTermineIscrizione)) {
+                        if (unicenter.modificaAppello(appelloTrovato.getCodiceAppello(), nuovaDataOra, nuovaAula,
+                                nuoviPosti, nuovoVincolo, nuovoTermineIscrizione)) {
                             view.mostraMessaggio("Appello modificato con successo.");
                         }
                     } catch (Exception e) {
@@ -451,8 +478,10 @@ public class MenuController {
                     }
                     StampaAppelli(appelliProfessore);
 
-                    String idApp = leggiStringa("Seleziona il codice dell'appello da eliminare (inserisci 0 per annullare): ");
-                    if ("0".equals(idApp)) break;
+                    String idApp = leggiStringa(
+                            "Seleziona il codice dell'appello da eliminare (inserisci 0 per annullare): ");
+                    if ("0".equals(idApp))
+                        break;
 
                     Appello appelloTrovato = null;
                     for (Appello a : appelliProfessore) {
@@ -530,7 +559,8 @@ public class MenuController {
                     }
 
                     if (iscritti.isEmpty()) {
-                        view.mostraMessaggio("Tutti gli studenti iscritti hanno già un esito pendente per questa materia.");
+                        view.mostraMessaggio(
+                                "Tutti gli studenti iscritti hanno già un esito pendente per questa materia.");
                         break;
                     }
                     view.mostraMessaggio("\nStudenti iscritti (senza esito pendente):");
@@ -557,14 +587,16 @@ public class MenuController {
                     }
 
                     try {
-                        EsameSostenuto esito = unicenter.pubblicaEsitoEsame(codAppello, matricola, codiceMateriaAppello, voto, lode, 7);
+                        EsameSostenuto esito = unicenter.pubblicaEsitoEsame(codAppello, matricola, codiceMateriaAppello,
+                                voto, lode, 7);
                         view.mostraMessaggio("Esito pubblicato con successo!");
                         view.mostraMessaggio("ID Verbale: " + esito.getIdVerbale());
                         view.mostraMessaggio("Stato: " + esito.getNomeStato());
                         if (esito.getNomeStato().equals("Bocciato")) {
                             view.mostraMessaggio("(Voto insufficiente - Regola di Dominio 4)");
                         } else {
-                            view.mostraMessaggio("Scadenza conferma: " + esito.getScadenzaConferma().format(formatterStampa));
+                            view.mostraMessaggio(
+                                    "Scadenza conferma: " + esito.getScadenzaConferma().format(formatterStampa));
                         }
                     } catch (Exception e) {
                         view.mostraErrore(e.getMessage());
@@ -590,8 +622,10 @@ public class MenuController {
                     }
                     stampaMaterie(materieProf);
 
-                    String codMateria = leggiStringa("Inserisci il codice della materia per l'avviso (0 per annullare): ");
-                    if ("0".equals(codMateria)) break;
+                    String codMateria = leggiStringa(
+                            "Inserisci il codice della materia per l'avviso (0 per annullare): ");
+                    if ("0".equals(codMateria))
+                        break;
 
                     if (!unicenter.isProfessoreAbilitatoAMateria(codMateria)) {
                         view.mostraErrore("Non sei abilitato a gestire questa materia.");
@@ -599,14 +633,16 @@ public class MenuController {
                     }
 
                     List<Studente> destinatari = unicenter.getStudentiDestinatariComunicazione(codMateria);
-                    view.mostraMessaggio("Studenti attualmente iscritti alla materia (destinatari): " + destinatari.size());
+                    view.mostraMessaggio(
+                            "Studenti attualmente iscritti alla materia (destinatari): " + destinatari.size());
 
                     String titolo = leggiStringa("Inserisci il titolo/oggetto dell'avviso: ");
                     String messaggio = leggiStringa("Inserisci il testo della comunicazione: ");
 
                     try {
                         int notificati = unicenter.inviaComunicazioneMateria(codMateria, titolo, messaggio);
-                        view.mostraMessaggio("\n[SUCCESSO] Comunicazione pubblicata e inviata a " + notificati + " studente/i.");
+                        view.mostraMessaggio(
+                                "\n[SUCCESSO] Comunicazione pubblicata e inviata a " + notificati + " studente/i.");
                     } catch (Exception e) {
                         view.mostraErrore("Errore durante l'invio della comunicazione: " + e.getMessage());
                     }
@@ -801,7 +837,8 @@ public class MenuController {
 
         try {
             if (unicenter.validaDataImmatricolazione()) {
-                view.mostraMessaggio("Finestra temporale per l'immatricolazione aperta. Procedi con l'immatricolazione.");
+                view.mostraMessaggio(
+                        "Finestra temporale per l'immatricolazione aperta. Procedi con l'immatricolazione.");
                 List<CorsoDiLaurea> corsi = unicenter.getCorsiDiLaureaAttivi();
                 if (corsi == null || corsi.isEmpty()) {
                     view.mostraMessaggio("Nessun corso di laurea attivo disponibile al momento.");
@@ -825,7 +862,8 @@ public class MenuController {
             unicenter.trovaCorsoDiLaureaByNome(corsoDiLaurea);
             String codiceFiscale = leggiStringa("Inserisci il tuo codice fiscale : ");
 
-            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea, codiceFiscale);
+            Studente nuovoStudente = unicenter.immatricolaStudente(nome, cognome, email, password, corsoDiLaurea,
+                    codiceFiscale);
 
             view.mostraMessaggio("\nIMMATRICOLAZIONE AVVENUTA CON SUCCESSO!");
             view.mostraMessaggio("La tua matrricola è: " + nuovoStudente.getMatricola());
@@ -887,7 +925,8 @@ public class MenuController {
 
     private void gestisciCompilazionePianoStudi() {
         view.mostraMessaggio("\n--- Compilazione Piano di Studi (UC9) ---");
-        Studente studente = (unicenter.getCurrentUser() instanceof Studente) ? (Studente) unicenter.getCurrentUser() : null;
+        Studente studente = (unicenter.getCurrentUser() instanceof Studente) ? (Studente) unicenter.getCurrentUser()
+                : null;
         if (studente == null) {
             view.mostraErrore("Nessuno studente autenticato.");
             return;
@@ -907,18 +946,22 @@ public class MenuController {
         }
 
         stampaMaterie(disponibili);
-        String sceltiStr = leggiStringa("Inserisci i codici delle materie a scelta separati da virgola (minimo 12 CFU): ");
-        if (sceltiStr.trim().isEmpty() || "0".equals(sceltiStr.trim())) return;
+        String sceltiStr = leggiStringa(
+                "Inserisci i codici delle materie a scelta separati da virgola (minimo 12 CFU): ");
+        if (sceltiStr.trim().isEmpty() || "0".equals(sceltiStr.trim()))
+            return;
 
         List<String> codici = new java.util.ArrayList<>();
         for (String s : sceltiStr.split(",")) {
-            if (!s.trim().isEmpty()) codici.add(s.trim());
+            if (!s.trim().isEmpty())
+                codici.add(s.trim());
         }
 
         try {
             boolean ok = unicenter.compilaPianoDiStudi(codici);
             if (ok) {
-                view.mostraMessaggio("Piano di studi inviato con successo! Stato attuale: " + studente.getPianoDiStudi().getNomeStato());
+                view.mostraMessaggio("Piano di studi inviato con successo! Stato attuale: "
+                        + studente.getPianoDiStudi().getNomeStato());
             }
         } catch (Exception e) {
             view.mostraErrore(e.getMessage());
@@ -930,7 +973,8 @@ public class MenuController {
         List<CorsoDiLaurea> corsi = unicenter.getCorsiDiLaurea();
         stampaCorsiDiLaurea(corsi);
         String codCorso = leggiStringa("Inserisci il codice del corso (0 per annullare): ");
-        if ("0".equals(codCorso)) return;
+        if ("0".equals(codCorso))
+            return;
 
         List<Materia> pre = unicenter.getMateriePreApprovateByCorso(codCorso);
         view.mostraMessaggio("Materie attualmente pre-approvate (" + pre.size() + "):");
@@ -979,11 +1023,13 @@ public class MenuController {
 
         view.mostraMessaggio("Piani in attesa di approvazione (" + pianiInAttesa.size() + "):");
         for (java.util.Map.Entry<String, it.project.PianoDiStudi> entry : pianiInAttesa.entrySet()) {
-            view.mostraMessaggio("Matricola: " + entry.getKey() + " - Materie a scelta: " + entry.getValue().getIdMaterieAScelta());
+            view.mostraMessaggio(
+                    "Matricola: " + entry.getKey() + " - Materie a scelta: " + entry.getValue().getIdMaterieAScelta());
         }
 
         String matricola = leggiStringa("Inserisci matricola da valutare (0 per annullare): ");
-        if ("0".equals(matricola)) return;
+        if ("0".equals(matricola))
+            return;
 
         view.mostraMessaggio("1. APPROVA piano");
         view.mostraMessaggio("2. RIFIUTA piano");
@@ -1002,17 +1048,40 @@ public class MenuController {
     }
 
     private void visualizzaLibrettoStudente() {
-        Studente studente = (unicenter.getCurrentUser() instanceof Studente) ? (Studente) unicenter.getCurrentUser() : null;
+        Studente studente = (unicenter.getCurrentUser() instanceof Studente) ? (Studente) unicenter.getCurrentUser()
+                : null;
         if (studente == null) {
             view.mostraErrore("Nessuno studente autenticato.");
             return;
         }
         Libretto libretto = studente.getLibretto();
+        PianoDiStudi piano = studente.getPianoDiStudi();
         view.mostraMessaggio("\n--- Libretto Universitario ---");
         view.mostraMessaggio("Totale CFU: " + (libretto != null ? libretto.getTotaleCfu() : 0));
         view.mostraMessaggio("Esami superati: " + (libretto != null ? libretto.getNumeroEsamiSuperati() : 0));
         if (libretto != null && libretto.getNumeroEsamiSuperati() > 0) {
             view.mostraMessaggio(String.format("Media ponderata: %.2f/30", libretto.getMediaPonderata()));
+        }
+
+        if (piano != null) {
+            String stato = piano.getNomeStato();
+            String statoDisplay = ("Registrato".equalsIgnoreCase(stato) || "Approvato".equalsIgnoreCase(stato))
+                    ? "Approvato"
+                    : stato;
+            view.mostraMessaggio("\n--- Materie a Scelta (Stato Piano: " + statoDisplay + ") ---");
+            if ("Rifiutato".equalsIgnoreCase(stato) || piano.getIdMaterieAScelta().isEmpty()) {
+                view.mostraMessaggio(
+                        "Nessuna materia a scelta selezionata, compilare il piano di studi per inserirle.");
+            } else {
+                for (String cod : piano.getIdMaterieAScelta()) {
+                    Materia m = unicenter.getGestoreMaterie().trovaMaterieByCodice(cod);
+                    String nome = m != null ? m.getNome() : cod;
+                    int cfu = m != null ? m.getCfu() : 0;
+                    boolean superato = libretto != null && libretto.isEsameSuperato(cod);
+                    view.mostraMessaggio("- [" + cod + "] " + nome + " (" + cfu + " CFU) - "
+                            + (superato ? "SUPERATO" : "DA SOSTENERE"));
+                }
+            }
         }
     }
 }

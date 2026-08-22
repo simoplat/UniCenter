@@ -62,9 +62,29 @@ public class PianoDiStudi {
 
     /**
      * Rifiuto da parte dell'amministratore e notifica osservatori.
+     * Rimuove le materie a scelta rifiutate.
      */
     public void rifiuta() {
+        rifiuta(Collections.emptyList());
+    }
+
+    /**
+     * Rifiuto da parte dell'amministratore con mantenimento delle sole materie verbalizzate.
+     *
+     * @param codiciMaterieVerbalizzate lista delle materie a scelta già superate e registrate
+     */
+    public void rifiuta(List<String> codiciMaterieVerbalizzate) {
         stato.rifiuta(this);
+        List<String> materieBloccate = new ArrayList<>();
+        if (codiciMaterieVerbalizzate != null) {
+            for (String codice : idMaterieAScelta) {
+                if (codiciMaterieVerbalizzate.contains(codice)) {
+                    materieBloccate.add(codice);
+                }
+            }
+        }
+        idMaterieAScelta.clear();
+        idMaterieAScelta.addAll(materieBloccate);
         notificaOsservatori("Rifiutato");
     }
 

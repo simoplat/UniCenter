@@ -15,7 +15,8 @@ import it.project.state.InAttesaConfermaState;
  * Applica lo State Pattern per gestire il ciclo di vita del voto
  * e l'Observer Pattern per notificare gli attori al cambio di stato.
  *
- * Regola di Dominio 4: se il voto è inferiore a 18, lo stato iniziale è BocciatoState.
+ * Regola di Dominio 4: se il voto è inferiore a 18, lo stato iniziale è
+ * BocciatoState.
  */
 public class EsameSostenuto {
 
@@ -38,19 +39,21 @@ public class EsameSostenuto {
      * Costruttore principale.
      * Applica automaticamente la Regola di Dominio 4: voto < 18 → BocciatoState.
      *
-     * @param idVerbale identificativo univoco del verbale dell'esame sostenuto
-     * @param codiceAppello codice dell'appello d'esame
+     * @param idVerbale         identificativo univoco del verbale dell'esame
+     *                          sostenuto
+     * @param codiceAppello     codice dell'appello d'esame
      * @param matricolaStudente matricola dello studente
-     * @param codiceMateria codice della materia
-     * @param idProfessore identificativo del professore che ha pubblicato l'esito
-     * @param votoNumerico voto numerico (0-30, dove 0 può indicare assente)
-     * @param lode true se il voto è 30 e lode
-     * @param cfu crediti formativi della materia
-     * @param giorniScadenza giorni di scadenza per la conferma (Estensione A)
+     * @param codiceMateria     codice della materia
+     * @param idProfessore      identificativo del professore che ha pubblicato
+     *                          l'esito
+     * @param votoNumerico      voto numerico (0-30, dove 0 può indicare assente)
+     * @param lode              true se il voto è 30 e lode
+     * @param cfu               crediti formativi della materia
+     * @param giorniScadenza    giorni di scadenza per la conferma (Estensione A)
      */
     public EsameSostenuto(String idVerbale, String codiceAppello, String matricolaStudente,
-                          String codiceMateria, String idProfessore,
-                          int votoNumerico, boolean lode, int cfu, int giorniScadenza) {
+            String codiceMateria, String idProfessore,
+            int votoNumerico, boolean lode, int cfu, int giorniScadenza) {
         this.idVerbale = idVerbale;
         this.codiceAppello = codiceAppello;
         this.matricolaStudente = matricolaStudente;
@@ -76,7 +79,8 @@ public class EsameSostenuto {
     // =========================================================================
 
     /**
-     * Lo studente accetta il voto. Delega allo stato corrente e notifica gli osservatori.
+     * Lo studente accetta il voto. Delega allo stato corrente e notifica gli
+     * osservatori.
      */
     public void accetta() {
         stato.accetta(this);
@@ -84,7 +88,8 @@ public class EsameSostenuto {
     }
 
     /**
-     * Lo studente rifiuta il voto. Delega allo stato corrente e notifica gli osservatori.
+     * Lo studente rifiuta il voto. Delega allo stato corrente e notifica gli
+     * osservatori.
      */
     public void rifiuta() {
         stato.rifiuta(this);
@@ -99,7 +104,9 @@ public class EsameSostenuto {
     }
 
     /**
-     * Verifica se la scadenza per la conferma è passata (Estensione A - Silenzio Rifiuto).
+     * Verifica se la scadenza per la conferma è passata (Estensione A - Silenzio
+     * Rifiuto).
+     * 
      * @return true se la scadenza è superata e l'esame è ancora in attesa
      */
     public boolean isScaduto() {

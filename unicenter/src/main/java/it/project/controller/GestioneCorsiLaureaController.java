@@ -75,7 +75,8 @@ public class GestioneCorsiLaureaController {
         if (nuovoNome != null && !nuovoNome.trim().isEmpty()) {
             // Verifica che il nuovo nome non sia già usato da un altro corso
             boolean nomeGiaUsato = corsiDiLaurea.stream()
-                    .anyMatch(c -> c.getNome().equalsIgnoreCase(nuovoNome.trim()) && !c.getId().equalsIgnoreCase(codice));
+                    .anyMatch(
+                            c -> c.getNome().equalsIgnoreCase(nuovoNome.trim()) && !c.getId().equalsIgnoreCase(codice));
             if (nomeGiaUsato) {
                 throw new IllegalArgumentException(
                         "Esiste già un altro corso con il nome '" + nuovoNome + "'.");
