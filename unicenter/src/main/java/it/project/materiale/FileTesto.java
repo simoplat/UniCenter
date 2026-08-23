@@ -13,12 +13,36 @@ import it.project.materiale.repository.MaterialeDidatticoRepository;
  */
 public class FileTesto extends MaterialeDidattico {
 
+    /**
+     * Costruttore per un nuovo file di testo.
+     *
+     * @param nome              nome del file
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dimensioneBytes   dimensione in byte
+     * @param ownerProfessoreId ID professore proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     */
     public FileTesto(String nome, String descrizione, String pathRelativo,
                      long dimensioneBytes, String ownerProfessoreId,
                      String codiceMateria, MaterialeDidatticoRepository repository) {
         super(nome, descrizione, pathRelativo, dimensioneBytes, ownerProfessoreId, codiceMateria, TipoMateriale.TESTO, repository);
     }
 
+    /**
+     * Costruttore completo con ID e timestamp per file di testo.
+     *
+     * @param id                ID univoco
+     * @param nome              nome file
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dataCreazione     data di creazione
+     * @param dimensioneBytes   dimensione in byte
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     */
     public FileTesto(String id, String nome, String descrizione, String pathRelativo,
                      LocalDateTime dataCreazione, long dimensioneBytes,
                      String ownerProfessoreId, String codiceMateria,

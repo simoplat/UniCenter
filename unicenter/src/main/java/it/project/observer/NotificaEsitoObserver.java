@@ -16,6 +16,12 @@ public class NotificaEsitoObserver implements ObserverEsitoVoto {
     private final Studente studente;
     private final Professore professore;
 
+    /**
+     * Costruttore dell'observer notifiche esito.
+     *
+     * @param studente   studente interessato dall'esito
+     * @param professore professore titolare dell'insegnamento
+     */
     public NotificaEsitoObserver(Studente studente, Professore professore) {
         this.studente = studente;
         this.professore = professore;

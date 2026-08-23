@@ -3,6 +3,9 @@ package it.project.validation;
 import it.project.Appello;
 import it.project.Studente;
 
+/**
+ * Validatore Chain of Responsibility: verifica che lo studente sia in regola con il pagamento delle tasse universitarie.
+ */
 public class TassaPaidValidator extends AbstractIscrizioneValidator {
     @Override
     public boolean validate(Studente studente, Appello appello) throws Exception {

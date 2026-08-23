@@ -26,16 +26,34 @@ public class MaterialeDidatticoController {
     private final GestoreMaterieController gestoreMaterie;
     private final MaterialeDidatticoRepository repository;
 
+    /**
+     * Costruttore con repository di default (FileSystem).
+     *
+     * @param unicenter      riferimento al sistema UniCenter
+     * @param gestoreMaterie controller per la gestione delle materie
+     */
     public MaterialeDidatticoController(Unicenter unicenter, GestoreMaterieController gestoreMaterie) {
         this(unicenter, gestoreMaterie, new FileSystemMaterialeDidatticoRepository());
     }
 
+    /**
+     * Costruttore completo con repository custom (utile per test in-memory).
+     *
+     * @param unicenter      riferimento al sistema UniCenter
+     * @param gestoreMaterie controller per la gestione delle materie
+     * @param repository     repository per il salvataggio dei file
+     */
     public MaterialeDidatticoController(Unicenter unicenter, GestoreMaterieController gestoreMaterie, MaterialeDidatticoRepository repository) {
         this.unicenter = unicenter;
         this.gestoreMaterie = gestoreMaterie;
         this.repository = repository;
     }
 
+    /**
+     * Restituisce il repository utilizzato per il materiale didattico.
+     *
+     * @return MaterialeDidatticoRepository
+     */
     public MaterialeDidatticoRepository getRepository() {
         return repository;
     }
@@ -46,6 +64,9 @@ public class MaterialeDidatticoController {
 
     /**
      * Inizializza la gerarchia fisica e logica della materia e delle cartelle dei professori associati.
+     *
+     * @param materia materia da inizializzare
+     * @return Cartella radice della materia
      */
     public Cartella inizializzaMateria(Materia materia) {
         if (materia == null) return null;
@@ -69,6 +90,13 @@ public class MaterialeDidatticoController {
 
     /**
      * Crea una nuova cartella all'interno della cartella del professore o di una sua sottocartella.
+     *
+     * @param professore         docente autenticato
+     * @param codiceMateria      codice della materia
+     * @param idCartellaGenitore id cartella genitore o null per la radice del docente
+     * @param nomeCartella       nome della nuova cartella
+     * @param descrizione        descrizione
+     * @return nuova Cartella creata
      */
     public Cartella creaCartella(Professore professore, String codiceMateria, String idCartellaGenitore,
                                  String nomeCartella, String descrizione) {
@@ -115,6 +143,15 @@ public class MaterialeDidatticoController {
 
     /**
      * Carica un nuovo materiale didattico (file, slide, dispensa, link, video) all'interno di una cartella del professore.
+     *
+     * @param professore         docente autenticato
+     * @param codiceMateria      codice della materia
+     * @param idCartellaGenitore id cartella genitore
+     * @param nomeFile           nome del file o risorsa
+     * @param descrizione        descrizione
+     * @param tipo               tipologia del materiale
+     * @param contenuto          byte del file o null per link
+     * @return MaterialeDidattico creato
      */
     public MaterialeDidattico caricaMateriale(Professore professore, String codiceMateria, String idCartellaGenitore,
                                               String nomeFile, String descrizione, TipoMateriale tipo,
@@ -176,6 +213,11 @@ public class MaterialeDidatticoController {
 
     /**
      * Elimina una risorsa didattica o una cartella.
+     *
+     * @param professore    docente autenticato
+     * @param codiceMateria codice materia
+     * @param idElemento    id dell'elemento da eliminare
+     * @return true se eliminato con successo
      */
     public boolean eliminaElemento(Professore professore, String codiceMateria, String idElemento) {
         validaProfessoreAbilitato(professore, codiceMateria);
@@ -216,6 +258,9 @@ public class MaterialeDidatticoController {
 
     /**
      * Restituisce l'albero completo dei materiali per una data materia.
+     *
+     * @param codiceMateria codice materia
+     * @return Cartella radice della materia
      */
     public Cartella getAlberoMateria(String codiceMateria) {
         Materia materia = gestoreMaterie.trovaMaterieByCodice(codiceMateria);
@@ -228,6 +273,9 @@ public class MaterialeDidatticoController {
 
     /**
      * Cerca un elemento in tutte le materie del sistema dato il suo ID.
+     *
+     * @param idElemento id univoco elemento
+     * @return ElementoDidattico trovato o null
      */
     public ElementoDidattico trovaElementoById(String idElemento) {
         if (idElemento == null) return null;
@@ -243,6 +291,9 @@ public class MaterialeDidatticoController {
 
     /**
      * Polymorphism: Consulta l'anteprima polimorfica di una risorsa.
+     *
+     * @param idElemento id elemento
+     * @return AnteprimaRisultato
      */
     public AnteprimaRisultato consultaMateriale(String idElemento) {
         ElementoDidattico elemento = trovaElementoById(idElemento);
@@ -254,6 +305,9 @@ public class MaterialeDidatticoController {
 
     /**
      * Polymorphism: Scarica i byte della risorsa.
+     *
+     * @param idElemento id elemento
+     * @return DownloadResponse con file e byte
      */
     public DownloadResponse scaricaMateriale(String idElemento) {
         ElementoDidattico elemento = trovaElementoById(idElemento);
@@ -278,6 +332,10 @@ public class MaterialeDidatticoController {
 
     /**
      * Attiva/Disattiva lo stato di preferito di un elemento per lo studente.
+     *
+     * @param studente   studente
+     * @param idElemento id elemento
+     * @return true se aggiunto ai preferiti, false se rimosso
      */
     public boolean togglePreferito(Studente studente, String idElemento) {
         if (studente == null) {
@@ -292,6 +350,9 @@ public class MaterialeDidatticoController {
 
     /**
      * Restituisce la lista di tutti gli elementi preferiti salvati dallo studente.
+     *
+     * @param studente studente
+     * @return lista elementi preferiti
      */
     public List<ElementoDidattico> getPreferitiStudente(Studente studente) {
         if (studente == null) return Collections.emptyList();
@@ -331,19 +392,46 @@ public class MaterialeDidatticoController {
     // DTO PER DOWNLOAD
     // =========================================================================
 
+    /**
+     * Oggetto di trasferimento dati (DTO) che incapsula la risposta a una richiesta di download.
+     */
     public static class DownloadResponse {
         private final String nomeFile;
         private final String mimeType;
         private final byte[] bytes;
 
+        /**
+         * Costruttore della risposta di download.
+         *
+         * @param nomeFile nome del file
+         * @param mimeType tipo MIME
+         * @param bytes    contenuto binario
+         */
         public DownloadResponse(String nomeFile, String mimeType, byte[] bytes) {
             this.nomeFile = nomeFile;
             this.mimeType = mimeType;
             this.bytes = bytes != null ? bytes : new byte[0];
         }
 
+        /**
+         * Restituisce il nome del file.
+         *
+         * @return nome file
+         */
         public String getNomeFile() { return nomeFile; }
+
+        /**
+         * Restituisce il tipo MIME del contenuto.
+         *
+         * @return mimeType
+         */
         public String getMimeType() { return mimeType; }
+
+        /**
+         * Restituisce i byte del file.
+         *
+         * @return array di byte
+         */
         public byte[] getBytes() { return bytes; }
     }
 }

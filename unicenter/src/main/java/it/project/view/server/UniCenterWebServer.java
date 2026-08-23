@@ -28,6 +28,11 @@ public class UniCenterWebServer {
     private int port = 8080;
     private Path webRoot;
 
+    /**
+     * Costruttore del web server integrato.
+     *
+     * @param unicenter istanza centrale del sistema UniCenter
+     */
     public UniCenterWebServer(Unicenter unicenter) {
         this.unicenter = unicenter;
         this.apiController = new UniCenterApiController(unicenter);
@@ -53,6 +58,12 @@ public class UniCenterWebServer {
         this.webRoot = Paths.get("src/web").toAbsolutePath().normalize();
     }
 
+    /**
+     * Avvia il server HTTP sulla porta preferita o sulla prima successiva disponibile.
+     *
+     * @param preferredPort porta desiderata (es. 8080)
+     * @return true se avviato con successo
+     */
     public synchronized boolean start(int preferredPort) {
         if (server != null) {
             return true; // Già avviato
@@ -83,6 +94,9 @@ public class UniCenterWebServer {
         return true;
     }
 
+    /**
+     * Arresta il server HTTP.
+     */
     public synchronized void stop() {
         if (server != null) {
             server.stop(1);
@@ -90,14 +104,27 @@ public class UniCenterWebServer {
         }
     }
 
+    /**
+     * Restituisce la porta effettiva su cui il server è in ascolto.
+     *
+     * @return porta TCP
+     */
     public int getPort() {
         return port;
     }
 
+    /**
+     * Restituisce l'URL di base dell'applicazione.
+     *
+     * @return URL base (es. http://localhost:8080)
+     */
     public String getBaseUrl() {
         return "http://localhost:" + port;
     }
 
+    /**
+     * Tenta di aprire automaticamente l'applicazione web nel browser predefinito del sistema operativo.
+     */
     public void openBrowser() {
         String url = getBaseUrl();
         try {

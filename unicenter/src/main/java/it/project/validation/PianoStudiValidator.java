@@ -4,6 +4,10 @@ import it.project.Appello;
 import it.project.PianoDiStudi;
 import it.project.Studente;
 
+/**
+ * Validatore Chain of Responsibility: verifica la presenza della materia nel piano di studi
+ * e l'approvazione del piano per le materie a scelta.
+ */
 public class PianoStudiValidator extends AbstractIscrizioneValidator {
     @Override
     public boolean validate(Studente studente, Appello appello) throws Exception {

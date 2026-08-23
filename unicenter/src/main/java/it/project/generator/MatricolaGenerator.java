@@ -1,8 +1,8 @@
 package it.project.generator;
 
 /**
- * Pattern Utilizzati: Pure Fabrication & Singleton
- * Scopo: Generazione univoca e sequenziale dei numeri di matricola.
+ * Pattern Utilizzati: Pure Fabrication e Singleton.
+ * Scopo: Generazione univoca e sequenziale dei numeri di matricola studente.
  */
 public class MatricolaGenerator {
     private static MatricolaGenerator instance;
@@ -10,6 +10,11 @@ public class MatricolaGenerator {
 
     private MatricolaGenerator() {}
 
+    /**
+     * Restituisce l'istanza Singleton del generatore matricole.
+     *
+     * @return istanza condivisa di MatricolaGenerator
+     */
     public static synchronized MatricolaGenerator getInstance() {
         if (instance == null) {
             instance = new MatricolaGenerator();
@@ -17,6 +22,11 @@ public class MatricolaGenerator {
         return instance;
     }
 
+    /**
+     * Genera in modo incrementale e thread-safe un nuovo numero di matricola.
+     *
+     * @return stringa matricola (es. M100001)
+     */
     public synchronized String generateMatricola() {
         return "M" + (++currentSequence);
     }

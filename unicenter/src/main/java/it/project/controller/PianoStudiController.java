@@ -37,8 +37,19 @@ public class PianoStudiController {
     private final Unicenter unicenter;
     private final Map<String, PianoDiStudi> pianiInAttesa; // matricola -> piano
 
+    /**
+     * Numero minimo di CFU a scelta richiesti per la compilazione del piano.
+     */
     public static final int MIN_CFU_A_SCELTA = 12;
 
+    /**
+     * Costruttore del controller piani di studio.
+     *
+     * @param gestioneCorsi   controller per la gestione dei corsi di laurea
+     * @param gestoreMaterie  controller per la gestione delle materie
+     * @param gestioneAppelli controller per la gestione degli appelli
+     * @param unicenter       riferimento al sistema centrale UniCenter
+     */
     public PianoStudiController(GestioneCorsiLaureaController gestioneCorsi,
                                 GestoreMaterieController gestoreMaterie,
                                 GestioneAppelliController gestioneAppelli,
@@ -59,7 +70,7 @@ public class PianoStudiController {
      * @return true se la compilazione è avvenuta con successo
      * @throws IllegalStateException se lo studente ha appelli prenotati o esiti
      *         pendenti per materie a scelta attualmente nel piano
-     * @throws IllegalArgumentException se i CFU sono insufficienti (< 12) o materie non valide
+     * @throws IllegalArgumentException se i CFU sono insufficienti (&lt; 12) o materie non valide
      */
     public boolean compilaPianoDiStudi(Studente studente, List<String> codiciMaterieAScelta) {
         if (studente == null) {
@@ -152,6 +163,7 @@ public class PianoStudiController {
      * - Esiti pendenti: incrocia gli esiti "In attesa di conferma"
      *   (via Unicenter.getEsitiPendentiByMatricola) con le materie a scelta
      *
+     * @param studente lo studente da verificare
      * @throws IllegalStateException se esiste almeno un conflitto
      */
     public void verificaVincoloCompilazioneMaterie(Studente studente) {
@@ -192,6 +204,9 @@ public class PianoStudiController {
     /**
      * Restituisce i codici delle materie a scelta già verbalizzate dallo studente.
      * Queste materie NON possono essere rimosse durante la ri-compilazione.
+     *
+     * @param studente lo studente
+     * @return lista codici materie verbalizzate
      */
     public List<String> getMaterieASceltaVerbalizzate(Studente studente) {
         if (studente == null) return Collections.emptyList();
@@ -262,7 +277,9 @@ public class PianoStudiController {
     }
 
     /**
-     * Restituisce la mappa dei piani in attesa di approvazione (matricola -> PianoDiStudi).
+     * Restituisce la mappa dei piani in attesa di approvazione (matricola -&gt; PianoDiStudi).
+     *
+     * @return mappa immutabile matricola -&gt; PianoDiStudi
      */
     public Map<String, PianoDiStudi> getPianiInAttesa() {
         return Collections.unmodifiableMap(pianiInAttesa);
@@ -270,6 +287,9 @@ public class PianoStudiController {
 
     /**
      * L'amministratore aggiunge una materia pre-approvata a un corso.
+     *
+     * @param codiceCorso codice corso
+     * @param materia     materia pre-approvata
      */
     public void aggiungiMateriaPreApprovata(String codiceCorso, Materia materia) {
         CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
@@ -278,6 +298,9 @@ public class PianoStudiController {
 
     /**
      * L'amministratore rimuove una materia pre-approvata da un corso.
+     *
+     * @param codiceCorso codice corso
+     * @param materia     materia pre-approvata da rimuovere
      */
     public void rimuoviMateriaPreApprovata(String codiceCorso, Materia materia) {
         CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);
@@ -287,6 +310,9 @@ public class PianoStudiController {
     /**
      * Restituisce le materie a scelta disponibili per uno studente
      * (tutte le materie del sistema che NON appartengono al manifesto obbligatorio del suo corso).
+     *
+     * @param studente studente richiedente
+     * @return lista materie a scelta
      */
     public List<Materia> getMaterieASceltaDisponibili(Studente studente) {
         if (studente == null) return Collections.emptyList();
@@ -312,6 +338,9 @@ public class PianoStudiController {
 
     /**
      * Restituisce le materie pre-approvate per un corso di laurea.
+     *
+     * @param codiceCorso codice del corso
+     * @return lista materie pre-approvate
      */
     public List<Materia> getMateriePreApprovateByCorso(String codiceCorso) {
         CorsoDiLaurea corso = gestioneCorsi.trovaCorsoDiLaureaById(codiceCorso);

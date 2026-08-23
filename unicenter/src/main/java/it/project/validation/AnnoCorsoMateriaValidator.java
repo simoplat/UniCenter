@@ -17,10 +17,18 @@ public class AnnoCorsoMateriaValidator extends AbstractIscrizioneValidator {
 
     private final GestioneCorsiLaureaController gestioneCorsiController;
 
+    /**
+     * Costruttore di default. Risolve il controller dei corsi via Singleton Unicenter.
+     */
     public AnnoCorsoMateriaValidator() {
         this.gestioneCorsiController = null;
     }
 
+    /**
+     * Costruttore con iniezione del controller dei corsi di laurea.
+     *
+     * @param gestioneCorsiController controller gestione corsi
+     */
     public AnnoCorsoMateriaValidator(GestioneCorsiLaureaController gestioneCorsiController) {
         this.gestioneCorsiController = gestioneCorsiController;
     }

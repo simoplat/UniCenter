@@ -14,6 +14,12 @@ public class JsonHelper {
     private static final DateTimeFormatter ISO_DATE_TIME = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
 
+    /**
+     * Serializza qualsiasi oggetto o struttura dati Java in una stringa JSON formattata.
+     *
+     * @param obj oggetto da serializzare
+     * @return stringa JSON
+     */
     public static String toJson(Object obj) {
         if (obj == null) {
             return "null";
@@ -105,7 +111,10 @@ public class JsonHelper {
     }
 
     /**
-     * Parser JSON semplice per oggetti JSON di primo livello (Mappa chiave-valore).
+     * Parser JSON per oggetti JSON di primo livello (Mappa chiave-valore).
+     *
+     * @param json stringa JSON contenente un oggetto
+     * @return Map dei campi estratti
      */
     public static Map<String, Object> parseJsonObject(String json) {
         Map<String, Object> result = new HashMap<>();
@@ -148,16 +157,23 @@ public class JsonHelper {
             if (firstValChar == '"') {
                 // Stringa
                 i++;
+                int valStart = i;
                 StringBuilder sb = new StringBuilder();
                 while (i < len) {
                     char c = trimmed.charAt(i);
                     if (c == '\\' && i + 1 < len) {
                         i++;
-                        char next = trimmed.charAt(i);
-                        if (next == 'n') sb.append('\n');
-                        else if (next == 't') sb.append('\t');
-                        else if (next == 'r') sb.append('\r');
-                        else sb.append(next);
+                        char nextC = trimmed.charAt(i);
+                        switch (nextC) {
+                            case '"' -> sb.append('"');
+                            case '\\' -> sb.append('\\');
+                            case 'n' -> sb.append('\n');
+                            case 'r' -> sb.append('\r');
+                            case 't' -> sb.append('\t');
+                            case 'b' -> sb.append('\b');
+                            case 'f' -> sb.append('\f');
+                            default -> sb.append(nextC);
+                        }
                     } else if (c == '"') {
                         break;
                     } else {
@@ -166,33 +182,31 @@ public class JsonHelper {
                     i++;
                 }
                 result.put(key, sb.toString());
-                i++; // Salta chiusura quote
-            } else if (firstValChar == '[') {
-                // Array di stringhe/numeri
-                int bracketDepth = 1;
-                int arrStart = i;
-                i++;
-                while (i < len && bracketDepth > 0) {
-                    if (trimmed.charAt(i) == '[') bracketDepth++;
-                    else if (trimmed.charAt(i) == ']') bracketDepth--;
-                    i++;
-                }
-                String arrStr = trimmed.substring(arrStart, i);
-                result.put(key, parseJsonArray(arrStr));
+                i++; // Salta quote chiusura
             } else if (firstValChar == '{') {
-                // Oggetto annidato
+                // Sotto-oggetto JSON
                 int braceDepth = 1;
-                int objStart = i;
+                int start = i;
                 i++;
                 while (i < len && braceDepth > 0) {
                     if (trimmed.charAt(i) == '{') braceDepth++;
                     else if (trimmed.charAt(i) == '}') braceDepth--;
                     i++;
                 }
-                String nestedStr = trimmed.substring(objStart, i);
-                result.put(key, parseJsonObject(nestedStr));
+                result.put(key, parseJsonObject(trimmed.substring(start, i)));
+            } else if (firstValChar == '[') {
+                // Array JSON
+                int bracketDepth = 1;
+                int start = i;
+                i++;
+                while (i < len && bracketDepth > 0) {
+                    if (trimmed.charAt(i) == '[') bracketDepth++;
+                    else if (trimmed.charAt(i) == ']') bracketDepth--;
+                    i++;
+                }
+                result.put(key, parseJsonArray(trimmed.substring(start, i)));
             } else {
-                // Booleano o Numero o null
+                // Booleano, Numero o Null
                 int valStart = i;
                 while (i < len && trimmed.charAt(i) != ',' && trimmed.charAt(i) != '}') {
                     i++;
@@ -220,6 +234,12 @@ public class JsonHelper {
         return result;
     }
 
+    /**
+     * Parser JSON per array (List di elementi).
+     *
+     * @param json stringa JSON contenente un array
+     * @return List di elementi parsati
+     */
     public static List<Object> parseJsonArray(String json) {
         List<Object> list = new ArrayList<>();
         if (json == null || json.trim().isEmpty()) return list;

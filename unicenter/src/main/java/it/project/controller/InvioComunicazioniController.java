@@ -26,6 +26,12 @@ public class InvioComunicazioniController {
     private final Unicenter unicenter;
     private final GestoreMaterieController gestoreMaterie;
 
+    /**
+     * Costruttore del controller invio comunicazioni.
+     *
+     * @param unicenter      riferimento a UniCenter
+     * @param gestoreMaterie controller per la gestione delle materie
+     */
     public InvioComunicazioniController(Unicenter unicenter, GestoreMaterieController gestoreMaterie) {
         this.unicenter = unicenter;
         this.gestoreMaterie = gestoreMaterie;
@@ -95,6 +101,8 @@ public class InvioComunicazioniController {
      * Sincronizza il registro degli studenti iscritti alla materia applicando le Regole di Dominio:
      * - La materia deve essere nel piano di studi dello studente.
      * - La materia non deve essere già superata / registrata nel libretto.
+     *
+     * @param materia materia per cui sincronizzare il registro iscritti
      */
     public void sincronizzaStudentiMateria(Materia materia) {
         if (materia == null) return;
@@ -115,6 +123,9 @@ public class InvioComunicazioniController {
 
     /**
      * Restituisce la lista degli studenti attualmente destinatari per una data materia.
+     *
+     * @param codiceMateria codice della materia
+     * @return lista studenti destinatari
      */
     public List<Studente> getStudentiDestinatari(String codiceMateria) {
         Materia materia = gestoreMaterie.trovaMaterieByCodice(codiceMateria);

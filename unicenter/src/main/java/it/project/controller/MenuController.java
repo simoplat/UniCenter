@@ -44,21 +44,44 @@ public class MenuController {
     private final DateTimeFormatter formatterInput = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private final DateTimeFormatter formatterInputData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    /**
+     * Costruttore con console view di default.
+     *
+     * @param unicenter riferimento al sistema centrale UniCenter
+     */
     public MenuController(Unicenter unicenter) {
         this(unicenter, new ConsoleView());
     }
 
+    /**
+     * Costruttore completo con vista personalizzata.
+     *
+     * @param unicenter riferimento al sistema centrale UniCenter
+     * @param view      interfaccia di visualizzazione
+     */
     public MenuController(Unicenter unicenter, UniCenterView view) {
         this.unicenter = unicenter;
         this.view = view != null ? view : new ConsoleView();
         this.webServer = new UniCenterWebServer(unicenter);
     }
 
+    /**
+     * Legge una riga di testo da console dopo aver mostrato un prompt.
+     *
+     * @param prompt messaggio di richiesta input
+     * @return stringa inserita
+     */
     public String leggiStringa(String prompt) {
         System.out.print(prompt);
         return scanner.hasNextLine() ? scanner.nextLine().trim() : "";
     }
 
+    /**
+     * Legge un numero intero da console gestendo errori di parsing.
+     *
+     * @param prompt messaggio di richiesta input
+     * @return intero inserito
+     */
     public int leggiIntero(String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -73,14 +96,27 @@ public class MenuController {
         }
     }
 
+    /**
+     * Restituisce l'istanza del web server integrato.
+     *
+     * @return UniCenterWebServer
+     */
     public UniCenterWebServer getWebServer() {
         return webServer;
     }
 
+    /**
+     * Restituisce la vista associata al controller.
+     *
+     * @return UniCenterView
+     */
     public UniCenterView getView() {
         return view;
     }
 
+    /**
+     * Avvia il server Web e mantiene il processo attivo.
+     */
     public void avvia() {
         // Avvia il server Web e apre direttamente il browser
         boolean serverStarted = webServer.start(8080);
@@ -941,6 +977,9 @@ public class MenuController {
         }
     }
 
+    /**
+     * Esegue il login dell'utente da console.
+     */
     public void loginUtente() {
         view.mostraMessaggio("\n------------------------------------------");
         view.mostraMessaggio("                 LOGIN                     ");
@@ -966,22 +1005,47 @@ public class MenuController {
         }
     }
 
+    /**
+     * Stampa la lista degli appelli d'esame.
+     *
+     * @param appelliDisponibili lista appelli
+     */
     public void StampaAppelli(List<Appello> appelliDisponibili) {
         view.stampaAppelli(appelliDisponibili);
     }
 
+    /**
+     * Stampa la lista delle materie.
+     *
+     * @param materie lista materie
+     */
     public void stampaMaterie(List<Materia> materie) {
         view.stampaMaterie(materie);
     }
 
+    /**
+     * Stampa la lista degli studenti.
+     *
+     * @param studenti lista studenti
+     */
     public void stampaStudenti(List<Studente> studenti) {
         view.stampaStudenti(studenti);
     }
 
+    /**
+     * Stampa la lista dei corsi di laurea.
+     *
+     * @param corsi lista corsi
+     */
     public void stampaCorsiDiLaurea(List<CorsoDiLaurea> corsi) {
         view.stampaCorsiDiLaurea(corsi);
     }
 
+    /**
+     * Stampa la lista degli esiti d'esame.
+     *
+     * @param esiti lista esiti sostenuti
+     */
     public void stampaEsiti(List<EsameSostenuto> esiti) {
         view.stampaEsiti(esiti);
     }

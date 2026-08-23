@@ -37,7 +37,7 @@ public class EsameSostenuto {
 
     /**
      * Costruttore principale.
-     * Applica automaticamente la Regola di Dominio 4: voto < 18 → BocciatoState.
+     * Applica automaticamente la Regola di Dominio 4: voto &lt; 18 -&gt; BocciatoState.
      *
      * @param idVerbale         identificativo univoco del verbale dell'esame
      *                          sostenuto
@@ -97,17 +97,18 @@ public class EsameSostenuto {
     }
 
     /**
-     * Utilizzato dagli stati concreti per effettuare la transizione.
+     * Imposta il nuovo stato dell'esame (utilizzato dagli stati concreti per la transizione).
+     *
+     * @param nuovoStato il nuovo stato dell'esame
      */
     public void setStato(IStatoVoto nuovoStato) {
         this.stato = nuovoStato;
     }
 
     /**
-     * Verifica se la scadenza per la conferma è passata (Estensione A - Silenzio
-     * Rifiuto).
+     * Verifica se la scadenza per la conferma è passata (Estensione A - Silenzio Rifiuto).
      * 
-     * @return true se la scadenza è superata e l'esame è ancora in attesa
+     * @return true se la scadenza è superata e l'esame è ancora in attesa di conferma
      */
     public boolean isScaduto() {
         return stato.getNome().equals("In attesa di conferma")
@@ -118,10 +119,20 @@ public class EsameSostenuto {
     // OBSERVER PATTERN
     // =========================================================================
 
+    /**
+     * Registra un osservatore per ricevere aggiornamenti sui cambi di stato del voto.
+     *
+     * @param observer l'osservatore da registrare
+     */
     public void aggiungiOsservatore(ObserverEsitoVoto observer) {
         osservatori.add(observer);
     }
 
+    /**
+     * Rimuove un osservatore registrato.
+     *
+     * @param observer l'osservatore da rimuovere
+     */
     public void rimuoviOsservatore(ObserverEsitoVoto observer) {
         osservatori.remove(observer);
     }
@@ -137,50 +148,110 @@ public class EsameSostenuto {
     // GETTER
     // =========================================================================
 
+    /**
+     * Restituisce l'identificativo del verbale d'esame.
+     *
+     * @return id verbale
+     */
     public String getIdVerbale() {
         return idVerbale;
     }
 
+    /**
+     * Restituisce il codice dell'appello associato all'esame.
+     *
+     * @return codice appello
+     */
     public String getCodiceAppello() {
         return codiceAppello;
     }
 
+    /**
+     * Restituisce la matricola dello studente.
+     *
+     * @return matricola studente
+     */
     public String getMatricolaStudente() {
         return matricolaStudente;
     }
 
+    /**
+     * Restituisce il codice della materia dell'esame.
+     *
+     * @return codice materia
+     */
     public String getCodiceMateria() {
         return codiceMateria;
     }
 
+    /**
+     * Restituisce l'identificativo del professore che ha verbalizzato l'esito.
+     *
+     * @return id professore
+     */
     public String getIdProfessore() {
         return idProfessore;
     }
 
+    /**
+     * Restituisce il voto numerico conseguito (0-30).
+     *
+     * @return voto numerico
+     */
     public int getVotoNumerico() {
         return votoNumerico;
     }
 
+    /**
+     * Indica se è stata attribuita la lode.
+     *
+     * @return true se 30 e lode, false altrimenti
+     */
     public boolean isLode() {
         return lode;
     }
 
+    /**
+     * Restituisce il numero di CFU della materia verbalizzata.
+     *
+     * @return crediti formativi universitari
+     */
     public int getCfu() {
         return cfu;
     }
 
+    /**
+     * Restituisce l'oggetto che rappresenta lo stato corrente del voto.
+     *
+     * @return istanza di IStatoVoto
+     */
     public IStatoVoto getStato() {
         return stato;
     }
 
+    /**
+     * Restituisce la descrizione testuale dello stato corrente del voto.
+     *
+     * @return nome dello stato
+     */
     public String getNomeStato() {
         return stato.getNome();
     }
 
+    /**
+     * Restituisce la data e ora limite per la conferma o rifiuto del voto.
+     *
+     * @return data di scadenza conferma
+     */
     public LocalDateTime getScadenzaConferma() {
         return scadenzaConferma;
     }
 
+    /**
+     * Restituisce la data e ora di registrazione/pubblicazione dell'esito.
+     *
+     * @return data registrazione
+     */
     public LocalDateTime getDataRegistrazione() {
         return dataRegistrazione;
     }

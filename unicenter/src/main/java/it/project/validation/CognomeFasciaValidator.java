@@ -3,6 +3,10 @@ package it.project.validation;
 import it.project.Appello;
 import it.project.Studente;
 
+/**
+ * Validatore Chain of Responsibility: verifica che l'iniziale del cognome dello studente
+ * ricada all'interno della fascia alfabetica (es. A-L o M-Z) configurata per l'appello.
+ */
 public class CognomeFasciaValidator extends AbstractIscrizioneValidator {
 
     @Override

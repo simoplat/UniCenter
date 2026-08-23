@@ -8,5 +8,10 @@ import it.project.PianoDiStudi;
  * una nuova strategia senza modificare il Controller.
  */
 public interface PoliticaApprovazione {
+    /**
+     * Applica la politica di approvazione al piano di studi fornito.
+     *
+     * @param piano il piano di studi su cui applicare la strategia
+     */
     void applica(PianoDiStudi piano);
 }

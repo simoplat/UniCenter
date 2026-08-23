@@ -32,10 +32,18 @@ public class DatabasePopulator {
 
     private final Unicenter unicenter;
 
+    /**
+     * Costruttore del DatabasePopulator.
+     *
+     * @param unicenter riferimento al sistema centrale UniCenter
+     */
     public DatabasePopulator(Unicenter unicenter) {
         this.unicenter = unicenter;
     }
 
+    /**
+     * Esegue il popolamento iniziale del database con dati simulati e vincoli temporali verificati.
+     */
     public void popolaDataBase() {
         if (unicenter.esisteUtente("admin@unicenter.it") || unicenter.esisteUtente("mario.rossi@studenti.it")) {
             return;

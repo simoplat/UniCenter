@@ -16,44 +16,17 @@ import it.project.view.UniCenterView;
 @DisplayName("Test Unitari - MenuController")
 class MenuControllerTest {
 
-    private TestUnicenter testUnicenter;
+    private Unicenter testUnicenter;
 
     @Mock
     private UniCenterView viewMock;
 
     private MenuController menuController;
 
-    static class TestUnicenter extends Unicenter {
-        boolean esisteUtenteResult = false;
-        boolean passwordCorrettaResult = false;
-        boolean passwordCorrettaCalled = false;
-        boolean validaDataThrows = false;
-        String validaDataErrorMsg = "";
-
-        @Override
-        public boolean esisteUtente(String email) {
-            return esisteUtenteResult;
-        }
-
-        @Override
-        public boolean passwordCorretta(String email, String password) {
-            passwordCorrettaCalled = true;
-            return passwordCorrettaResult;
-        }
-
-        @Override
-        public boolean validaDataImmatricolazione() throws DataNonValidaException {
-            if (validaDataThrows) {
-                throw new DataNonValidaException(validaDataErrorMsg);
-            }
-            return true;
-        }
-    }
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        testUnicenter = new TestUnicenter();
+        testUnicenter = mock(Unicenter.class);
         menuController = spy(new MenuController(testUnicenter, viewMock));
     }
 
@@ -67,14 +40,14 @@ class MenuControllerTest {
         // Arrange
         String emailTest = "inesistente@example.com";
         doReturn(emailTest).when(menuController).leggiStringa("Inserisci email: ");
-        testUnicenter.esisteUtenteResult = false;
+        when(testUnicenter.esisteUtente(emailTest)).thenReturn(false);
 
         // Act
         menuController.loginUtente();
 
         // Assert
         verify(viewMock).mostraMessaggio("Email non registrata. Riprova.");
-        assertFalse(testUnicenter.passwordCorrettaCalled);
+        verify(testUnicenter, never()).passwordCorretta(anyString(), anyString());
     }
 
     @Test
@@ -87,8 +60,8 @@ class MenuControllerTest {
         doReturn(emailTest).when(menuController).leggiStringa("Inserisci email: ");
         doReturn(passTest).when(menuController).leggiStringa("Inserisci password: ");
 
-        testUnicenter.esisteUtenteResult = true;
-        testUnicenter.passwordCorrettaResult = false;
+        when(testUnicenter.esisteUtente(emailTest)).thenReturn(true);
+        when(testUnicenter.passwordCorretta(emailTest, passTest)).thenReturn(false);
 
         // Act
         menuController.loginUtente();
@@ -103,11 +76,10 @@ class MenuControllerTest {
 
     @Test
     @DisplayName("Immatricolazione bloccata per finestra temporale chiusa")
-    void testGestisciImmatricolazione_DataNonValida() {
+    void testGestisciImmatricolazione_DataNonValida() throws Exception {
         // Arrange
         String messaggioErrore = "La finestra temporale per le immatricolazioni è chiusa.";
-        testUnicenter.validaDataThrows = true;
-        testUnicenter.validaDataErrorMsg = messaggioErrore;
+        when(testUnicenter.validaDataImmatricolazione()).thenThrow(new DataNonValidaException(messaggioErrore));
 
         // Act
         menuController.gestisciImmatricolazione();

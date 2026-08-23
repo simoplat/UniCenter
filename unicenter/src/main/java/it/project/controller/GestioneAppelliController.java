@@ -21,6 +21,11 @@ import it.project.validation.*;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
 
+/**
+ * Controller di dominio per la gestione degli appelli d'esame (UC2).
+ * Gestisce la creazione, modifica, eliminazione e ricerca degli appelli,
+ * nonché l'iscrizione/disiscrizione degli studenti mediante validazione in catena (Chain of Responsibility).
+ */
 public class GestioneAppelliController {
     private static final Pattern VINCOLO_PATTERN = Pattern.compile("^[A-Z]-[A-Z]$");
     private IscrizioneValidator validatorChain;
@@ -28,6 +33,11 @@ public class GestioneAppelliController {
     private final CodiceAppelloGenerator codiceAppelloGenerator;
     Unicenter unicenter;
 
+    /**
+     * Costruttore del controller.
+     *
+     * @param unicenter riferimento al sistema centrale UniCenter
+     */
     public GestioneAppelliController(Unicenter unicenter) {
         this.unicenter = unicenter;
         this.validatorChain = ValidationChainBuilder.buildDefaultChain();
@@ -67,6 +77,18 @@ public class GestioneAppelliController {
         return senzaAccenti;
     }
 
+    /**
+     * Crea un nuovo appello d'esame previa validazione dei dati.
+     *
+     * @param codiceMateria         codice identificativo della materia
+     * @param dataOraStr            data e ora di svolgimento dell'esame
+     * @param aula                  aula d'esame
+     * @param postiDisponibili      numero massimo di posti
+     * @param vincoloLetteraCognome eventuale vincolo alfabetico (es. "A-L")
+     * @param termineIscrizione     data di scadenza per l'iscrizione
+     * @return true se l'appello è creato con successo
+     * @throws Exception in caso di dati non validi o permessi insufficienti
+     */
     public boolean creaNuovoAppello(String codiceMateria, LocalDateTime dataOraStr, String aula, int postiDisponibili,
             String vincoloLetteraCognome, LocalDate termineIscrizione) throws Exception {
 
@@ -80,6 +102,19 @@ public class GestioneAppelliController {
         return true;
     }
 
+    /**
+     * Valida i vincoli temporali, di capienza e di abilitazione docente per un appello.
+     *
+     * @param codiceMateria         codice della materia
+     * @param dataOraStr            data e ora dell'appello
+     * @param aula                  aula d'esame
+     * @param postiDisponibili      numero posti
+     * @param vincoloLetteraCognome vincolo alfabetico
+     * @param termineIscrizione     data di scadenza per le iscrizioni
+     * @throws Exception               se il docente non è abilitato
+     * @throws DataNonValidaException  se le date sono non valide o temporalmente incoerenti
+     * @throws PostiNonValidi          se il numero di posti è &lt;= 0
+     */
     public void validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula,
             int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione)
             throws Exception, DataNonValidaException, PostiNonValidi {
@@ -109,6 +144,14 @@ public class GestioneAppelliController {
         return;
     }
 
+    /**
+     * Iscrive uno studente a un appello d'esame eseguendo la catena di validatori (Chain of Responsibility).
+     *
+     * @param studente      studente da iscrivere
+     * @param codiceAppello codice dell'appello
+     * @return true se l'iscrizione è avvenuta con successo
+     * @throws Exception in caso di violazione di uno dei vincoli di iscrizione
+     */
     public boolean iscriviStudente(Studente studente, String codiceAppello) throws Exception {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
 
@@ -153,6 +196,14 @@ public class GestioneAppelliController {
         return true;
     }
 
+    /**
+     * Annulla l'iscrizione di uno studente a un appello d'esame.
+     *
+     * @param studente      studente da disiscrivere
+     * @param codiceAppello codice dell'appello
+     * @return true se disiscritto con successo
+     * @throws Exception se il termine è scaduto, c'è un esito pendente o lo studente non è iscritto
+     */
     public boolean disiscriviStudente(Studente studente, String codiceAppello) throws Exception {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
 
@@ -189,6 +240,12 @@ public class GestioneAppelliController {
         }
     }
 
+    /**
+     * Restituisce tutti gli appelli disponibili per un insieme di materie.
+     *
+     * @param codiciMaterie lista di codici materia
+     * @return lista di appelli corrispondenti
+     */
     public List<Appello> trovaAppelliByIdMateria(List<String> codiciMaterie) {
         if (appelli == null || appelli.isEmpty()) {
             return Collections.emptyList(); // Nessun appello disponibile
@@ -207,6 +264,13 @@ public class GestioneAppelliController {
         return appelliDisponibili;
     }
 
+    /**
+     * Filtra e restituisce gli appelli prenotabili da uno studente specifico.
+     *
+     * @param studente      studente richiedente
+     * @param codiciMaterie lista delle materie iscrivibili
+     * @return lista appelli prenotabili
+     */
     public List<Appello> trovaAppelliPrenotabiliByStudente(Studente studente, List<String> codiciMaterie) {
         if (studente == null) {
             return Collections.emptyList();
@@ -235,6 +299,13 @@ public class GestioneAppelliController {
         return appelliPrenotabili;
     }
 
+    /**
+     * Cerca un appello d'esame tramite il suo codice univoco.
+     *
+     * @param codiceAppello codice appello
+     * @return istanza di Appello
+     * @throws AppelloNonTrovatoException se l'appello non esiste
+     */
     public Appello trovaAppelloByIdAppello(String codiceAppello) {
         if (appelli != null && codiceAppello != null) {
             for (Appello app : appelli) {
@@ -246,15 +317,40 @@ public class GestioneAppelliController {
         throw new AppelloNonTrovatoException("Appello non trovato: " + codiceAppello);
     }
 
+    /**
+     * Genera un nuovo codice identificativo univoco per un appello.
+     *
+     * @return codice appello generato
+     */
     public String generaCodiceAppello() {
         return codiceAppelloGenerator.generateCodice();
     }
 
+    /**
+     * Restituisce la lista degli studenti iscritti a un appello.
+     *
+     * @param codiceAppello codice appello
+     * @return lista studenti iscritti
+     */
     public List<Studente> trovaIscrittiByIdAppello(String codiceAppello) {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         return appello.getIscritti();
     }
 
+    /**
+     * Modifica i dati di un appello esistente e notifica gli studenti iscritti.
+     *
+     * @param codiceAppello         codice appello
+     * @param dataOra               nuova data e ora
+     * @param aula                  nuova aula
+     * @param postiDisponibili      nuovo totale posti
+     * @param vincolo               nuovo vincolo cognome
+     * @param dataTermineIscrizione nuova data termine
+     * @return true se modificato con successo
+     * @throws DataNonValidaException in caso di data non valida
+     * @throws PostiNonValidi in caso di posti insufficienti
+     * @throws Exception in caso di altri errori di validazione
+     */
     public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili,
             String vincolo, LocalDate dataTermineIscrizione) throws Exception, DataNonValidaException, PostiNonValidi {
 
@@ -290,6 +386,12 @@ public class GestioneAppelliController {
         return true;
     }
 
+    /**
+     * Elimina un appello d'esame inviando una notifica agli studenti iscritti.
+     *
+     * @param codiceAppello codice dell'appello da eliminare
+     * @return true se eliminato
+     */
     public boolean eliminaAppello(String codiceAppello) {
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
 
@@ -302,6 +404,12 @@ public class GestioneAppelliController {
         return true;
     }
 
+    /**
+     * Restituisce la lista degli appelli prenotati da uno specifico studente.
+     *
+     * @param studente lo studente
+     * @return lista appelli a cui lo studente è iscritto
+     */
     public List<Appello> appelliPrenotatiByStudente(Studente studente) {
         List<Appello> appelliPrenotati = new ArrayList<>();
         if (appelli == null || appelli.isEmpty() || studente == null) {

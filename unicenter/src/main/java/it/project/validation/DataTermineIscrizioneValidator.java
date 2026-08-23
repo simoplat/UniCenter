@@ -7,6 +7,10 @@ import java.time.LocalDate;
 
 import it.project.database.ClockProvider;
 
+/**
+ * Validatore Chain of Responsibility: verifica che la richiesta di iscrizione avvenga
+ * entro i termini massimi stabiliti per l'appello.
+ */
 public class DataTermineIscrizioneValidator extends AbstractIscrizioneValidator {
 
     @Override

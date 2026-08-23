@@ -31,10 +31,24 @@ public class UniCenterApiController {
     private final DateTimeFormatter formatterInput = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private final DateTimeFormatter formatterInputData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    /**
+     * Costruttore dell'API controller.
+     *
+     * @param unicenter istanza del sistema UniCenter
+     */
     public UniCenterApiController(Unicenter unicenter) {
         this.unicenter = unicenter;
     }
 
+    /**
+     * Smista ed esegue una richiesta REST API proveniente dal client Web.
+     *
+     * @param path        percorso URI della richiesta
+     * @param method      metodo HTTP (GET, POST, PUT, DELETE)
+     * @param body        corpo della richiesta deserializzato da JSON
+     * @param queryParams parametri della query string
+     * @return mappa contenente la risposta strutturata (success, data/error)
+     */
     public Map<String, Object> handleRequest(String path, String method, Map<String, Object> body, Map<String, String> queryParams) {
         try {
             // ==========================================

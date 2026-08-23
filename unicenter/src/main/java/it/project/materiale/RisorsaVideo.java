@@ -14,6 +14,17 @@ public class RisorsaVideo extends MaterialeDidattico {
     private String streamUrl;
     private int durataMinuti;
 
+    /**
+     * Costruttore per una nuova risorsa video con ID autogenerato.
+     *
+     * @param nome              nome della risorsa
+     * @param descrizione       descrizione
+     * @param streamUrl         URL di streaming video
+     * @param durataMinuti      durata stimata in minuti
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     */
     public RisorsaVideo(String nome, String descrizione, String streamUrl, int durataMinuti,
                         String ownerProfessoreId, String codiceMateria,
                         MaterialeDidatticoRepository repository) {
@@ -22,6 +33,19 @@ public class RisorsaVideo extends MaterialeDidattico {
         this.durataMinuti = durataMinuti;
     }
 
+    /**
+     * Costruttore completo con ID e timestamp per risorsa video.
+     *
+     * @param id                ID univoco
+     * @param nome              nome risorsa
+     * @param descrizione       descrizione
+     * @param streamUrl         URL di streaming
+     * @param durataMinuti      durata in minuti
+     * @param dataCreazione     data di creazione
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     */
     public RisorsaVideo(String id, String nome, String descrizione, String streamUrl, int durataMinuti,
                         LocalDateTime dataCreazione, String ownerProfessoreId,
                         String codiceMateria, MaterialeDidatticoRepository repository) {
@@ -30,9 +54,32 @@ public class RisorsaVideo extends MaterialeDidattico {
         this.durataMinuti = durataMinuti;
     }
 
+    /**
+     * Restituisce l'URL di streaming del video.
+     *
+     * @return URL streaming
+     */
     public String getStreamUrl() { return streamUrl; }
+
+    /**
+     * Imposta l'URL di streaming del video.
+     *
+     * @param streamUrl nuovo URL streaming
+     */
     public void setStreamUrl(String streamUrl) { this.streamUrl = streamUrl; }
+
+    /**
+     * Restituisce la durata del video in minuti.
+     *
+     * @return durata minuti
+     */
     public int getDurataMinuti() { return durataMinuti; }
+
+    /**
+     * Imposta la durata del video in minuti.
+     *
+     * @param durataMinuti durata minuti
+     */
     public void setDurataMinuti(int durataMinuti) { this.durataMinuti = durataMinuti; }
 
     @Override

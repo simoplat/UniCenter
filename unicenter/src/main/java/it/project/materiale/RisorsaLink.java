@@ -14,6 +14,16 @@ public class RisorsaLink extends MaterialeDidattico {
 
     private String url;
 
+    /**
+     * Costruttore per una nuova risorsa link con ID autogenerato.
+     *
+     * @param nome              nome della risorsa
+     * @param descrizione       descrizione
+     * @param url               indirizzo web
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     */
     public RisorsaLink(String nome, String descrizione, String url,
                        String ownerProfessoreId, String codiceMateria,
                        MaterialeDidatticoRepository repository) {
@@ -21,6 +31,18 @@ public class RisorsaLink extends MaterialeDidattico {
         this.url = url;
     }
 
+    /**
+     * Costruttore completo con ID e timestamp per risorsa link.
+     *
+     * @param id                ID univoco
+     * @param nome              nome risorsa
+     * @param descrizione       descrizione
+     * @param url               indirizzo web
+     * @param dataCreazione     data di creazione
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     */
     public RisorsaLink(String id, String nome, String descrizione, String url,
                        LocalDateTime dataCreazione, String ownerProfessoreId,
                        String codiceMateria, MaterialeDidatticoRepository repository) {
@@ -28,7 +50,18 @@ public class RisorsaLink extends MaterialeDidattico {
         this.url = url;
     }
 
+    /**
+     * Restituisce l'URL di destinazione.
+     *
+     * @return url
+     */
     public String getUrl() { return url; }
+
+    /**
+     * Imposta l'URL di destinazione.
+     *
+     * @param url nuovo url
+     */
     public void setUrl(String url) { this.url = url; }
 
     @Override

@@ -10,13 +10,16 @@ import it.project.exceptions.EsameNonTrovatoException;
  * possiede la lista degli esami superati (EsameSostenuto con stato "Approvato")
  * e calcola la media ponderata.
  *
- * Unificazione: questa classe sostituisce la versione precedente basata su Map<Materia, Voto>
+ * Unificazione: questa classe sostituisce la versione precedente basata su {@code Map<Materia, Voto>}
  * e gestisce direttamente gli EsameSostenuto.
  */
 public class Libretto {
 
     private final List<EsameSostenuto> esamiSuperati;
 
+    /**
+     * Costruttore di default. Inizializza una lista vuota di esami superati.
+     */
     public Libretto() {
         this.esamiSuperati = new ArrayList<>();
     }
@@ -98,6 +101,8 @@ public class Libretto {
     }
 
     /**
+     * Restituisce la lista immutabile degli esami superati.
+     *
      * @return la lista immutabile degli esami superati
      */
     public List<EsameSostenuto> getEsamiSuperati() {
@@ -105,6 +110,8 @@ public class Libretto {
     }
 
     /**
+     * Calcola e restituisce il numero totale di CFU acquisiti dallo studente.
+     *
      * @return il numero totale di CFU acquisiti
      */
     public int getTotaleCfu() {
@@ -116,6 +123,8 @@ public class Libretto {
     }
 
     /**
+     * Restituisce il conteggio degli esami superati.
+     *
      * @return il numero di esami superati
      */
     public int getNumeroEsamiSuperati() {

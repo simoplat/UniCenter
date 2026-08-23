@@ -3,6 +3,10 @@ package it.project.validation;
 import it.project.Appello;
 import it.project.Studente;
 
+/**
+ * Base Handler astratto per il Pattern Chain of Responsibility (GoF Comportamentale).
+ * Gestisce l'inoltro della richiesta al validatore successivo nella catena.
+ */
 public abstract class AbstractIscrizioneValidator implements IscrizioneValidator {
     protected IscrizioneValidator next;
 
@@ -11,6 +15,14 @@ public abstract class AbstractIscrizioneValidator implements IscrizioneValidator
         this.next = nextValidator;
     }
 
+    /**
+     * Inoltra la validazione all'anello successivo se presente.
+     *
+     * @param studente studente da validare
+     * @param appello  appello richiesto
+     * @return true se tutti i validatori successivi hanno esito positivo
+     * @throws Exception in caso di violazione nei validatori successivi
+     */
     protected boolean checkNext(Studente studente, Appello appello) throws Exception {
         if (next == null) {
             return true;

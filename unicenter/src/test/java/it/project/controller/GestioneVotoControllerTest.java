@@ -18,42 +18,29 @@ import static org.mockito.Mockito.*;
 @DisplayName("Test Unitari - GestioneVotoController")
 class GestioneVotoControllerTest {
 
-    private TestUnicenter unicenterMock;
+    private Unicenter unicenterMock;
     private GestoreMaterieController gestoreMaterieMock;
     private GestioneVotoController controller;
 
     private final String MATERIA = "IS01";
     private final String PROF_ID = "P001";
     private final String MATRICOLA = "M001";
-
-    static class TestUnicenter extends Unicenter {
-        Professore prof;
-        Studente studente;
-
-        @Override
-        public Optional<Professore> trovaProfessore(String id) {
-            return Optional.ofNullable(prof);
-        }
-
-        @Override
-        public Optional<Studente> trovaStudente(String matricola) {
-            return Optional.ofNullable(studente);
-        }
-    }
+    private Professore prof;
+    private Studente studente;
 
     @BeforeEach
     void setUp() {
-        unicenterMock = new TestUnicenter();
+        unicenterMock = mock(Unicenter.class);
         gestoreMaterieMock = mock(GestoreMaterieController.class);
 
         Materia materia = new Materia(MATERIA, "Ingegneria del Software", 9);
         when(gestoreMaterieMock.trovaMaterieByCodice(MATERIA)).thenReturn(materia);
 
-        Professore prof = new Professore(PROF_ID, "Mario", "Rossi", "prof@test.it", "pwd", "RSSMRA80A01H501U");
-        unicenterMock.prof = prof;
+        prof = new Professore(PROF_ID, "Mario", "Rossi", "prof@test.it", "pwd", "RSSMRA80A01H501U");
+        when(unicenterMock.trovaProfessore(PROF_ID)).thenReturn(Optional.of(prof));
 
-        Studente studente = new Studente(MATRICOLA, "Luigi", "Verdi", "studente@test.it", "pwd", "VRDLGU00A01H501X", "Informatica");
-        unicenterMock.studente = studente;
+        studente = new Studente(MATRICOLA, "Luigi", "Verdi", "studente@test.it", "pwd", "VRDLGU00A01H501X", "Informatica");
+        when(unicenterMock.trovaStudente(MATRICOLA)).thenReturn(Optional.of(studente));
 
         controller = new GestioneVotoController(unicenterMock, gestoreMaterieMock);
     }
@@ -119,7 +106,7 @@ class GestioneVotoControllerTest {
     @DisplayName("Accettazione voto con studente non trovato lancia IllegalStateException")
     void testAccettaVoto_StudenteNonTrovato() {
         EsameSostenuto esame = controller.pubblicaEsito("APP001", "MATRICOLA_NON_ESISTE", MATERIA, PROF_ID, 28, false, 7);
-        unicenterMock.studente = null;
+        when(unicenterMock.trovaStudente("MATRICOLA_NON_ESISTE")).thenReturn(Optional.empty());
         assertThrows(IllegalStateException.class, () -> controller.accettaVoto(esame.getIdVerbale()));
     }
 

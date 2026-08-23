@@ -63,6 +63,10 @@ public class CorsoDiLaureaFactory {
 
     /**
      * Restituisce il numero di anni attesi per ciascuna tipologia.
+     *
+     * @param tipologia denominazione della tipologia
+     * @return numero di anni accademici attesi
+     * @throws IllegalArgumentException se la tipologia è sconosciuta
      */
     public static int getAnniPerTipologia(String tipologia) {
         switch (tipologia.toLowerCase()) {
@@ -80,7 +84,9 @@ public class CorsoDiLaureaFactory {
     }
 
     /**
-     * Restituisce l'array delle tipologie valide.
+     * Restituisce l'array delle tipologie valide supportate.
+     *
+     * @return array di stringhe delle tipologie valide
      */
     public static String[] getTipologieValide() {
         return TIPOLOGIE_VALIDE.clone();

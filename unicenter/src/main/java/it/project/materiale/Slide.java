@@ -14,6 +14,18 @@ public class Slide extends MaterialeDidattico {
 
     private int numeroLezione;
 
+    /**
+     * Costruttore per una nuova risorsa Slide con ID autogenerato.
+     *
+     * @param nome              nome file
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dimensioneBytes   dimensione in byte
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     * @param numeroLezione     numero della lezione
+     */
     public Slide(String nome, String descrizione, String pathRelativo,
                  long dimensioneBytes, String ownerProfessoreId,
                  String codiceMateria, MaterialeDidatticoRepository repository, int numeroLezione) {
@@ -21,6 +33,20 @@ public class Slide extends MaterialeDidattico {
         this.numeroLezione = numeroLezione;
     }
 
+    /**
+     * Costruttore completo con ID e timestamp per Slide.
+     *
+     * @param id                ID univoco
+     * @param nome              nome file
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dataCreazione     data di creazione
+     * @param dimensioneBytes   dimensione in byte
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     * @param numeroLezione     numero della lezione
+     */
     public Slide(String id, String nome, String descrizione, String pathRelativo,
                  LocalDateTime dataCreazione, long dimensioneBytes,
                  String ownerProfessoreId, String codiceMateria,
@@ -29,7 +55,18 @@ public class Slide extends MaterialeDidattico {
         this.numeroLezione = numeroLezione;
     }
 
+    /**
+     * Restituisce il numero di lezione a cui si riferiscono le slide.
+     *
+     * @return numero lezione
+     */
     public int getNumeroLezione() { return numeroLezione; }
+
+    /**
+     * Imposta il numero di lezione a cui si riferiscono le slide.
+     *
+     * @param numeroLezione numero lezione
+     */
     public void setNumeroLezione(int numeroLezione) { this.numeroLezione = numeroLezione; }
 
     @Override

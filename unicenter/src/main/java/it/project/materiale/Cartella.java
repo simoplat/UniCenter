@@ -21,6 +21,15 @@ public class Cartella implements ElementoDidattico {
     private String codiceMateria;
     private final List<ElementoDidattico> elementi;
 
+    /**
+     * Costruttore per una nuova cartella con ID autogenerato.
+     *
+     * @param nome              nome della cartella
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param ownerProfessoreId ID professore proprietario
+     * @param codiceMateria     codice materia
+     */
     public Cartella(String nome, String descrizione, String pathRelativo,
                     String ownerProfessoreId, String codiceMateria) {
         this.id = UUID.randomUUID().toString();
@@ -33,6 +42,17 @@ public class Cartella implements ElementoDidattico {
         this.elementi = new ArrayList<>();
     }
 
+    /**
+     * Costruttore completo con ID e timestamp specifici.
+     *
+     * @param id                ID univoco
+     * @param nome              nome cartella
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dataCreazione     data di creazione
+     * @param ownerProfessoreId ID professore proprietario
+     * @param codiceMateria     codice materia
+     */
     public Cartella(String id, String nome, String descrizione, String pathRelativo,
                     LocalDateTime dataCreazione, String ownerProfessoreId, String codiceMateria) {
         this.id = id != null ? id : UUID.randomUUID().toString();
@@ -57,6 +77,11 @@ public class Cartella implements ElementoDidattico {
     @Override
     public String getDescrizione() { return descrizione; }
 
+    /**
+     * Imposta la descrizione della cartella.
+     *
+     * @param descrizione nuova descrizione
+     */
     public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
 
     @Override
@@ -74,6 +99,11 @@ public class Cartella implements ElementoDidattico {
     @Override
     public String getOwnerProfessoreId() { return ownerProfessoreId; }
 
+    /**
+     * Imposta l'ID del professore proprietario della cartella.
+     *
+     * @param ownerProfessoreId ID docente
+     */
     public void setOwnerProfessoreId(String ownerProfessoreId) { this.ownerProfessoreId = ownerProfessoreId; }
 
     @Override
@@ -86,6 +116,8 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Pattern Composite: Somma ricorsiva delle dimensioni di tutti gli elementi contenuti.
+     *
+     * @return dimensione totale in byte
      */
     @Override
     public long getDimensioneBytes() {
@@ -98,6 +130,8 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Aggiunge un elemento figlio alla cartella.
+     *
+     * @param elemento elemento da aggiungere
      */
     public void aggiungiElemento(ElementoDidattico elemento) {
         if (elemento != null && !elementi.contains(elemento)) {
@@ -107,6 +141,9 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Rimuove un elemento figlio per ID (ricorsivo).
+     *
+     * @param idElemento id dell'elemento da rimuovere
+     * @return true se rimosso, false altrimenti
      */
     public boolean rimuoviElemento(String idElemento) {
         if (idElemento == null) return false;
@@ -131,6 +168,9 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Cerca un elemento per ID in tutta la gerarchia sottostante.
+     *
+     * @param idElemento id da cercare
+     * @return ElementoDidattico trovato o null
      */
     public ElementoDidattico trovaElemento(String idElemento) {
         if (idElemento == null) return null;
@@ -150,6 +190,9 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Cerca una cartella contenitore per ID.
+     *
+     * @param idCartella id cartella
+     * @return Cartella trovata o null
      */
     public Cartella trovaCartella(String idCartella) {
         ElementoDidattico elem = trovaElemento(idCartella);
@@ -161,6 +204,9 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Cerca la cartella genitore di un determinato elemento.
+     *
+     * @param idFiglio id dell'elemento figlio
+     * @return Cartella genitore o null
      */
     public Cartella trovaCartellaGenitore(String idFiglio) {
         if (idFiglio == null) return null;
@@ -182,6 +228,11 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Crea e aggiunge una nuova sottocartella all'interno di questa cartella.
+     *
+     * @param nomeCartella nome cartella
+     * @param descrizione  descrizione
+     * @param ownerProfId  id docente proprietario
+     * @return nuova Cartella
      */
     public Cartella creaSubCartella(String nomeCartella, String descrizione, String ownerProfId) {
         String subPath = (pathRelativo == null || pathRelativo.isEmpty())
@@ -194,6 +245,14 @@ public class Cartella implements ElementoDidattico {
 
     /**
      * Creator: Crea e aggiunge una nuova istanza di MaterialeDidattico polimorfico.
+     *
+     * @param nomeFile    nome file
+     * @param descrizione descrizione
+     * @param tipo        tipo materiale
+     * @param contenuto   byte del file
+     * @param ownerProfId id docente
+     * @param repo        repository per la persistenza
+     * @return MaterialeDidattico creato
      */
     public MaterialeDidattico creaMateriale(String nomeFile, String descrizione, TipoMateriale tipo,
                                             byte[] contenuto, String ownerProfId,

@@ -19,6 +19,9 @@ import it.project.factory.CorsoDiLaureaFactory;
 public class GestioneCorsiLaureaController {
     private final List<CorsoDiLaurea> corsiDiLaurea;
 
+    /**
+     * Costruttore di default. Inizializza una lista vuota di corsi di laurea.
+     */
     public GestioneCorsiLaureaController() {
         this.corsiDiLaurea = new ArrayList<>();
     }
@@ -34,6 +37,9 @@ public class GestioneCorsiLaureaController {
      * Il corso viene creato come "non finalizzato": non ha materie e non è visibile
      * per l'immatricolazione.
      *
+     * @param nome           denominazione del corso
+     * @param tipologia      tipologia del corso
+     * @param anniAccademici durata in anni
      * @return il CorsoDiLaurea appena creato
      */
     public CorsoDiLaurea creaCorsoDiLaurea(String nome, String tipologia, int anniAccademici) {
@@ -96,6 +102,9 @@ public class GestioneCorsiLaureaController {
     /**
      * Rende obsoleto un Corso di Laurea (soft-delete).
      * I corsi obsoleti non accettano nuove iscrizioni ma restano nel sistema.
+     *
+     * @param codice codice del corso
+     * @return true se reso obsoleto con successo
      */
     public boolean rendiObsoletoCorsoDiLaurea(String codice) {
         CorsoDiLaurea corso = trovaCorsoDiLaureaById(codice);
@@ -135,6 +144,8 @@ public class GestioneCorsiLaureaController {
      * Restituisce i corsi creati ma non ancora finalizzati (senza materie
      * associate).
      * Questi sono i corsi che l'amministratore può ancora configurare.
+     *
+     * @return lista corsi non finalizzati
      */
     public List<CorsoDiLaurea> getCorsiNonFinalizzati() {
         return corsiDiLaurea.stream()
@@ -173,6 +184,13 @@ public class GestioneCorsiLaureaController {
     // RICERCA
     // =========================================================================
 
+    /**
+     * Cerca un corso di laurea per denominazione esatta.
+     *
+     * @param nome denominazione del corso
+     * @return istanza di CorsoDiLaurea
+     * @throws CorsoDiLaureaNonTrovatoException se il corso non esiste
+     */
     public CorsoDiLaurea trovaCorsoDiLaureaByNome(String nome) {
         if (nome != null) {
             for (CorsoDiLaurea corso : corsiDiLaurea) {
@@ -184,6 +202,13 @@ public class GestioneCorsiLaureaController {
         throw new CorsoDiLaureaNonTrovatoException("Corso di laurea non trovato: " + nome);
     }
 
+    /**
+     * Cerca un corso di laurea per codice identificativo.
+     *
+     * @param id codice corso
+     * @return istanza di CorsoDiLaurea
+     * @throws CorsoDiLaureaNonTrovatoException se il corso non esiste
+     */
     public CorsoDiLaurea trovaCorsoDiLaureaById(String id) {
         if (id != null) {
             for (CorsoDiLaurea corso : corsiDiLaurea) {
@@ -198,6 +223,8 @@ public class GestioneCorsiLaureaController {
     /**
      * Restituisce solo i corsi attivi, finalizzati e non obsoleti.
      * Un corso non finalizzato NON è visibile per l'immatricolazione.
+     *
+     * @return lista corsi attivi e finalizzati
      */
     public List<CorsoDiLaurea> getCorsiAttivi() {
         return corsiDiLaurea.stream()
@@ -207,6 +234,8 @@ public class GestioneCorsiLaureaController {
 
     /**
      * Restituisce tutti i corsi (anche obsoleti e non finalizzati).
+     *
+     * @return lista completa corsi
      */
     public List<CorsoDiLaurea> getTuttiCorsi() {
         return corsiDiLaurea;
@@ -214,6 +243,8 @@ public class GestioneCorsiLaureaController {
 
     /**
      * Aggiunge un corso creato manualmente (retrocompatibilità con popolaDataBase).
+     *
+     * @param corso corso di laurea da aggiungere
      */
     public void addCorsoDiLaurea(CorsoDiLaurea corso) {
         corsiDiLaurea.add(corso);

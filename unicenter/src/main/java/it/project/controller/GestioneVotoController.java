@@ -29,6 +29,12 @@ public class GestioneVotoController {
     private final Unicenter unicenter;
     private final GestoreMaterieController gestoreMaterie;
 
+    /**
+     * Costruttore del controller gestione voti.
+     *
+     * @param unicenter      riferimento a UniCenter
+     * @param gestoreMaterie controller per la gestione delle materie
+     */
     public GestioneVotoController(Unicenter unicenter, GestoreMaterieController gestoreMaterie) {
         this.unicenter = unicenter;
         this.gestoreMaterie = gestoreMaterie;
@@ -42,13 +48,14 @@ public class GestioneVotoController {
 
     /**
      * Il Professore pubblica l'esito di un esame.
-     * Se il voto è >= 18: stato "In attesa di conferma" (Regola di Dominio 4
+     * Se il voto è &gt;= 18: stato "In attesa di conferma" (Regola di Dominio 4
      * applicata in EsameSostenuto).
-     * Se il voto è < 18: stato "Bocciato" automaticamente.
+     * Se il voto è &lt; 18: stato "Bocciato" automaticamente.
      *
      * @param codiceAppello     codice dell'appello
      * @param matricolaStudente matricola dello studente
      * @param codiceMateria     codice della materia
+     * @param idProfessore      id del docente che verbalizza
      * @param votoNumerico      il voto numerico assegnato
      * @param lode              true se 30 e lode
      * @param giorniScadenza    giorni entro cui lo studente deve confermare
@@ -194,8 +201,10 @@ public class GestioneVotoController {
     // =========================================================================
 
     /**
-     * Restituisce tutti gli esiti pendenti ("In attesa di conferma") per uno
-     * studente.
+     * Restituisce tutti gli esiti pendenti ("In attesa di conferma") per uno studente.
+     *
+     * @param matricola matricola dello studente
+     * @return lista esiti pendenti
      */
     public List<EsameSostenuto> trovaEsitiPendentiByStudente(String matricola) {
         List<EsameSostenuto> risultato = new ArrayList<>();
@@ -210,6 +219,9 @@ public class GestioneVotoController {
 
     /**
      * Restituisce tutti gli esiti di uno studente (qualsiasi stato).
+     *
+     * @param matricola matricola dello studente
+     * @return lista esiti dello studente
      */
     public List<EsameSostenuto> trovaEsitiByStudente(String matricola) {
         List<EsameSostenuto> risultato = new ArrayList<>();
@@ -223,6 +235,9 @@ public class GestioneVotoController {
 
     /**
      * Restituisce tutti gli esiti pubblicati da un professore.
+     *
+     * @param idProfessore id del professore
+     * @return lista esiti pubblicati dal docente
      */
     public List<EsameSostenuto> trovaEsitiByProfessore(String idProfessore) {
         List<EsameSostenuto> risultato = new ArrayList<>();
@@ -235,7 +250,9 @@ public class GestioneVotoController {
     }
 
     /**
-     * Restituisce tutti gli esiti pubblicati (per debug/admin).
+     * Restituisce la vista non modificabile di tutti gli esiti pubblicati (per debug/admin).
+     *
+     * @return lista immutabile di tutti gli esiti
      */
     public List<EsameSostenuto> getTuttiGliEsiti() {
         return Collections.unmodifiableList(esitiPubblicati);

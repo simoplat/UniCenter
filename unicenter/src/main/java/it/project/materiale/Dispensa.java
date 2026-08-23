@@ -15,6 +15,19 @@ public class Dispensa extends MaterialeDidattico {
     private String autoreDocente;
     private int annoAccademico;
 
+    /**
+     * Costruttore per una nuova risorsa Dispensa con ID autogenerato.
+     *
+     * @param nome              nome file
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dimensioneBytes   dimensione in byte
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     * @param autoreDocente     nome autore docente
+     * @param annoAccademico    anno accademico di pubblicazione
+     */
     public Dispensa(String nome, String descrizione, String pathRelativo,
                     long dimensioneBytes, String ownerProfessoreId,
                     String codiceMateria, MaterialeDidatticoRepository repository,
@@ -24,6 +37,21 @@ public class Dispensa extends MaterialeDidattico {
         this.annoAccademico = annoAccademico > 0 ? annoAccademico : 2026;
     }
 
+    /**
+     * Costruttore completo con ID e timestamp per Dispensa.
+     *
+     * @param id                ID univoco
+     * @param nome              nome file
+     * @param descrizione       descrizione
+     * @param pathRelativo      percorso relativo
+     * @param dataCreazione     data creazione
+     * @param dimensioneBytes   dimensione in byte
+     * @param ownerProfessoreId ID docente proprietario
+     * @param codiceMateria     codice materia
+     * @param repository        repository
+     * @param autoreDocente     nome autore
+     * @param annoAccademico    anno accademico
+     */
     public Dispensa(String id, String nome, String descrizione, String pathRelativo,
                     LocalDateTime dataCreazione, long dimensioneBytes,
                     String ownerProfessoreId, String codiceMateria,
@@ -34,9 +62,32 @@ public class Dispensa extends MaterialeDidattico {
         this.annoAccademico = annoAccademico > 0 ? annoAccademico : 2026;
     }
 
+    /**
+     * Restituisce l'autore o curatore della dispensa.
+     *
+     * @return autore docente
+     */
     public String getAutoreDocente() { return autoreDocente; }
+
+    /**
+     * Imposta l'autore o curatore della dispensa.
+     *
+     * @param autoreDocente autore docente
+     */
     public void setAutoreDocente(String autoreDocente) { this.autoreDocente = autoreDocente; }
+
+    /**
+     * Restituisce l'anno accademico di riferimento.
+     *
+     * @return anno accademico
+     */
     public int getAnnoAccademico() { return annoAccademico; }
+
+    /**
+     * Imposta l'anno accademico di riferimento.
+     *
+     * @param annoAccademico anno accademico
+     */
     public void setAnnoAccademico(int annoAccademico) { this.annoAccademico = annoAccademico; }
 
     @Override

@@ -13,10 +13,18 @@ public class FileSystemMaterialeDidatticoRepository implements MaterialeDidattic
 
     private final Path rootPath;
 
+    /**
+     * Costruttore di default. Risolve il percorso radice standard "materiale_didattico".
+     */
     public FileSystemMaterialeDidatticoRepository() {
         this(resolveDefaultRootPath());
     }
 
+    /**
+     * Costruttore con percorso radice personalizzato.
+     *
+     * @param customRoot percorso radice personalizzato
+     */
     public FileSystemMaterialeDidatticoRepository(Path customRoot) {
         this.rootPath = customRoot.toAbsolutePath().normalize();
         try {
