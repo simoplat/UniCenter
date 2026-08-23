@@ -520,8 +520,13 @@ function renderAuthenticatedView() {
   loadActiveTabContent();
 }
 
-function switchTab(tabName) {
+function switchTab(tabName, preserveState = false) {
   state.activeTab = tabName;
+  if (!preserveState && tabName === 'materiale') {
+    matState.selectedMateria = null;
+    matState.currentFolderId = null;
+    matState.folderHistory = [];
+  }
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   renderAuthenticatedView();
 }
@@ -1236,7 +1241,6 @@ function formatNotificationBody(messaggio) {
         ${props.codiceMateria ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Materia</span><strong style="color: #fff;">${props.codiceMateria}</strong></div>` : ''}
         ${props.dataOra ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Data & Ora</span><strong style="color: #fff;">${UI.formatDate(props.dataOra)}</strong></div>` : ''}
         ${props.aula ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Aula</span><strong style="color: #fff;">${props.aula}</strong></div>` : ''}
-        ${props.postiDisponibili !== undefined ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Posti Disp.</span><strong style="color: var(--accent-success);">${props.postiDisponibili}</strong></div>` : ''}
         ${props.vincoloLetteraCognome ? `<div><span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; display: block;">Vincolo Cognome</span><span class="badge ${props.vincoloLetteraCognome !== 'A-Z' && props.vincoloLetteraCognome !== 'Nessuno' ? 'badge-warning' : 'badge-info'}">${props.vincoloLetteraCognome}</span></div>` : ''}
       </div>
     `;
@@ -2463,29 +2467,111 @@ async function renderMaterialeDidattico(container) {
   matState.materie = resMaterie.data || [];
 
   if (matState.materie.length === 0) {
+    if (isStudente) {
+      container.innerHTML = `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">📁 Materiale Didattico</h1>
+            <p class="page-subtitle">Consulta, visualizza in anteprima e scarica le risorse delle tue materie.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="switchTab('preferiti')">
+            ⭐ I Miei Preferiti
+          </button>
+        </div>
+        <div class="card-panel" style="text-align: center; padding: 3rem 1.5rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+          <h2>Nessuna Materia nel Piano di Studi</h2>
+          <p style="color: var(--text-secondary); max-width: 520px; margin: 0.5rem auto 1.5rem;">
+            Non risultano materie associate al tuo piano di studi. Compila o aggiorna il tuo piano di studi per accedere al materiale didattico dei corsi.
+          </p>
+          <button class="btn btn-primary" onclick="switchTab('piano-studi')">
+            Compila Piano di Studi
+          </button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="card-panel" style="text-align: center; padding: 3rem 1.5rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
+          <h2>Nessuna Materia Disponibile</h2>
+          <p style="color: var(--text-secondary);">Non risultano materie associate al tuo profilo per la gestione del materiale didattico.</p>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  // 2. SE NESSUNA MATERIA È SELEZIONATA: Mostra la lista delle materie del piano di studi
+  if (!matState.selectedMateria || !matState.materie.some(m => m.codice === matState.selectedMateria)) {
+    matState.selectedMateria = null;
+    matState.currentFolderId = null;
+    matState.folderHistory = [];
+
     container.innerHTML = `
-      <div class="card-panel" style="text-align: center; padding: 3rem 1.5rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
-        <h2>Nessuna Materia Disponibile</h2>
-        <p style="color: var(--text-secondary);">Non risultano materie associate al tuo profilo per la gestione del materiale didattico.</p>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">📁 Materiale Didattico</h1>
+          <p class="page-subtitle">
+            ${isProf 
+              ? 'Seleziona uno dei tuoi corsi per organizzare, caricare ed eliminare il materiale didattico.' 
+              : 'Seleziona una materia del tuo piano di studi per accedere al materiale didattico, consultare le risorse e scaricare i file.'}
+          </p>
+        </div>
+        ${isStudente ? `
+          <button class="btn btn-secondary" onclick="switchTab('preferiti')">
+            ⭐ I Miei Preferiti
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="materia-grid">
+        ${matState.materie.map(m => `
+          <div class="materia-card" onclick="selezionaMateriaMateriale('${m.codice}')">
+            <div>
+              <div class="materia-card-header">
+                <span class="badge badge-purple" style="font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.05em;">${m.codice}</span>
+                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                  ${m.tipo ? `<span class="badge ${m.tipo === 'Obbligatoria' ? 'badge-info' : 'badge-subtle'}" style="font-size: 0.72rem;">${m.tipo}</span>` : ''}
+                  <span class="badge badge-success" style="font-size: 0.75rem;">${m.cfu} CFU</span>
+                </div>
+              </div>
+              <h3 class="materia-card-title">${escapeHtml(m.nome)}</h3>
+              <div class="materia-card-docenti">
+                <span>👨‍🏫</span>
+                <span>${m.docenti && m.docenti.length > 0 ? escapeHtml(m.docenti.join(', ')) : 'Docente da assegnare'}</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="materia-card-stats">
+                <span>📁 ${(m.totaleFile !== undefined ? m.totaleFile : m.totaleElementi)} file</span>
+                ${m.totaleCartelle ? `<span>• ${m.totaleCartelle} cartelle</span>` : ''}
+                <span>• ${(m.dimensioneBytes / 1024).toFixed(1)} KB</span>
+              </div>
+              <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); selezionaMateriaMateriale('${m.codice}')">
+                  Visualizza Materiale →
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('')}
       </div>
     `;
     return;
   }
 
-  // Seleziona la prima materia di default se non selezionata
-  if (!matState.selectedMateria || !matState.materie.some(m => m.codice === matState.selectedMateria)) {
-    matState.selectedMateria = matState.materie[0].codice;
-    matState.currentFolderId = null;
-    matState.folderHistory = [];
-  }
-
-  // 2. Carica albero composite della materia selezionata
+  // 3. SE UNA MATERIA È SELEZIONATA: Carica albero composite della materia
   const resAlbero = await API.get(`/api/materiale/albero?codiceMateria=${matState.selectedMateria}`);
   matState.rootTree = resAlbero.data || null;
 
   if (!matState.rootTree) {
-    container.innerHTML = `<div class="card-panel"><p style="color: var(--accent-danger);">Impossibile caricare i contenuti della materia.</p></div>`;
+    container.innerHTML = `
+      <div class="card-panel" style="text-align: center; padding: 2.5rem 1.5rem;">
+        <p style="color: var(--accent-danger); font-weight: 600; margin-bottom: 1rem;">Impossibile caricare i contenuti della materia selezionata.</p>
+        <button class="btn btn-secondary btn-sm" onclick="tornaAListaMaterie()">← Torna alle Materie</button>
+      </div>
+    `;
     return;
   }
 
@@ -2503,45 +2589,74 @@ async function renderMaterialeDidattico(container) {
   const sottocartelle = elementiFigli.filter(e => e.isCartella);
   const fileList = elementiFigli.filter(e => !e.isCartella);
 
-  const materiaAttuale = matState.materie.find(m => m.codice === matState.selectedMateria) || {};
+  const materiaAttuale = matState.materie.find(m => m.codice === matState.selectedMateria) || {
+    codice: matState.selectedMateria,
+    nome: matState.rootTree.nome,
+    cfu: '',
+    docenti: []
+  };
 
   container.innerHTML = `
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">📁 Materiale Didattico</h1>
-        <p class="page-subtitle">
-          ${isProf ? 'Organizza, carica ed elimina il materiale per i tuoi corsi.' : 'Consulta, visualizza in anteprima e scarica le risorse delle tue materie.'}
-        </p>
+    <!-- BANNER DELLA MATERIA SELEZIONATA -->
+    <div class="materia-banner">
+      <div class="materia-banner-info">
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <span class="badge badge-purple" style="font-family: var(--font-mono); font-weight: 700;">${materiaAttuale.codice}</span>
+          ${materiaAttuale.tipo ? `<span class="badge ${materiaAttuale.tipo === 'Obbligatoria' ? 'badge-info' : 'badge-subtle'}">${materiaAttuale.tipo}</span>` : ''}
+          ${materiaAttuale.cfu ? `<span class="badge badge-success">${materiaAttuale.cfu} CFU</span>` : ''}
+        </div>
+        <div class="materia-banner-title">
+          <span>📚 ${escapeHtml(materiaAttuale.nome)}</span>
+        </div>
+        ${materiaAttuale.docenti && materiaAttuale.docenti.length > 0 ? `
+          <div style="font-size: 0.88rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem;">
+            <span>👨‍🏫</span>
+            <span>${escapeHtml(materiaAttuale.docenti.join(', '))}</span>
+          </div>
+        ` : ''}
       </div>
-      ${isStudente ? `
-        <button class="btn btn-secondary" onclick="switchTab('preferiti')">
-          ⭐ I Miei Preferiti
+
+      <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="tornaAListaMaterie()">
+          ← Torna alle Materie
         </button>
-      ` : ''}
+        ${isStudente ? `
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('preferiti')">
+            ⭐ I Miei Preferiti
+          </button>
+        ` : ''}
+      </div>
     </div>
 
-    <!-- SELETTORE MATERIE -->
-    <div style="display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1.25rem;">
-      ${matState.materie.map(m => `
-        <button class="btn ${m.codice === matState.selectedMateria ? 'btn-primary' : 'btn-secondary'}" 
-                style="padding: 0.65rem 1.1rem; border-radius: var(--radius-lg); flex-shrink: 0;"
-                onclick="cambiaMateriaMateriale('${m.codice}')">
-          <span><strong>${m.codice}</strong> • ${m.nome}</span>
-          <span class="badge badge-subtle" style="margin-left: 0.5rem; font-size: 0.75rem;">${m.cfu} CFU</span>
+    <!-- SELETTORE RAPIDO ALTRE MATERIE -->
+    ${matState.materie.length > 1 ? `
+      <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1.25rem;">
+        <button class="btn btn-subtle btn-sm" style="flex-shrink: 0;" onclick="tornaAListaMaterie()">
+          📋 Tutte le Materie
         </button>
-      `).join('')}
-    </div>
+        ${matState.materie.map(m => `
+          <button class="btn ${m.codice === matState.selectedMateria ? 'btn-primary' : 'btn-secondary'} btn-sm" 
+                  style="border-radius: var(--radius-lg); flex-shrink: 0;"
+                  onclick="selezionaMateriaMateriale('${m.codice}')">
+            <span><strong>${m.codice}</strong> • ${escapeHtml(m.nome)}</span>
+          </button>
+        `).join('')}
+      </div>
+    ` : ''}
 
     <div class="file-explorer">
       <!-- HEADER EXPLORER & BREADCRUMBS -->
       <div class="explorer-header">
         <div class="breadcrumbs">
-          <span style="font-size: 1.1rem; margin-right: 0.2rem;">📂</span>
+          <span class="breadcrumb-item" onclick="tornaAListaMaterie()" title="Torna all'elenco delle materie">
+            📚 Materie
+          </span>
+          <span class="breadcrumb-separator">/</span>
           ${matState.folderHistory.map((item, idx) => `
             ${idx > 0 ? '<span class="breadcrumb-separator">/</span>' : ''}
             <span class="breadcrumb-item ${idx === matState.folderHistory.length - 1 ? 'active' : ''}" 
                   onclick="navigaBreadcrumb(${idx})">
-              ${item.nome}
+              ${idx === 0 ? '📁 ' : ''}${escapeHtml(item.nome)}
             </span>
           `).join('')}
         </div>
@@ -2561,7 +2676,7 @@ async function renderMaterialeDidattico(container) {
       <!-- INFORMAZIONI CARTELLA CORRENTE -->
       ${currentFolder.descrizione ? `
         <div style="font-size: 0.88rem; color: var(--text-secondary); padding: 0 0.5rem;">
-          ℹ️ ${currentFolder.descrizione}
+          ℹ️ ${escapeHtml(currentFolder.descrizione)}
         </div>
       ` : ''}
 
@@ -2576,7 +2691,7 @@ async function renderMaterialeDidattico(container) {
               <div class="folder-card" onclick="apriSottoCartella('${f.id}', '${escapeHtml(f.nome)}')">
                 <div class="folder-icon">📁</div>
                 <div class="folder-info">
-                  <div class="folder-title" title="${f.nome}">${f.nome}</div>
+                  <div class="folder-title" title="${escapeHtml(f.nome)}">${escapeHtml(f.nome)}</div>
                   <div class="folder-meta">
                     ${(f.elementi || []).length} elementi • ${(f.dimensioneBytes / 1024).toFixed(1)} KB
                   </div>
@@ -2611,7 +2726,7 @@ async function renderMaterialeDidattico(container) {
 
         ${fileList.length === 0 && sottocartelle.length === 0 ? `
           <div class="card-panel" style="text-align: center; padding: 2.5rem 1.5rem;">
-            <p style="color: var(--text-muted); font-size: 0.95rem;">Questa cartella è vuota.</p>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">Nessun materiale o file presente in questa cartella.</p>
             ${isProf ? `
               <div style="margin-top: 1rem;">
                 <button class="btn btn-primary btn-sm" onclick="apriModalUploadMateriale('${currentFolder.id}', '${escapeHtml(currentFolder.nome)}')">
@@ -2647,8 +2762,8 @@ async function renderMaterialeDidattico(container) {
                 </div>
 
                 <div class="file-card-body">
-                  <div class="file-card-title" title="${m.nome}">${m.nome}</div>
-                  <div class="file-card-desc">${m.descrizione || 'Nessuna descrizione specificata.'}</div>
+                  <div class="file-card-title" title="${escapeHtml(m.nome)}">${escapeHtml(m.nome)}</div>
+                  <div class="file-card-desc">${escapeHtml(m.descrizione) || 'Nessuna descrizione specificata.'}</div>
                 </div>
 
                 <div class="file-card-footer">
@@ -2663,7 +2778,7 @@ async function renderMaterialeDidattico(container) {
                           onclick="apriModalAnteprimaMateriale('${m.id}')">
                     👁️ Anteprima
                   </button>
-                  <a href="${m.downloadUrl}" target="_blank" download="${m.nome}" 
+                  <a href="${m.downloadUrl}" target="_blank" download="${escapeHtml(m.nome)}" 
                      class="btn btn-primary btn-sm" style="flex: 1; font-size: 0.78rem; text-decoration: none; text-align: center;">
                     ⬇️ Scarica
                   </a>
@@ -2711,12 +2826,24 @@ function navigaBreadcrumb(index) {
   }
 }
 
-function cambiaMateriaMateriale(codice) {
+function selezionaMateriaMateriale(codice) {
   matState.selectedMateria = codice;
   matState.currentFolderId = null;
   matState.folderHistory = [];
   const container = document.getElementById('tab-content');
   if (container) renderMaterialeDidattico(container);
+}
+
+function tornaAListaMaterie() {
+  matState.selectedMateria = null;
+  matState.currentFolderId = null;
+  matState.folderHistory = [];
+  const container = document.getElementById('tab-content');
+  if (container) renderMaterialeDidattico(container);
+}
+
+function cambiaMateriaMateriale(codice) {
+  selezionaMateriaMateriale(codice);
 }
 
 // ==========================================
@@ -3129,6 +3256,6 @@ function vaiACartellaMateria(codiceMateria, folderId, folderNome) {
   matState.selectedMateria = codiceMateria;
   matState.currentFolderId = folderId;
   matState.folderHistory = [{ id: folderId, nome: folderNome }];
-  switchTab('materiale');
+  switchTab('materiale', true);
 }
 

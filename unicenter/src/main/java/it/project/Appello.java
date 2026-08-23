@@ -86,8 +86,7 @@ public class Appello {
     @Override
     public String toString() {
         return "Appello [codiceAppello=" + codiceAppello + ", codiceMateria=" + codiceMateria + ", dataOra=" + dataOra
-                + ", aula=" + aula + ", postiDisponibili=" + postiDisponibili + ", vincoloLetteraCognome="
-                + vincoloLetteraCognome + "]";
+                + ", aula=" + aula + ", vincoloLetteraCognome=" + vincoloLetteraCognome + "]";
     }
 
     public void notifica(Notifica notifica) {

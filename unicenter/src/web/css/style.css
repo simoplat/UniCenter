@@ -1209,3 +1209,126 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
   font-weight: 600;
 }
 
+/* ==========================================================================
+   MATERIE PIANO DI STUDI & CORSO BANNER (MATERIALE DIDATTICO UC10)
+   ========================================================================== */
+
+.materia-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.materia-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.materia-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-primary);
+  opacity: 0.7;
+  transition: all var(--transition-fast);
+}
+
+.materia-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-primary);
+  box-shadow: 0 12px 28px -8px rgba(99, 102, 241, 0.22);
+}
+
+.materia-card:hover::before {
+  width: 6px;
+  opacity: 1;
+}
+
+.materia-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.materia-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  margin: 0.25rem 0 0.5rem 0;
+  transition: color var(--transition-fast);
+}
+
+.materia-card:hover .materia-card-title {
+  color: var(--accent-primary-light);
+}
+
+.materia-card-docenti {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.materia-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.materia-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.materia-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(12px);
+}
+
+.materia-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.materia-banner-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+

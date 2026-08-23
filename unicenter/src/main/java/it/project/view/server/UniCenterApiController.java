@@ -1022,12 +1022,27 @@ public class UniCenterApiController {
                             unicenter.trovaProfessore(idDoc).ifPresent(p -> docentiNomi.add("Prof. " + p.getNome() + " " + p.getCognome()));
                         }
 
+                        String tipoMateria = "Insegnamento";
+                        if (user instanceof Studente s && s.getPianoDiStudi() != null) {
+                            if (s.getPianoDiStudi().getIdMaterieObbligatorie().contains(m.getCodiceMateria())) {
+                                tipoMateria = "Obbligatoria";
+                            } else if (s.getPianoDiStudi().getIdMaterieAScelta().contains(m.getCodiceMateria())) {
+                                tipoMateria = "A Scelta";
+                            }
+                        }
+
+                        int totFile = contaFileRicorsivi(radice);
+                        int totCartelle = contaCartelleRicorsive(radice);
+
                         result.add(Map.of(
                                 "codice", m.getCodiceMateria(),
                                 "nome", m.getNome(),
                                 "cfu", m.getCfu(),
+                                "tipo", tipoMateria,
                                 "docenti", docentiNomi,
                                 "totaleElementi", radice.elenca().size(),
+                                "totaleFile", totFile,
+                                "totaleCartelle", totCartelle,
                                 "dimensioneBytes", radice.getDimensioneBytes()
                         ));
                     }
@@ -1218,6 +1233,30 @@ public class UniCenterApiController {
             map.put("icona", m.getTipo().getIcona());
         }
         return map;
+    }
+
+    private int contaFileRicorsivi(it.project.materiale.Cartella cartella) {
+        if (cartella == null) return 0;
+        int count = 0;
+        for (it.project.materiale.ElementoDidattico e : cartella.elenca()) {
+            if (e instanceof it.project.materiale.Cartella c) {
+                count += contaFileRicorsivi(c);
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private int contaCartelleRicorsive(it.project.materiale.Cartella cartella) {
+        if (cartella == null) return 0;
+        int count = 0;
+        for (it.project.materiale.ElementoDidattico e : cartella.elenca()) {
+            if (e instanceof it.project.materiale.Cartella c) {
+                count += 1 + contaCartelleRicorsive(c);
+            }
+        }
+        return count;
     }
 
     private Map<String, Object> buildUserData(Utente user) {
