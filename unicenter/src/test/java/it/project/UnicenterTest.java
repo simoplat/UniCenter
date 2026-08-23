@@ -13,9 +13,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
+import it.project.database.ClockProvider;
 import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.UtenteNonTrovatoException;
+import it.project.state.StatoApprovatoPiano;
+import it.project.state.StatoInAttesaPiano;
 
 class UnicenterTest {
 
@@ -215,20 +218,20 @@ class UnicenterTest {
     @Test
     void validaDataImmatricolazione_meseAgosto_ritornaTrue() throws DataNonValidaException {
         try {
-            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 8, 15));
+            ClockProvider.setFixedDate(LocalDate.of(2026, 8, 15));
             assertTrue(unicenter.validaDataImmatricolazione());
         } finally {
-            it.project.database.ClockProvider.resetClock();
+            ClockProvider.resetClock();
         }
     }
 
     @Test
     void validaDataImmatricolazione_meseFuoriFinestra_lanciaDataNonValidaException() {
         try {
-            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 1, 15));
+            ClockProvider.setFixedDate(LocalDate.of(2026, 1, 15));
             assertThrows(DataNonValidaException.class, () -> unicenter.validaDataImmatricolazione());
         } finally {
-            it.project.database.ClockProvider.resetClock();
+            ClockProvider.resetClock();
         }
     }
 
@@ -284,14 +287,14 @@ class UnicenterTest {
     void trovaAppelliStudentePrenotabili_pianoStudiNonApprovato_mostraSoloMaterieObbligatorie() {
         unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
         Studente studente = (Studente) unicenter.getCurrentUser();
-        studente.getPianoDiStudi().setStato(new it.project.state.StatoInAttesaPiano());
+        studente.getPianoDiStudi().setStato(new StatoInAttesaPiano());
 
         // UC9: con piano in attesa, le materie obbligatorie sono comunque prenotabili
         List<Appello> appelli = unicenter.trovaAppelliStudentePrenotabili();
         assertNotNull(appelli);
 
         // Ripristina lo stato del piano di studi per i successivi test
-        studente.getPianoDiStudi().setStato(new it.project.state.StatoApprovatoPiano());
+        studente.getPianoDiStudi().setStato(new StatoApprovatoPiano());
     }
 
     @Test
@@ -323,7 +326,7 @@ class UnicenterTest {
     @Test
     void getStatoRinnovoStudenteCorrente_studenteAutenticato_restituisceDatiCorretti() {
         try {
-            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+            ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
             unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
             Studente studente = (Studente) unicenter.getCurrentUser();
             studente.setAnnoImmatricolazione(2026);
@@ -340,14 +343,14 @@ class UnicenterTest {
             assertEquals(2, stato.get("prossimoAnno"));
             assertEquals(2026, stato.get("annoImmatricolazione"));
         } finally {
-            it.project.database.ClockProvider.resetClock();
+            ClockProvider.resetClock();
         }
     }
 
     @Test
     void rinnovaIscrizioneStudenteCorrente_stessoAnnoImmatricolazione_lanciaDataNonValidaException() {
         try {
-            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+            ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
             unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
             Studente studente = (Studente) unicenter.getCurrentUser();
             studente.setAnnoImmatricolazione(2026);
@@ -356,14 +359,14 @@ class UnicenterTest {
 
             assertThrows(DataNonValidaException.class, () -> unicenter.rinnovaIscrizioneStudenteCorrente());
         } finally {
-            it.project.database.ClockProvider.resetClock();
+            ClockProvider.resetClock();
         }
     }
 
     @Test
     void rinnovaIscrizioneStudenteCorrente_flussoCompleto_successo() throws Exception {
         try {
-            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+            ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
             unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
             Studente studente = (Studente) unicenter.getCurrentUser();
             studente.setAnnoImmatricolazione(2026);
@@ -377,7 +380,7 @@ class UnicenterTest {
             assertFalse(studente.isTassePagate());
             assertTrue(studente.isRinnovoEffettuatoPerAnnoCorrente());
         } finally {
-            it.project.database.ClockProvider.resetClock();
+            ClockProvider.resetClock();
         }
     }
 

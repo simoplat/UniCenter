@@ -1,5 +1,6 @@
 package it.project.controller;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +74,7 @@ class MenuControllerTest {
 
         // Assert
         verify(viewMock).mostraMessaggio("Email non registrata. Riprova.");
-        org.junit.jupiter.api.Assertions.assertFalse(testUnicenter.passwordCorrettaCalled);
+        assertFalse(testUnicenter.passwordCorrettaCalled);
     }
 
     @Test

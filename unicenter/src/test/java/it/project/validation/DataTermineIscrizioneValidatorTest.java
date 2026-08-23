@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import it.project.Appello;
 import it.project.Studente;
+import it.project.database.ClockProvider;
 import it.project.exceptions.DataNonValidaException;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,9 +46,9 @@ class DataTermineIscrizioneValidatorTest {
         assertTrue(ex.getMessage().contains("data di scadenza iscrizioni non definita"));
     }
 
-    @org.junit.jupiter.api.AfterEach
+    @AfterEach
     void tearDown() {
-        it.project.database.ClockProvider.resetClock();
+        ClockProvider.resetClock();
     }
 
     @Test
@@ -55,7 +57,7 @@ class DataTermineIscrizioneValidatorTest {
         LocalDate oggi = LocalDate.of(2026, 1, 2);
         when(appello.getTermineIscrizione()).thenReturn(termine);
 
-        it.project.database.ClockProvider.setFixedDate(oggi);
+        ClockProvider.setFixedDate(oggi);
 
         DataNonValidaException ex = assertThrows(DataNonValidaException.class,
                 () -> validator.validate(studente, appello));
@@ -67,7 +69,7 @@ class DataTermineIscrizioneValidatorTest {
         LocalDate termine = LocalDate.of(2026, 1, 1);
         when(appello.getTermineIscrizione()).thenReturn(termine);
 
-        it.project.database.ClockProvider.setFixedDate(termine);
+        ClockProvider.setFixedDate(termine);
 
         assertTrue(validator.validate(studente, appello));
     }
@@ -78,7 +80,7 @@ class DataTermineIscrizioneValidatorTest {
         LocalDate oggi = LocalDate.of(2026, 1, 5);
         when(appello.getTermineIscrizione()).thenReturn(termine);
 
-        it.project.database.ClockProvider.setFixedDate(oggi);
+        ClockProvider.setFixedDate(oggi);
 
         assertTrue(validator.validate(studente, appello));
     }
@@ -91,7 +93,7 @@ class DataTermineIscrizioneValidatorTest {
         when(nextValidator.validate(studente, appello)).thenReturn(true);
         validator.setNext(nextValidator);
 
-        it.project.database.ClockProvider.setFixedDate(oggi);
+        ClockProvider.setFixedDate(oggi);
 
         assertTrue(validator.validate(studente, appello));
         verify(nextValidator, times(1)).validate(studente, appello);
@@ -104,7 +106,7 @@ class DataTermineIscrizioneValidatorTest {
         when(appello.getTermineIscrizione()).thenReturn(termine);
         validator.setNext(nextValidator);
 
-        it.project.database.ClockProvider.setFixedDate(oggi);
+        ClockProvider.setFixedDate(oggi);
 
         assertThrows(DataNonValidaException.class, () -> validator.validate(studente, appello));
 

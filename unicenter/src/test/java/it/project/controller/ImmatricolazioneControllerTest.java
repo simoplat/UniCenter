@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import it.project.CorsoDiLaurea;
 import it.project.Studente;
 import it.project.Unicenter;
+import it.project.database.ClockProvider;
 import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.strategy.ICalcoloTasseStrategy;
@@ -118,14 +120,14 @@ class ImmatricolazioneControllerTest {
     // validaDataImmatricolazione
     // ---------------------------------------------------------------
 
-    @org.junit.jupiter.api.AfterEach
+    @AfterEach
     void tearDown() {
-        it.project.database.ClockProvider.resetClock();
+        ClockProvider.resetClock();
     }
 
     @Test
     void validaDataImmatricolazione_meseAgosto_ritornaTrue() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 8, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 8, 1));
         assertDoesNotThrow(() -> {
             boolean risultato = controller.validaDataImmatricolazione();
             assertTrue(risultato);
@@ -134,7 +136,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void validaDataImmatricolazione_meseSettembre_ritornaTrue() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 9, 30));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 9, 30));
         assertDoesNotThrow(() -> {
             boolean risultato = controller.validaDataImmatricolazione();
             assertTrue(risultato);
@@ -143,7 +145,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void validaDataImmatricolazione_meseFuoriFinestra_lanciaDataNonValidaException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 1, 15));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 1, 15));
         DataNonValidaException ex = assertThrows(DataNonValidaException.class,
                 () -> controller.validaDataImmatricolazione());
         assertTrue(ex.getMessage().contains("1° agosto al 30 settembre"));
@@ -151,14 +153,14 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void validaDataImmatricolazione_primoOttobre_lanciaDataNonValidaException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
         assertThrows(DataNonValidaException.class,
                 () -> controller.validaDataImmatricolazione());
     }
 
     @Test
     void validaDataImmatricolazione_trentunoLuglio_lanciaDataNonValidaException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 7, 31));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 7, 31));
         assertThrows(DataNonValidaException.class,
                 () -> controller.validaDataImmatricolazione());
     }
@@ -170,12 +172,12 @@ class ImmatricolazioneControllerTest {
     @Test
     void validaDataRinnovoIscrizione_finestraAperta_ritornaTrue() {
         // Settembre
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 9, 15));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 9, 15));
         assertTrue(controller.isFinestraRinnovoAperta());
         assertDoesNotThrow(() -> controller.validaDataRinnovoIscrizione());
 
         // Dicembre
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 12, 31));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 12, 31));
         assertTrue(controller.isFinestraRinnovoAperta());
         assertDoesNotThrow(() -> controller.validaDataRinnovoIscrizione());
     }
@@ -183,19 +185,19 @@ class ImmatricolazioneControllerTest {
     @Test
     void validaDataRinnovoIscrizione_finestraChiusa_lanciaDataNonValidaException() {
         // Luglio (prima)
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 7, 15));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 7, 15));
         assertFalse(controller.isFinestraRinnovoAperta());
         assertThrows(DataNonValidaException.class, () -> controller.validaDataRinnovoIscrizione());
 
         // Gennaio (dopo)
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 1, 10));
+        ClockProvider.setFixedDate(LocalDate.of(2027, 1, 10));
         assertFalse(controller.isFinestraRinnovoAperta());
         assertThrows(DataNonValidaException.class, () -> controller.validaDataRinnovoIscrizione());
     }
 
     @Test
     void validaDataRinnovoIscrizione_studenteStessoAnnoImmatricolazione_lanciaDataNonValidaException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
 
@@ -207,7 +209,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void validaDataRinnovoIscrizione_studenteAnnoSuccessivo_ritornaTrue() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
 
@@ -226,7 +228,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void rinnovaIscrizioneStudente_stessoAnnoImmatricolazione_lanciaDataNonValidaException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
         studente.setTassePagate(true);
@@ -236,7 +238,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void rinnovaIscrizioneStudente_tasseNonPagate_lanciaIllegalStateException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
         studente.setTassePagate(false);
@@ -248,7 +250,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void rinnovaIscrizioneStudente_giaRinnovato_lanciaIllegalStateException() {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
         studente.setTassePagate(true);
@@ -261,7 +263,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void rinnovaIscrizioneStudente_successo_inCorso() throws Exception {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
         studente.setTassePagate(true);
@@ -280,7 +282,7 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void rinnovaIscrizioneStudente_successo_diventaFuoriCorso() throws Exception {
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2029, 10, 1));
+        ClockProvider.setFixedDate(LocalDate.of(2029, 10, 1));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
         studente.getCarriera().setAnnoCorrente(3);
@@ -297,14 +299,14 @@ class ImmatricolazioneControllerTest {
     @Test
     void rinnovaIscrizioneStudente_rinnoviMultiAnnoConsecutivi_successo() throws Exception {
         // Immatricolazione nel 2026
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 9, 10));
+        ClockProvider.setFixedDate(LocalDate.of(2026, 9, 10));
         Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
         studente.setAnnoImmatricolazione(2026);
         studente.setTassePagate(true);
         assertEquals(1, studente.getAnnoCorrente());
 
         // 1° Rinnovo: Ottobre 2027 -> 2° Anno (In Corso)
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 15));
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 15));
         assertTrue(controller.isFinestraRinnovoAperta(studente));
         assertTrue(controller.rinnovaIscrizioneStudente(studente));
         assertEquals(2, studente.getAnnoCorrente());
@@ -315,7 +317,7 @@ class ImmatricolazioneControllerTest {
         studente.setTassePagate(true);
 
         // 2° Rinnovo: Ottobre 2028 -> 3° Anno (In Corso)
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2028, 10, 15));
+        ClockProvider.setFixedDate(LocalDate.of(2028, 10, 15));
         assertTrue(controller.isFinestraRinnovoAperta(studente));
         assertTrue(controller.rinnovaIscrizioneStudente(studente));
         assertEquals(3, studente.getAnnoCorrente());
@@ -326,7 +328,7 @@ class ImmatricolazioneControllerTest {
         studente.setTassePagate(true);
 
         // 3° Rinnovo: Ottobre 2029 -> 4° Anno (Fuori Corso con maggiorazione)
-        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2029, 10, 15));
+        ClockProvider.setFixedDate(LocalDate.of(2029, 10, 15));
         assertTrue(controller.isFinestraRinnovoAperta(studente));
         assertTrue(controller.rinnovaIscrizioneStudente(studente));
         assertEquals(4, studente.getAnnoCorrente());
