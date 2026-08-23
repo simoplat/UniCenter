@@ -230,11 +230,11 @@ public class DatabasePopulator {
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("AM01"));
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("ALG01"));
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("PRG01"));
+                    cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("IS01"));
                     cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("AR01"));
+                    cdl.aggiungiMateriaAdAnno(1, gestoreMaterie.trovaMaterieByCodice("BD01"));
                     cdl.aggiungiMateriaAdAnno(2, gestoreMaterie.trovaMaterieByCodice("AM02"));
                     cdl.aggiungiMateriaAdAnno(2, gestoreMaterie.trovaMaterieByCodice("PRG02"));
-                    cdl.aggiungiMateriaAdAnno(2, gestoreMaterie.trovaMaterieByCodice("IS01"));
-                    cdl.aggiungiMateriaAdAnno(2, gestoreMaterie.trovaMaterieByCodice("BD01"));
                     cdl.aggiungiMateriaAdAnno(3, gestoreMaterie.trovaMaterieByCodice("SO01"));
                     cdl.aggiungiMateriaAdAnno(3, gestoreMaterie.trovaMaterieByCodice("RET01"));
                     cdl.aggiungiMateriaAdAnno(3, gestoreMaterie.trovaMaterieByCodice("SIC01"));

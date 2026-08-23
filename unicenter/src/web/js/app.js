@@ -95,9 +95,183 @@ const UI = {
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
   setupGlobalEvents();
+  await initClockWidget();
   await loadDemoUsers();
   await checkAuth();
 });
+
+// ==========================================
+// CLOCK STATE & SYSTEM SIMULATION WIDGET
+// ==========================================
+let clockState = {
+  formattedDateTime: '',
+  isoDateTime: '',
+  date: '',
+  time: '',
+  isSimulated: false,
+  realIsoDateTime: ''
+};
+
+async function initClockWidget() {
+  await fetchClockStatus();
+  setInterval(fetchClockStatus, 30000);
+}
+
+async function fetchClockStatus() {
+  try {
+    const res = await API.get('/api/system/clock');
+    if (res.success) {
+      clockState = res.data;
+      renderClockWidget();
+    }
+  } catch (err) {
+    console.error('Error fetching clock status', err);
+  }
+}
+
+function renderClockWidget() {
+  const container = document.getElementById('topbar-clock-container');
+  if (!container) return;
+
+  const isSim = clockState.isSimulated;
+  container.innerHTML = `
+    <div class="clock-widget">
+      <div class="clock-pill ${isSim ? 'simulated' : ''}" onclick="apriModalImpostaDataClock()" title="Clicca per simulare/impostare una data di test (solo futura)">
+        <span class="clock-icon">${isSim ? '⏱️' : '🕒'}</span>
+        <span class="clock-datetime">${clockState.formattedDateTime || 'Caricamento...'}</span>
+        ${isSim ? `<span class="clock-tag">SIMULATO</span>` : ''}
+      </div>
+      ${isSim ? `
+        <button class="clock-reset-btn" onclick="ripristinaDataClock(event)" title="Ripristina data e ora reale di sistema">
+          ↺ Reset
+        </button>
+      ` : ''}
+    </div>
+  `;
+}
+
+async function apriModalImpostaDataClock() {
+  await fetchClockStatus();
+
+  const now = new Date();
+  const futureMinDate = new Date(now.getTime() + 60000);
+  const minIsoStr = futureMinDate.toISOString().slice(0, 16);
+  const defaultVal = clockState.isoDateTime ? clockState.isoDateTime.slice(0, 16) : minIsoStr;
+  const currentYear = now.getFullYear();
+
+  const bodyHtml = `
+    <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary);">
+      <p style="margin-bottom: 1rem;">
+        Imposta una <strong>data e ora futura</strong> di simulazione per testare manualmente le finestre temporali del sistema (ad es. apertura/chiusura immatricolazioni, finestre di rinnovo iscrizione, scadenze appelli e carriere).
+      </p>
+
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Data Clock Attuale:</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: ${clockState.isSimulated ? '#fbbf24' : 'var(--text-primary)'};">
+            ${clockState.formattedDateTime} ${clockState.isSimulated ? '(Simulato)' : '(Reale)'}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Orario Reale di Sistema:</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-secondary);">
+            ${now.toLocaleString('it-IT')}
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label for="clock-input-datetime" style="font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--text-primary);">
+          Seleziona Nuova Data e Ora (Solo date future):
+        </label>
+        <input type="datetime-local" id="clock-input-datetime" class="form-control" 
+               min="${minIsoStr}" value="${defaultVal}"
+               style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-medium); background: var(--bg-card); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;" />
+        <small style="display: block; margin-top: 0.35rem; color: var(--text-muted); font-size: 0.75rem;">
+          ⚠️ Nota: non è consentito impostare date nel passato rispetto all'orario reale di sistema.
+        </small>
+      </div>
+
+      <label style="font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--text-primary); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em;">
+        ⚡ Scorciatoie di Test Rapido:
+      </label>
+      <div class="clock-shortcut-grid">
+        <button type="button" class="clock-shortcut-btn" onclick="selezionaShortcutClock('${currentYear}-09-15T10:00')">
+          <span class="clock-shortcut-title">🎓 Finestra Immatricolazioni</span>
+          <span class="clock-shortcut-date">15 Settembre ${currentYear}</span>
+        </button>
+        <button type="button" class="clock-shortcut-btn" onclick="selezionaShortcutClock('${currentYear}-10-15T10:00')">
+          <span class="clock-shortcut-title">💳 Finestra Rinnovo Iscrizioni</span>
+          <span class="clock-shortcut-date">15 Ottobre ${currentYear}</span>
+        </button>
+        <button type="button" class="clock-shortcut-btn" onclick="selezionaShortcutClock('${currentYear + 1}-01-15T10:00')">
+          <span class="clock-shortcut-title">🔒 Finestra Rinnovo Chiusa</span>
+          <span class="clock-shortcut-date">15 Gennaio ${currentYear + 1}</span>
+        </button>
+        <button type="button" class="clock-shortcut-btn" onclick="selezionaShortcutClock('${currentYear + 1}-06-15T10:00')">
+          <span class="clock-shortcut-title">☀️ Sessione Estiva d'Esame</span>
+          <span class="clock-shortcut-date">15 Giugno ${currentYear + 1}</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  const footerHtml = `
+    ${clockState.isSimulated ? `
+      <button class="btn btn-secondary" onclick="ripristinaDataClock()">
+        ↺ Ripristina Tempo Reale
+      </button>
+    ` : ''}
+    <button class="btn btn-secondary" onclick="UI.closeModal()">Annulla</button>
+    <button class="btn btn-primary" onclick="applicaDataClock()">
+      ✓ Applica Data di Test
+    </button>
+  `;
+
+  UI.modal('⏱️ Imposta Data & Ora di Sistema', bodyHtml, footerHtml);
+}
+
+function selezionaShortcutClock(isoVal) {
+  const input = document.getElementById('clock-input-datetime');
+  if (input) {
+    input.value = isoVal;
+    input.focus();
+  }
+}
+
+async function applicaDataClock() {
+  const input = document.getElementById('clock-input-datetime');
+  if (!input || !input.value) {
+    UI.toast('Inserisci una data e ora valida', 'error');
+    return;
+  }
+
+  const dateTime = input.value;
+  const res = await API.post('/api/system/clock/set', { dateTime });
+  if (res.success) {
+    clockState = res.data;
+    renderClockWidget();
+    UI.closeModal();
+    UI.toast(`Data impostata con successo: ${res.data.formattedDateTime}`, 'success');
+    renderApp();
+  } else {
+    UI.toast(res.error || 'Impossibile impostare la data', 'error');
+  }
+}
+
+async function ripristinaDataClock(e) {
+  if (e) e.stopPropagation();
+  const res = await API.post('/api/system/clock/reset');
+  if (res.success) {
+    clockState = res.data;
+    renderClockWidget();
+    UI.closeModal();
+    UI.toast('Orologio di sistema ripristinato al tempo reale', 'info');
+    renderApp();
+  } else {
+    UI.toast(res.error || "Errore durante il ripristino dell'orologio", 'error');
+  }
+}
 
 function setupGlobalEvents() {
   document.getElementById('modal-close-btn')?.addEventListener('click', UI.closeModal);
@@ -189,7 +363,6 @@ function renderTopbarUser() {
           <span class="user-role">${state.user.ruolo}</span>
         </div>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="logout()" title="Disconnetti">Esci</button>
     `;
   }
 }
@@ -443,10 +616,13 @@ function renderAuthenticatedView() {
         <span>📋 Piano di Studi</span>
       </a>
       <a class="nav-item ${state.activeTab === 'tasse' ? 'active' : ''}" onclick="switchTab('tasse')">
-        <span>💳 Tasse Universitarie</span>
+        <span>💳 Tasse & Rinnovo</span>
       </a>
       <a class="nav-item ${state.activeTab === 'notifiche' ? 'active' : ''}" onclick="switchTab('notifiche')">
         <span>🔔 Notifiche</span>
+      </a>
+      <a class="nav-item nav-item-logout" onclick="logout()" title="Disconnetti ed esci da UniCenter">
+        <span>🚪 Esci</span>
       </a>
     `;
   } else if (role === 'professore') {
@@ -473,6 +649,9 @@ function renderAuthenticatedView() {
       <a class="nav-item ${state.activeTab === 'comunicazioni' ? 'active' : ''}" onclick="switchTab('comunicazioni')">
         <span>📢 Avvisi & Comunicazioni</span>
       </a>
+      <a class="nav-item nav-item-logout" onclick="logout()" title="Disconnetti ed esci da UniCenter">
+        <span>🚪 Esci</span>
+      </a>
     `;
   } else if (role === 'amministratore') {
     navItemsHtml = `
@@ -491,6 +670,9 @@ function renderAuthenticatedView() {
       </a>
       <a class="nav-item ${state.activeTab === 'piani-attesa' ? 'active' : ''}" onclick="switchTab('piani-attesa')">
         <span>⏳ Valutazione Piani di Studio</span>
+      </a>
+      <a class="nav-item nav-item-logout" onclick="logout()" title="Disconnetti ed esci da UniCenter">
+        <span>🚪 Esci</span>
       </a>
     `;
   }
@@ -577,11 +759,14 @@ async function renderStudentDashboard(container) {
   const res = await API.get('/api/student/dashboard');
   const d = res.data || {};
 
+  const annoLabel = `${d.annoCorrente || 1}° Anno (${d.isFuoriCorso ? 'Fuori Corso' : 'In Corso'})`;
+  const annoBadgeClass = d.isFuoriCorso ? 'badge-warning' : 'badge-info';
+
   container.innerHTML = `
     <div class="page-header">
       <div>
         <h1 class="page-title">Bentornato, ${state.user.nome}!</h1>
-        <p class="page-subtitle">Matricola: <strong>${d.matricola}</strong> • Corso: <strong>${d.corso}</strong></p>
+        <p class="page-subtitle">Matricola: <strong>${d.matricola}</strong> • Corso: <strong>${d.corso}</strong> • <span class="badge ${annoBadgeClass}">${annoLabel}</span></p>
       </div>
     </div>
 
@@ -1161,41 +1346,99 @@ async function handleSalvaPianoStudi(e) {
 }
 
 async function renderStudentTasse(container) {
-  const res = await API.get('/api/student/tasse');
-  const d = res.data || {};
+  const [tasseRes, rinnovoRes] = await Promise.all([
+    API.get('/api/student/tasse'),
+    API.get('/api/student/rinnovo/status')
+  ]);
+  const d = tasseRes.data || {};
+  const r = rinnovoRes.data || {};
 
   container.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Gestione Tasse Universitarie</h1>
-        <p class="page-subtitle">Verifica lo stato dei pagamenti universitari e salda le rate pendenti</p>
+        <h1 class="page-title">Gestione Tasse & Rinnovo Iscrizione</h1>
+        <p class="page-subtitle">Verifica lo stato dei pagamenti universitari e rinnova l'iscrizione per l'anno accademico successivo</p>
       </div>
     </div>
 
-    <div class="card-panel" style="max-width: 600px;">
-      <div class="card-panel-header">
-        <h3 class="card-panel-title">Situazione Contabile</h3>
-      </div>
-      <div style="margin-bottom: 1.5rem;">
-        <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Importo Totale Tasse</div>
-        <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 1rem 0;">${d.importo ? d.importo.toFixed(2) : '0.00'} €</div>
-        <div>
-          Stato Pagamento: 
-          <span class="badge ${d.pagate ? 'badge-success' : 'badge-danger'}" style="font-size: 0.85rem;">
-            ${d.pagate ? 'REGOLARE (Saldate)' : 'IN SOSPESO (Non Saldate)'}
-          </span>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+      <!-- CARD SITUAZIONE CONTABILE -->
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <h3 class="card-panel-title">💳 Situazione Contabile Corrente</h3>
         </div>
+        <div style="margin-bottom: 1.5rem;">
+          <div style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase;">Importo Tasse Attuali</div>
+          <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 1rem 0;">${d.importo ? d.importo.toFixed(2) : '0.00'} €</div>
+          <div>
+            Stato Pagamento: 
+            <span class="badge ${d.pagate ? 'badge-success' : 'badge-danger'}" style="font-size: 0.85rem;">
+              ${d.pagate ? 'REGOLARE (Saldate)' : 'IN SOSPESO (Non Saldate)'}
+            </span>
+          </div>
+        </div>
+
+        ${d.pagate ? `
+          <div style="padding: 1rem; border-radius: var(--radius-md); background: var(--accent-success-bg); border: 1px solid rgba(16,185,129,0.3); color: var(--accent-success);">
+            Tutte le tasse universitarie dell'anno risultano saldate.
+          </div>
+        ` : `
+          <button class="btn btn-primary" style="width: 100%;" onclick="simulaPagaTasse()">
+            Simula Pagamento Tasse (${d.importo ? d.importo.toFixed(2) : '0.00'} €)
+          </button>
+        `}
       </div>
 
-      ${d.pagate ? `
-        <div style="padding: 1rem; border-radius: var(--radius-md); background: var(--accent-success-bg); border: 1px solid rgba(16,185,129,0.3); color: var(--accent-success);">
-          Tutte le tasse universitarie risultano regolarmente saldate. Puoi iscriverti a tutti gli appelli d'esame.
+      <!-- CARD RINNOVO ISCRIZIONE -->
+      <div class="card-panel">
+        <div class="card-panel-header">
+          <h3 class="card-panel-title">🎓 Rinnovo Iscrizione Anno Successivo</h3>
         </div>
-      ` : `
-        <button class="btn btn-primary" style="width: 100%;" onclick="simulaPagaTasse()">
-          Simula Pagamento Tasse (${d.importo ? d.importo.toFixed(2) : '0.00'} €)
-        </button>
-      `}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Corso di Laurea</span>
+            <strong style="color: #fff;">${r.nomeCorso || '-'}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Anno Corrente</span>
+            <span class="badge ${r.isFuoriCorsoAttuale ? 'badge-warning' : 'badge-info'}">${r.annoAttuale || 1}° Anno (${r.isFuoriCorsoAttuale ? 'Fuori Corso' : 'In Corso'})</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Prossimo Anno</span>
+            <span class="badge ${r.saraFuoriCorso ? 'badge-warning' : 'badge-primary'}">${r.prossimoAnno || 2}° Anno (${r.saraFuoriCorso ? 'Fuori Corso' : 'In Corso'})</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Anno Immatricolazione</span>
+            <strong style="color: #fff;">${r.annoImmatricolazione || '-'}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Finestra Rinnovo</span>
+            <span class="badge ${r.finestraAperta ? 'badge-success' : 'badge-danger'}">${r.finestraAperta ? 'Aperta (1 Set - 31 Dic)' : 'Chiusa / Non Idonea'}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Tasse Nuova Iscrizione</span>
+            <strong style="color: var(--accent-primary); font-size: 1.1rem;">${r.importoStimato ? r.importoStimato.toFixed(2) : '250.00'} €</strong>
+          </div>
+        </div>
+
+        ${r.giaRinnovato ? `
+          <div style="padding: 1rem; border-radius: var(--radius-md); background: var(--accent-success-bg); border: 1px solid rgba(16,185,129,0.3); color: var(--accent-success);">
+            ✓ Hai già rinnovato regolarmente l'iscrizione per questo ciclo accademico.
+          </div>
+        ` : !r.finestraAperta ? `
+          <div style="padding: 1rem; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--accent-danger);">
+            ${r.motivoBlocco || "La finestra per il rinnovo dell'iscrizione è attualmente chiusa (apertura: 1 Settembre - 31 Dicembre)."}
+          </div>
+        ` : !r.tassePregressePagate ? `
+          <div style="padding: 1rem; border-radius: var(--radius-md); background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--accent-warning);">
+            ⚠️ Per poter rinnovare l'iscrizione ad anni successivi devi prima saldare le tasse dell'anno in corso.
+          </div>
+        ` : `
+          <button class="btn btn-primary" style="width: 100%;" onclick="eseguiRinnovoIscrizione()">
+            Rinnova Iscrizione al ${r.prossimoAnno}° Anno (${r.saraFuoriCorso ? 'Fuori Corso' : 'In Corso'})
+          </button>
+        `}
+      </div>
     </div>
   `;
 }
@@ -1207,6 +1450,19 @@ async function simulaPagaTasse() {
     loadActiveTabContent();
   } else {
     UI.toast(res.error || 'Errore nel pagamento', 'error');
+  }
+}
+
+async function eseguiRinnovoIscrizione() {
+  if (!confirm('Confermi di voler rinnovare l\'iscrizione al corso di laurea per il nuovo anno accademico?')) {
+    return;
+  }
+  const res = await API.post('/api/student/rinnova-iscrizione');
+  if (res.success) {
+    UI.toast(res.data?.message || 'Iscrizione rinnovata con successo!', 'success');
+    loadActiveTabContent();
+  } else {
+    UI.toast(res.error || 'Errore durante il rinnovo dell\'iscrizione', 'error');
   }
 }
 

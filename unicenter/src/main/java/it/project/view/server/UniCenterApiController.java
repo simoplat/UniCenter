@@ -17,6 +17,7 @@ import it.project.Professore;
 import it.project.Studente;
 import it.project.Unicenter;
 import it.project.Utente;
+import it.project.database.ClockProvider;
 import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 
@@ -77,6 +78,74 @@ public class UniCenterApiController {
                 list.add(Map.of("role", "professore", "email", "giuseppe.verdi@unicenter.it", "nome", "Prof. Giuseppe Verdi (Docente SO01, RET01, SIC01)"));
                 list.add(Map.of("role", "amministratore", "email", "admin@unicenter.it", "nome", "Amministratore di Sistema"));
                 return ok(list);
+            }
+
+            // ==========================================
+            // SYSTEM CLOCK ENDPOINTS
+            // ==========================================
+            if (path.equals("/api/system/clock") && "GET".equalsIgnoreCase(method)) {
+                LocalDateTime now = ClockProvider.nowLocalDateTime();
+                boolean isSimulated = (ClockProvider.getClock() != null);
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                DateTimeFormatter dtfTime = DateTimeFormatter.ofPattern("HH:mm");
+                DateTimeFormatter dtfIso = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+                Map<String, Object> clockData = new HashMap<>();
+                clockData.put("isoDateTime", now.format(dtfIso));
+                clockData.put("formattedDateTime", now.format(dtf));
+                clockData.put("date", now.format(dtfDate));
+                clockData.put("time", now.format(dtfTime));
+                clockData.put("isSimulated", isSimulated);
+                clockData.put("realIsoDateTime", LocalDateTime.now().format(dtfIso));
+                return ok(clockData);
+            }
+
+            if (path.equals("/api/system/clock/set") && "POST".equalsIgnoreCase(method)) {
+                String dateTimeStr = (String) body.get("dateTime");
+                if (dateTimeStr == null || dateTimeStr.trim().isEmpty()) {
+                    return error("Specificare una data e ora valida (formato ISO: YYYY-MM-DDTHH:mm).");
+                }
+
+                LocalDateTime targetDateTime;
+                try {
+                    if (dateTimeStr.length() == 10) {
+                        targetDateTime = LocalDate.parse(dateTimeStr).atTime(12, 0);
+                    } else {
+                        targetDateTime = LocalDateTime.parse(dateTimeStr);
+                    }
+                } catch (Exception e) {
+                    return error("Formato data/ora non valido: " + e.getMessage());
+                }
+
+                LocalDateTime realNow = LocalDateTime.now();
+                if (targetDateTime.isBefore(realNow)) {
+                    return error("È possibile impostare solo date nel futuro rispetto all'orario reale corrente ("
+                            + realNow.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ").");
+                }
+
+                ClockProvider.setFixedDateTime(targetDateTime);
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                DateTimeFormatter dtfIso = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                Map<String, Object> clockData = new HashMap<>();
+                clockData.put("isoDateTime", targetDateTime.format(dtfIso));
+                clockData.put("formattedDateTime", targetDateTime.format(dtf));
+                clockData.put("isSimulated", true);
+                clockData.put("message", "Data di sistema impostata a: " + targetDateTime.format(dtf));
+                return ok(clockData);
+            }
+
+            if (path.equals("/api/system/clock/reset") && "POST".equalsIgnoreCase(method)) {
+                ClockProvider.resetClock();
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                DateTimeFormatter dtfIso = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                Map<String, Object> clockData = new HashMap<>();
+                clockData.put("isoDateTime", now.format(dtfIso));
+                clockData.put("formattedDateTime", now.format(dtf));
+                clockData.put("isSimulated", false);
+                clockData.put("message", "Orologio di sistema ripristinato al tempo reale.");
+                return ok(clockData);
             }
 
             // ==========================================
@@ -168,6 +237,9 @@ public class UniCenterApiController {
                     dash.put("esamiSuperati", superati);
                     dash.put("tasseImporto", studente.getTasse());
                     dash.put("tassePagate", studente.isTassePagate());
+                    dash.put("annoCorrente", studente.getAnnoCorrente());
+                    dash.put("isFuoriCorso", studente.isFuoriCorso());
+                    dash.put("rinnovoEffettuato", studente.isRinnovoEffettuatoPerAnnoCorrente());
                     dash.put("notificheCount", notif != null ? notif.size() : 0);
                     dash.put("esitiPendentiCount", pendenti != null ? pendenti.size() : 0);
                     dash.put("appelliPrenotatiCount", prenotati != null ? prenotati.size() : 0);
@@ -408,6 +480,22 @@ public class UniCenterApiController {
                     boolean ok = unicenter.pagaTasseStudente();
                     if (ok) return ok(Map.of("message", "Pagamento completato con successo! Le tasse sono saldate."));
                     return error("Errore durante il pagamento delle tasse.");
+                }
+
+                if (path.equals("/api/student/rinnovo/status") || path.equals("/api/student/rinnovo-status")) {
+                    return ok(unicenter.getStatoRinnovoStudenteCorrente());
+                }
+
+                if (path.equals("/api/student/rinnova-iscrizione") && "POST".equalsIgnoreCase(method)) {
+                    try {
+                        unicenter.rinnovaIscrizioneStudenteCorrente();
+                        return ok(Map.of(
+                                "message", "Rinnovo dell'iscrizione completato con successo!",
+                                "stato", unicenter.getStatoRinnovoStudenteCorrente()
+                        ));
+                    } catch (Exception e) {
+                        return error(e.getMessage());
+                    }
                 }
 
                 if (path.equals("/api/student/piano-studi")) {

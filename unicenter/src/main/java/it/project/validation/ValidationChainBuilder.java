@@ -24,6 +24,7 @@ public class ValidationChainBuilder {
     public static IscrizioneValidator buildDefaultChain() {
         IscrizioneValidator esameSuperato = new EsameSuperatoValidator();
         IscrizioneValidator pianoStudi = new PianoStudiValidator();
+        IscrizioneValidator annoCorso = new AnnoCorsoMateriaValidator();
         IscrizioneValidator posti = new PostiDisponibiliValidator();
         IscrizioneValidator tasse = new TassaPaidValidator();
         IscrizioneValidator cognome = new CognomeFasciaValidator();
@@ -31,7 +32,8 @@ public class ValidationChainBuilder {
 
         // Collega i validatori in sequenza
         esameSuperato.setNext(pianoStudi);
-        pianoStudi.setNext(posti);
+        pianoStudi.setNext(annoCorso);
+        annoCorso.setNext(posti);
         posti.setNext(tasse);
         tasse.setNext(cognome);
         cognome.setNext(dataTermine);

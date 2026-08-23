@@ -20,18 +20,35 @@ import static org.mockito.Mockito.*;
 
 class GestioneAppelliControllerTest {
 
-    private Unicenter unicenterMock;
+    private TestUnicenter unicenterMock;
     private GestioneAppelliController controller;
 
     private static final String MATERIA = "INF101";
 
+    static class TestUnicenter extends Unicenter {
+        Utente currentUser = null;
+        boolean professoreAbilitato = true;
+
+        public TestUnicenter() {
+            super();
+            initControllers();
+        }
+
+        @Override
+        public Utente getCurrentUser() {
+            return currentUser;
+        }
+
+        @Override
+        public boolean isProfessoreAbilitatoAMateria(String codiceMateria) {
+            return professoreAbilitato;
+        }
+    }
+
     @BeforeEach
     void setUp() {
-        unicenterMock = mock(Unicenter.class);
-        // Di default nessun utente autenticato: bypassa il controllo
-        // "professore abilitato alla materia" per i test che non lo
-        // riguardano direttamente.
-        when(unicenterMock.getCurrentUser()).thenReturn(null);
+        unicenterMock = new TestUnicenter();
+        unicenterMock.currentUser = null;
         controller = new GestioneAppelliController(unicenterMock);
     }
 
@@ -129,8 +146,8 @@ class GestioneAppelliControllerTest {
     void creaNuovoAppello_professoreNonAbilitatoAllaMateria_lanciaIllegalArgumentException() {
         Professore prof = new Professore("P001", "Luigi", "Bianchi",
                 "luigi.bianchi@test.it", "pwd", "BNCLGU00A01H501U");
-        when(unicenterMock.getCurrentUser()).thenReturn(prof);
-        when(unicenterMock.isProfessoreAbilitatoAMateria(MATERIA)).thenReturn(false);
+        unicenterMock.currentUser = prof;
+        unicenterMock.professoreAbilitato = false;
 
         assertThrows(IllegalArgumentException.class,
                 () -> controller.creaNuovoAppello(MATERIA, LocalDateTime.now().plusDays(2),
@@ -141,8 +158,8 @@ class GestioneAppelliControllerTest {
     void creaNuovoAppello_professoreAbilitato_creaCorrettamente() throws Exception {
         Professore prof = new Professore("P001", "Luigi", "Bianchi",
                 "luigi.bianchi@test.it", "pwd", "BNCLGU00A01H501U");
-        when(unicenterMock.getCurrentUser()).thenReturn(prof);
-        when(unicenterMock.isProfessoreAbilitatoAMateria(MATERIA)).thenReturn(true);
+        unicenterMock.currentUser = prof;
+        unicenterMock.professoreAbilitato = true;
 
         boolean risultato = controller.creaNuovoAppello(MATERIA,
                 LocalDateTime.now().plusDays(2), "Aula 1", 10, "A-Z",

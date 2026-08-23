@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -213,21 +214,21 @@ class UnicenterTest {
 
     @Test
     void validaDataImmatricolazione_meseAgosto_ritornaTrue() throws DataNonValidaException {
-        LocalDate dataFissata = LocalDate.of(2026, 8, 15);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
-
+        try {
+            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 8, 15));
             assertTrue(unicenter.validaDataImmatricolazione());
+        } finally {
+            it.project.database.ClockProvider.resetClock();
         }
     }
 
     @Test
     void validaDataImmatricolazione_meseFuoriFinestra_lanciaDataNonValidaException() {
-        LocalDate dataFissata = LocalDate.of(2026, 1, 15);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
-
+        try {
+            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 1, 15));
             assertThrows(DataNonValidaException.class, () -> unicenter.validaDataImmatricolazione());
+        } finally {
+            it.project.database.ClockProvider.resetClock();
         }
     }
 
@@ -317,5 +318,72 @@ class UnicenterTest {
         assertTrue(materie.stream().anyMatch(m -> m.getCodiceMateria().equals("IS01")));
         assertTrue(materie.stream().anyMatch(m -> m.getCodiceMateria().equals("BD01")));
         assertTrue(materie.stream().anyMatch(m -> m.getCodiceMateria().equals("AR01")));
+    }
+
+    @Test
+    void getStatoRinnovoStudenteCorrente_studenteAutenticato_restituisceDatiCorretti() {
+        try {
+            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+            unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
+            Studente studente = (Studente) unicenter.getCurrentUser();
+            studente.setAnnoImmatricolazione(2026);
+            studente.setTassePagate(true);
+            studente.setRinnovoEffettuatoPerAnnoCorrente(false);
+
+            Map<String, Object> stato = unicenter.getStatoRinnovoStudenteCorrente();
+            assertNotNull(stato);
+            assertTrue((Boolean) stato.get("finestraAperta"));
+            assertTrue((Boolean) stato.get("tassePregressePagate"));
+            assertFalse((Boolean) stato.get("giaRinnovato"));
+            assertTrue((Boolean) stato.get("idoneo"));
+            assertEquals(1, stato.get("annoAttuale"));
+            assertEquals(2, stato.get("prossimoAnno"));
+            assertEquals(2026, stato.get("annoImmatricolazione"));
+        } finally {
+            it.project.database.ClockProvider.resetClock();
+        }
+    }
+
+    @Test
+    void rinnovaIscrizioneStudenteCorrente_stessoAnnoImmatricolazione_lanciaDataNonValidaException() {
+        try {
+            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+            unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
+            Studente studente = (Studente) unicenter.getCurrentUser();
+            studente.setAnnoImmatricolazione(2026);
+            studente.setTassePagate(true);
+            studente.setRinnovoEffettuatoPerAnnoCorrente(false);
+
+            assertThrows(DataNonValidaException.class, () -> unicenter.rinnovaIscrizioneStudenteCorrente());
+        } finally {
+            it.project.database.ClockProvider.resetClock();
+        }
+    }
+
+    @Test
+    void rinnovaIscrizioneStudenteCorrente_flussoCompleto_successo() throws Exception {
+        try {
+            it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+            unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
+            Studente studente = (Studente) unicenter.getCurrentUser();
+            studente.setAnnoImmatricolazione(2026);
+            studente.getCarriera().setAnnoCorrente(1);
+            studente.setTassePagate(true);
+            studente.setRinnovoEffettuatoPerAnnoCorrente(false);
+
+            boolean ok = unicenter.rinnovaIscrizioneStudenteCorrente();
+            assertTrue(ok);
+            assertEquals(2, studente.getAnnoCorrente());
+            assertFalse(studente.isTassePagate());
+            assertTrue(studente.isRinnovoEffettuatoPerAnnoCorrente());
+        } finally {
+            it.project.database.ClockProvider.resetClock();
+        }
+    }
+
+    @Test
+    void getStatoRinnovoStudente_corsoInesistente_lanciaCorsoDiLaureaNonTrovatoException() {
+        Studente studente = new Studente("M999", "Test", "User", "test@studenti.it", "pwd", "CF999", "CORSO_NON_ESISTENTE");
+        assertThrows(CorsoDiLaureaNonTrovatoException.class, () -> unicenter.getStatoRinnovoStudente(studente));
     }
 }

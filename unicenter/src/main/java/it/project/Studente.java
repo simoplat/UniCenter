@@ -54,7 +54,8 @@ public class Studente extends Utente implements ObserverNotifica {
     }
 
     public boolean togglePreferito(String idElemento) {
-        if (idElemento == null) return false;
+        if (idElemento == null)
+            return false;
         if (preferitiMaterialeIds.contains(idElemento)) {
             preferitiMaterialeIds.remove(idElemento);
             return false; // non più preferito
@@ -112,8 +113,54 @@ public class Studente extends Utente implements ObserverNotifica {
         return this.libretto;
     }
 
+    public Carriera getCarriera() {
+        return this.carriera;
+    }
+
+    public int getAnnoCorrente() {
+        return this.carriera.getAnnoCorrente();
+    }
+
+    public int getAnnoImmatricolazione() {
+        return this.carriera.getAnnoImmatricolazione();
+    }
+
+    public void setAnnoImmatricolazione(int annoImmatricolazione) {
+        this.carriera.setAnnoImmatricolazione(annoImmatricolazione);
+    }
+
+    public int getAnnoUltimoRinnovo() {
+        return this.carriera.getAnnoUltimoRinnovo();
+    }
+
+    public void setAnnoUltimoRinnovo(int annoUltimoRinnovo) {
+        this.carriera.setAnnoUltimoRinnovo(annoUltimoRinnovo);
+    }
+
+    public boolean isFuoriCorso() {
+        return this.carriera.isFuoriCorso();
+    }
+
+    public boolean isRinnovoEffettuatoPerAnnoCorrente() {
+        return this.carriera.isRinnovoEffettuatoPerAnnoCorrente();
+    }
+
+    public void setRinnovoEffettuatoPerAnnoCorrente(boolean rinnovoEffettuato) {
+        this.carriera.setRinnovoEffettuatoPerAnnoCorrente(rinnovoEffettuato);
+    }
+
     public void calcolaTasse(ICalcoloTasseStrategy strategy, double tassaBase) {
         this.carriera.calcolaImportoTasse(strategy, tassaBase);
+    }
+
+    public void rinnovaIscrizione(int anniDurataCorso, ICalcoloTasseStrategy strategy, double tassaBase) {
+        this.carriera.eseguiRinnovo(anniDurataCorso, strategy, tassaBase);
+        String statoCorso = this.carriera.isFuoriCorso() ? "Fuori Corso" : "In Corso";
+        this.aggiungiNotifica(new Notifica(
+                "Rinnovo Iscrizione",
+                "Iscrizione rinnovata con successo per l'anno " + this.carriera.getAnnoCorrente() + " (" + statoCorso
+                        + "). Importo tasse da saldare: " + String.format("%.2f EUR", this.carriera.getTasse()) + ".",
+                it.project.database.ClockProvider.nowLocalDateTime()));
     }
 
 }

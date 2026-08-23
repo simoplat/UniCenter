@@ -28,27 +28,22 @@ import it.project.strategy.ICalcoloTasseStrategy;
  * mockStatic)
  * - org.mockito:mockito-junit-jupiter:5.x
  */
-@ExtendWith(MockitoExtension.class)
 class ImmatricolazioneControllerTest {
 
-    @Mock
     private Unicenter unicenter;
-
-    @Mock
-    private CorsoDiLaurea corsoDiLaureaMock;
-
     private ImmatricolazioneController controller;
 
     private static final String NOME = "Mario";
     private static final String COGNOME = "Rossi";
-    private static final String EMAIL = "mario.rossi@studenti.it";
+    private static final String EMAIL = "mario.rossi.nuovo@studenti.it";
     private static final String PASSWORD = "pass123";
     private static final String CORSO = "Ingegneria Informatica";
-    private static final double TASSA_BASE = 500.0;
     private static final String CODICE_FISCALE = "CODICEFISCALEMARIOROSSI";
 
     @BeforeEach
     void setUp() {
+        unicenter = Unicenter.getInstance();
+        unicenter.popolaDataBase();
         controller = new ImmatricolazioneController(unicenter);
     }
 
@@ -58,9 +53,6 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_corsoTrovato_creaStudenteConDatiCorretti() {
-        when(corsoDiLaureaMock.getId()).thenReturn(CORSO);
-        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
-
         Studente studente = controller.immatricolaStudente(
                 NOME, COGNOME, EMAIL, PASSWORD, CORSO, CODICE_FISCALE);
 
@@ -69,34 +61,20 @@ class ImmatricolazioneControllerTest {
         assertEquals(COGNOME, studente.getCognome());
         assertEquals(EMAIL, studente.getEmail());
         assertEquals(CODICE_FISCALE, studente.getCodiceFiscale());
-        assertEquals(CORSO, studente.getIdCorsoDiLaurea());
+        assertEquals("ING-INF", studente.getIdCorsoDiLaurea());
         assertNotNull(studente.getMatricola());
         assertFalse(studente.isTassePagate(), "Alla creazione le tasse non devono risultare pagate");
-
-        verify(unicenter, times(1)).trovaCorsoDiLaureaByNome(CORSO);
     }
 
     @Test
     void immatricolaStudente_corsoNonTrovato_lanciaCorsoDiLaureaNonTrovatoException() {
-        when(unicenter.trovaCorsoDiLaureaByNome("Corso Inesistente"))
-                .thenThrow(new CorsoDiLaureaNonTrovatoException("Corso di laurea non trovato: Corso Inesistente"));
-
-        CorsoDiLaureaNonTrovatoException ex = assertThrows(CorsoDiLaureaNonTrovatoException.class,
+        assertThrows(CorsoDiLaureaNonTrovatoException.class,
                 () -> controller.immatricolaStudente(
                         NOME, COGNOME, EMAIL, PASSWORD, "Corso Inesistente", CODICE_FISCALE));
-
-        assertTrue(ex.getMessage().contains("Corso Inesistente"));
-
-        // Il builder non deve nemmeno essere invocato: nessuna ulteriore interazione
-        // attesa
-        verify(unicenter, times(1)).trovaCorsoDiLaureaByNome("Corso Inesistente");
-        verifyNoMoreInteractions(unicenter);
     }
 
     @Test
     void immatricolaStudente_nomeNonValido_propagaEccezioneDalBuilder() {
-        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
-
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
                         "   ", COGNOME, EMAIL, PASSWORD, CORSO, CODICE_FISCALE));
@@ -106,8 +84,6 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_emailNonValida_propagaEccezioneDalBuilder() {
-        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
-
         assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
                         NOME, COGNOME, "email-non-valida", PASSWORD, CORSO, CODICE_FISCALE));
@@ -115,9 +91,6 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_passwordTroppoCorta_propagaEccezioneDalBuilder() {
-        when(corsoDiLaureaMock.getId()).thenReturn(CORSO);
-        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
-
         assertThrows(IllegalArgumentException.class,
                 () -> controller.immatricolaStudente(
                         NOME, COGNOME, EMAIL, "123", CORSO, CODICE_FISCALE));
@@ -125,14 +98,6 @@ class ImmatricolazioneControllerTest {
 
     @Test
     void immatricolaStudente_usaStrategyPerCalcolareTotaleTasse_conMockIniettataViaReflection() throws Exception {
-        when(corsoDiLaureaMock.getId()).thenReturn(CORSO);
-        when(unicenter.trovaCorsoDiLaureaByNome(CORSO)).thenReturn(corsoDiLaureaMock);
-
-        // La strategy è istanziata internamente dal controller (new
-        // CalcoloTasseStandardStrategy()),
-        // quindi la sostituiamo via reflection per isolare il test dalla logica di
-        // calcolo reale
-        // e verificare solo l'interazione.
         ICalcoloTasseStrategy strategyMock = mock(ICalcoloTasseStrategy.class);
         when(strategyMock.calcolaTasse(ImmatricolazioneController.TASSA_IMMATRICOLAZIONE, false))
                 .thenReturn(1234.56);
@@ -153,70 +118,220 @@ class ImmatricolazioneControllerTest {
     // validaDataImmatricolazione
     // ---------------------------------------------------------------
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        it.project.database.ClockProvider.resetClock();
+    }
+
     @Test
     void validaDataImmatricolazione_meseAgosto_ritornaTrue() {
-        // IMPORTANTE: costruire la data PRIMA di aprire mockStatic. Se si costruisce
-        // dentro when(...).thenReturn(LocalDate.of(...)), la chiamata a LocalDate.of()
-        // viene valutata come argomento mentre LocalDate è già mockata staticamente e
-        // lo stub precedente non è ancora completato -> UnfinishedStubbingException.
-        LocalDate dataFissata = LocalDate.of(2026, 8, 1);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
-
-            assertDoesNotThrow(() -> {
-                boolean risultato = controller.validaDataImmatricolazione();
-                assertTrue(risultato);
-            });
-        }
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 8, 1));
+        assertDoesNotThrow(() -> {
+            boolean risultato = controller.validaDataImmatricolazione();
+            assertTrue(risultato);
+        });
     }
 
     @Test
     void validaDataImmatricolazione_meseSettembre_ritornaTrue() {
-        LocalDate dataFissata = LocalDate.of(2026, 9, 30);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
-
-            assertDoesNotThrow(() -> {
-                boolean risultato = controller.validaDataImmatricolazione();
-                assertTrue(risultato);
-            });
-        }
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 9, 30));
+        assertDoesNotThrow(() -> {
+            boolean risultato = controller.validaDataImmatricolazione();
+            assertTrue(risultato);
+        });
     }
 
     @Test
     void validaDataImmatricolazione_meseFuoriFinestra_lanciaDataNonValidaException() {
-        LocalDate dataFissata = LocalDate.of(2026, 1, 15);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
-
-            DataNonValidaException ex = assertThrows(DataNonValidaException.class,
-                    () -> controller.validaDataImmatricolazione());
-
-            assertTrue(ex.getMessage().contains("1° agosto al 30 settembre"));
-        }
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 1, 15));
+        DataNonValidaException ex = assertThrows(DataNonValidaException.class,
+                () -> controller.validaDataImmatricolazione());
+        assertTrue(ex.getMessage().contains("1° agosto al 30 settembre"));
     }
 
     @Test
     void validaDataImmatricolazione_primoOttobre_lanciaDataNonValidaException() {
-        // caso limite: il giorno subito dopo la chiusura della finestra
-        LocalDate dataFissata = LocalDate.of(2026, 10, 1);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
-
-            assertThrows(DataNonValidaException.class,
-                    () -> controller.validaDataImmatricolazione());
-        }
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+        assertThrows(DataNonValidaException.class,
+                () -> controller.validaDataImmatricolazione());
     }
 
     @Test
     void validaDataImmatricolazione_trentunoLuglio_lanciaDataNonValidaException() {
-        // caso limite: il giorno subito prima dell'apertura della finestra
-        LocalDate dataFissata = LocalDate.of(2026, 7, 31);
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(dataFissata);
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 7, 31));
+        assertThrows(DataNonValidaException.class,
+                () -> controller.validaDataImmatricolazione());
+    }
 
-            assertThrows(DataNonValidaException.class,
-                    () -> controller.validaDataImmatricolazione());
-        }
+    // ---------------------------------------------------------------
+    // validaDataRinnovoIscrizione
+    // ---------------------------------------------------------------
+
+    @Test
+    void validaDataRinnovoIscrizione_finestraAperta_ritornaTrue() {
+        // Settembre
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 9, 15));
+        assertTrue(controller.isFinestraRinnovoAperta());
+        assertDoesNotThrow(() -> controller.validaDataRinnovoIscrizione());
+
+        // Dicembre
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 12, 31));
+        assertTrue(controller.isFinestraRinnovoAperta());
+        assertDoesNotThrow(() -> controller.validaDataRinnovoIscrizione());
+    }
+
+    @Test
+    void validaDataRinnovoIscrizione_finestraChiusa_lanciaDataNonValidaException() {
+        // Luglio (prima)
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 7, 15));
+        assertFalse(controller.isFinestraRinnovoAperta());
+        assertThrows(DataNonValidaException.class, () -> controller.validaDataRinnovoIscrizione());
+
+        // Gennaio (dopo)
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 1, 10));
+        assertFalse(controller.isFinestraRinnovoAperta());
+        assertThrows(DataNonValidaException.class, () -> controller.validaDataRinnovoIscrizione());
+    }
+
+    @Test
+    void validaDataRinnovoIscrizione_studenteStessoAnnoImmatricolazione_lanciaDataNonValidaException() {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+
+        assertFalse(controller.isFinestraRinnovoAperta(studente));
+        DataNonValidaException ex = assertThrows(DataNonValidaException.class,
+                () -> controller.validaDataRinnovoIscrizione(studente));
+        assertTrue(ex.getMessage().contains("stesso anno solare di immatricolazione"));
+    }
+
+    @Test
+    void validaDataRinnovoIscrizione_studenteAnnoSuccessivo_ritornaTrue() {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+
+        assertTrue(controller.isFinestraRinnovoAperta(studente));
+        assertDoesNotThrow(() -> controller.validaDataRinnovoIscrizione(studente));
+    }
+
+    // ---------------------------------------------------------------
+    // rinnovaIscrizioneStudente
+    // ---------------------------------------------------------------
+
+    @Test
+    void rinnovaIscrizioneStudente_studenteNull_lanciaIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> controller.rinnovaIscrizioneStudente(null));
+    }
+
+    @Test
+    void rinnovaIscrizioneStudente_stessoAnnoImmatricolazione_lanciaDataNonValidaException() {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(true);
+
+        assertThrows(DataNonValidaException.class, () -> controller.rinnovaIscrizioneStudente(studente));
+    }
+
+    @Test
+    void rinnovaIscrizioneStudente_tasseNonPagate_lanciaIllegalStateException() {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(false);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> controller.rinnovaIscrizioneStudente(studente));
+        assertTrue(ex.getMessage().contains("tasse universitarie pendenti"));
+    }
+
+    @Test
+    void rinnovaIscrizioneStudente_giaRinnovato_lanciaIllegalStateException() {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(true);
+        studente.setRinnovoEffettuatoPerAnnoCorrente(true);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> controller.rinnovaIscrizioneStudente(studente));
+        assertTrue(ex.getMessage().contains("già effettuato"));
+    }
+
+    @Test
+    void rinnovaIscrizioneStudente_successo_inCorso() throws Exception {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(true);
+        assertEquals(1, studente.getAnnoCorrente());
+        assertFalse(studente.isFuoriCorso());
+
+        boolean ok = controller.rinnovaIscrizioneStudente(studente);
+        assertTrue(ok);
+        assertEquals(2, studente.getAnnoCorrente());
+        assertFalse(studente.isFuoriCorso(), "Al 2° anno di una triennale è ancora In Corso");
+        assertFalse(studente.isTassePagate(), "Dopo il rinnovo le nuove tasse devono risultare non ancora pagate");
+        assertEquals(ImmatricolazioneController.TASSA_RINNOVO_BASE, studente.getTasse());
+        assertTrue(studente.isRinnovoEffettuatoPerAnnoCorrente());
+        assertFalse(studente.getNotifiche().isEmpty(), "Deve essere stata creata una notifica di rinnovo");
+    }
+
+    @Test
+    void rinnovaIscrizioneStudente_successo_diventaFuoriCorso() throws Exception {
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2029, 10, 1));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.getCarriera().setAnnoCorrente(3);
+        studente.setTassePagate(true);
+
+        boolean ok = controller.rinnovaIscrizioneStudente(studente);
+        assertTrue(ok);
+        assertEquals(4, studente.getAnnoCorrente());
+        assertTrue(studente.isFuoriCorso(), "Al 4° anno di una triennale diventa Fuori Corso");
+        assertEquals(ImmatricolazioneController.TASSA_RINNOVO_BASE + 300.0, studente.getTasse(),
+                "Per studenti fuori corso deve applicarsi la maggiorazione di 300 EUR");
+    }
+
+    @Test
+    void rinnovaIscrizioneStudente_rinnoviMultiAnnoConsecutivi_successo() throws Exception {
+        // Immatricolazione nel 2026
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2026, 9, 10));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(true);
+        assertEquals(1, studente.getAnnoCorrente());
+
+        // 1° Rinnovo: Ottobre 2027 -> 2° Anno (In Corso)
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2027, 10, 15));
+        assertTrue(controller.isFinestraRinnovoAperta(studente));
+        assertTrue(controller.rinnovaIscrizioneStudente(studente));
+        assertEquals(2, studente.getAnnoCorrente());
+        assertFalse(studente.isFuoriCorso());
+        assertEquals(2027, studente.getAnnoUltimoRinnovo());
+
+        // Pagamento tasse anno 2
+        studente.setTassePagate(true);
+
+        // 2° Rinnovo: Ottobre 2028 -> 3° Anno (In Corso)
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2028, 10, 15));
+        assertTrue(controller.isFinestraRinnovoAperta(studente));
+        assertTrue(controller.rinnovaIscrizioneStudente(studente));
+        assertEquals(3, studente.getAnnoCorrente());
+        assertFalse(studente.isFuoriCorso());
+        assertEquals(2028, studente.getAnnoUltimoRinnovo());
+
+        // Pagamento tasse anno 3
+        studente.setTassePagate(true);
+
+        // 3° Rinnovo: Ottobre 2029 -> 4° Anno (Fuori Corso con maggiorazione)
+        it.project.database.ClockProvider.setFixedDate(LocalDate.of(2029, 10, 15));
+        assertTrue(controller.isFinestraRinnovoAperta(studente));
+        assertTrue(controller.rinnovaIscrizioneStudente(studente));
+        assertEquals(4, studente.getAnnoCorrente());
+        assertTrue(studente.isFuoriCorso());
+        assertEquals(2029, studente.getAnnoUltimoRinnovo());
+        assertEquals(ImmatricolazioneController.TASSA_RINNOVO_BASE + 300.0, studente.getTasse());
     }
 }

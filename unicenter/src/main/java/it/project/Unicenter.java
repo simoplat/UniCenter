@@ -4,62 +4,58 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import it.project.controller.*;
 import it.project.database.ClockProvider;
 import it.project.database.DatabasePopulator;
+import it.project.exceptions.CorsoDiLaureaNonTrovatoException;
 import it.project.exceptions.DataNonValidaException;
 import it.project.exceptions.UtenteNonTrovatoException;
 
 public class Unicenter {
-    private final List<Utente> utenti;
-    private final ImmatricolazioneController immatricolazioneController;
-    private final GestioneAppelliController gestioneAppelliController;
-    private final GestoreMaterieController gestoreMaterie;
-    private final GestioneCorsiLaureaController gestioneCorsiLaureaController;
-    private final GestioneVotoController gestioneVotoController;
-    private final InvioComunicazioniController invioComunicazioniController;
-    private final PianoStudiController pianoStudiController;
-    private final MaterialeDidatticoController materialeDidatticoController;
-    private final MenuController menuController;
+    private List<Utente> utenti;
+    private ImmatricolazioneController immatricolazioneController;
+    private GestioneAppelliController gestioneAppelliController;
+    private GestoreMaterieController gestoreMaterie;
+    private GestioneCorsiLaureaController gestioneCorsiLaureaController;
+    private GestioneVotoController gestioneVotoController;
+    private InvioComunicazioniController invioComunicazioniController;
+    private PianoStudiController pianoStudiController;
+    private MaterialeDidatticoController materialeDidatticoController;
+    private MenuController menuController;
     private Utente currentUser = null;
 
-    private Unicenter() {
+    public Unicenter() {
         this.utenti = new ArrayList<>();
-        this.menuController = new MenuController(this);
+    }
 
-        // Inizializzazione Adapter Notifiche
-
-        // 1. Inizializzazione Controller UC8 (Immatricolazione)
-        this.immatricolazioneController = new ImmatricolazioneController(this);
-
-        // 2. Inizializzazione Controller UC1 (Gestione Appelli)
-        this.gestioneAppelliController = new GestioneAppelliController(this);
-
-        this.gestoreMaterie = new GestoreMaterieController();
-        this.gestioneCorsiLaureaController = new GestioneCorsiLaureaController();
-
-        // 3. Inizializzazione Controller UC3 (Gestione Voto)
-        this.gestioneVotoController = new GestioneVotoController(this, this.gestoreMaterie);
-
-        // 4. Inizializzazione Controller UC7 (Invio Comunicazioni)
-        this.invioComunicazioniController = new InvioComunicazioniController(this, this.gestoreMaterie);
-
-        // 5. Inizializzazione Controller UC9 (Compilazione Piano di Studi)
-        this.pianoStudiController = new PianoStudiController(
-                this.gestioneCorsiLaureaController,
-                this.gestoreMaterie,
-                this.gestioneAppelliController,
-                this);
-
-        // 6. Inizializzazione Controller UC6 & UC10 (Materiale Didattico)
-        this.materialeDidatticoController = new MaterialeDidatticoController(this, this.gestoreMaterie);
+    public void initControllers() {
+        if (this.menuController == null) {
+            this.menuController = new MenuController(this);
+            this.immatricolazioneController = new ImmatricolazioneController(this);
+            this.gestioneAppelliController = new GestioneAppelliController(this);
+            this.gestoreMaterie = new GestoreMaterieController();
+            this.gestioneCorsiLaureaController = new GestioneCorsiLaureaController();
+            this.gestioneVotoController = new GestioneVotoController(this, this.gestoreMaterie);
+            this.invioComunicazioniController = new InvioComunicazioniController(this, this.gestoreMaterie);
+            this.pianoStudiController = new PianoStudiController(
+                    this.gestioneCorsiLaureaController,
+                    this.gestoreMaterie,
+                    this.gestioneAppelliController,
+                    this);
+            this.materialeDidatticoController = new MaterialeDidatticoController(this, this.gestoreMaterie);
+        }
     }
 
     private static class UnicenterHolder {
         private static final Unicenter INSTANCE = new Unicenter();
+        static {
+            INSTANCE.initControllers();
+        }
     }
 
     public static Unicenter getInstance() {
@@ -358,6 +354,89 @@ public class Unicenter {
 
     public boolean validaDataImmatricolazione() throws DataNonValidaException {
         return immatricolazioneController.validaDataImmatricolazione();
+    }
+
+    public boolean validaDataRinnovoIscrizione() throws DataNonValidaException {
+        return immatricolazioneController.validaDataRinnovoIscrizione();
+    }
+
+    public boolean isRinnovoIscrizioneAperto() {
+        return immatricolazioneController.isFinestraRinnovoAperta();
+    }
+
+    public boolean rinnovaIscrizioneStudente(Studente studente) throws Exception {
+        return immatricolazioneController.rinnovaIscrizioneStudente(studente);
+    }
+
+    public boolean rinnovaIscrizioneStudenteCorrente() throws Exception {
+        if (currentUser instanceof Studente) {
+            return rinnovaIscrizioneStudente((Studente) currentUser);
+        }
+        throw new IllegalStateException("Nessuno studente autenticato per effettuare il rinnovo.");
+    }
+
+    public Map<String, Object> getStatoRinnovoStudente(Studente studente) {
+        if (studente == null) {
+            return Collections.emptyMap();
+        }
+        boolean finestraAperta = immatricolazioneController.isFinestraRinnovoAperta(studente);
+        boolean finestraGeneraleAperta = immatricolazioneController.isFinestraRinnovoAperta();
+        boolean tassePregressePagate = studente.isTassePagate();
+        boolean giaRinnovato = studente.isRinnovoEffettuatoPerAnnoCorrente();
+        int annoAttuale = studente.getAnnoCorrente();
+        int prossimoAnno = annoAttuale + 1;
+        int annoImmatricolazione = studente.getAnnoImmatricolazione();
+
+        CorsoDiLaurea corso = gestioneCorsiLaureaController.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
+        if (corso == null) {
+            throw new CorsoDiLaureaNonTrovatoException(
+                    "Corso di laurea non trovato per lo studente: " + studente.getIdCorsoDiLaurea());
+        }
+        int durata = corso.getAnniAccademici();
+        String nomeCorso = corso.getNome();
+
+        boolean saraFuoriCorso = prossimoAnno > durata;
+        double importoStimato = immatricolazioneController.getCalcoloTasseStrategy().calcolaTasse(
+                ImmatricolazioneController.TASSA_RINNOVO_BASE, saraFuoriCorso);
+
+        boolean idoneo = finestraAperta && tassePregressePagate && !giaRinnovato;
+
+        String motivoBlocco = null;
+        if (!finestraGeneraleAperta) {
+            motivoBlocco = "La finestra temporale per il rinnovo è chiusa (aperta dal 1° settembre al 31 dicembre).";
+        } else if (!finestraAperta) {
+            motivoBlocco = "Non è possibile rinnovare l'iscrizione nello stesso anno solare di immatricolazione ("
+                    + annoImmatricolazione + "). La prima finestra di rinnovo valida sarà attiva a partire dall'anno "
+                    + (annoImmatricolazione + 1) + ".";
+        } else if (!tassePregressePagate) {
+            motivoBlocco = "È necessario prima saldare le tasse universitarie pendenti relative all'anno precedente.";
+        } else if (giaRinnovato) {
+            motivoBlocco = "Rinnovo già effettuato per l'anno accademico in corso.";
+        }
+
+        Map<String, Object> stato = new HashMap<>();
+        stato.put("finestraAperta", finestraAperta);
+        stato.put("finestraGeneraleAperta", finestraGeneraleAperta);
+        stato.put("tassePregressePagate", tassePregressePagate);
+        stato.put("giaRinnovato", giaRinnovato);
+        stato.put("annoAttuale", annoAttuale);
+        stato.put("prossimoAnno", prossimoAnno);
+        stato.put("annoImmatricolazione", annoImmatricolazione);
+        stato.put("isFuoriCorsoAttuale", studente.isFuoriCorso());
+        stato.put("saraFuoriCorso", saraFuoriCorso);
+        stato.put("durataCorso", durata);
+        stato.put("nomeCorso", nomeCorso);
+        stato.put("importoStimato", importoStimato);
+        stato.put("idoneo", idoneo);
+        stato.put("motivoBlocco", motivoBlocco);
+        return stato;
+    }
+
+    public Map<String, Object> getStatoRinnovoStudenteCorrente() {
+        if (currentUser instanceof Studente) {
+            return getStatoRinnovoStudente((Studente) currentUser);
+        }
+        return Collections.emptyMap();
     }
 
     public List<CorsoDiLaurea> getCorsiDiLaurea() {
@@ -775,24 +854,27 @@ public class Unicenter {
      * UC6: Il professore autenticato crea una sottocartella in una materia.
      */
     public it.project.materiale.Cartella creaCartellaMateriale(String codiceMateria, String idCartellaGenitore,
-                                                               String nomeCartella, String descrizione) {
+            String nomeCartella, String descrizione) {
         if (!(currentUser instanceof Professore)) {
             throw new IllegalStateException("Solo un professore autenticato può creare cartelle di materiale.");
         }
-        return materialeDidatticoController.creaCartella((Professore) currentUser, codiceMateria, idCartellaGenitore, nomeCartella, descrizione);
+        return materialeDidatticoController.creaCartella((Professore) currentUser, codiceMateria, idCartellaGenitore,
+                nomeCartella, descrizione);
     }
 
     /**
      * UC6: Il professore autenticato carica un materiale didattico.
      */
-    public it.project.materiale.MaterialeDidattico caricaMaterialeDidattico(String codiceMateria, String idCartellaGenitore,
-                                                                           String nomeFile, String descrizione,
-                                                                           it.project.materiale.TipoMateriale tipo,
-                                                                           byte[] contenuto) {
+    public it.project.materiale.MaterialeDidattico caricaMaterialeDidattico(String codiceMateria,
+            String idCartellaGenitore,
+            String nomeFile, String descrizione,
+            it.project.materiale.TipoMateriale tipo,
+            byte[] contenuto) {
         if (!(currentUser instanceof Professore)) {
             throw new IllegalStateException("Solo un professore autenticato può caricare materiale didattico.");
         }
-        return materialeDidatticoController.caricaMateriale((Professore) currentUser, codiceMateria, idCartellaGenitore, nomeFile, descrizione, tipo, contenuto);
+        return materialeDidatticoController.caricaMateriale((Professore) currentUser, codiceMateria, idCartellaGenitore,
+                nomeFile, descrizione, tipo, contenuto);
     }
 
     /**
@@ -837,7 +919,8 @@ public class Unicenter {
     }
 
     /**
-     * UC10: Restituisce i materiali e le cartelle preferite dello studente autenticato.
+     * UC10: Restituisce i materiali e le cartelle preferite dello studente
+     * autenticato.
      */
     public List<it.project.materiale.ElementoDidattico> getPreferitiMaterialeStudente() {
         if (!(currentUser instanceof Studente)) {
@@ -847,4 +930,3 @@ public class Unicenter {
     }
 
 }
-

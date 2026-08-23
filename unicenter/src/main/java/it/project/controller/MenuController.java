@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import it.project.Amministratore;
@@ -118,6 +119,7 @@ public class MenuController {
             view.mostraMessaggio("5. Visualizza libretto");
             view.mostraMessaggio("6. Gestione tasse universitarie (Visualizza / Paga)");
             view.mostraMessaggio("7. Compila Piano di Studi (UC9)");
+            view.mostraMessaggio("8. Rinnova iscrizione ad anno successivo");
             view.mostraMessaggio("0. Torna al menu principale");
 
             int scelta = leggiIntero("Seleziona un'opzione: ");
@@ -292,9 +294,70 @@ public class MenuController {
                 }
 
                 case 7 -> gestisciCompilazionePianoStudi();
+                case 8 -> gestisciRinnovoIscrizione();
                 case 0 -> back = true;
                 default -> view.mostraMessaggio("\nOpzione non valida. Riprova.");
             }
+        }
+    }
+
+    private void gestisciRinnovoIscrizione() {
+        view.mostraMessaggio("\n--- Rinnovo Iscrizione ad Anno Successivo ---");
+        try {
+            Map<String, Object> stato = unicenter.getStatoRinnovoStudenteCorrente();
+            if (stato.isEmpty()) {
+                view.mostraErrore("Nessuno studente autenticato.");
+                return;
+            }
+            int annoAttuale = (int) stato.get("annoAttuale");
+            int prossimoAnno = (int) stato.get("prossimoAnno");
+            boolean isFuoriCorsoAttuale = (boolean) stato.get("isFuoriCorsoAttuale");
+            boolean saraFuoriCorso = (boolean) stato.get("saraFuoriCorso");
+            boolean finestraAperta = (boolean) stato.get("finestraAperta");
+            boolean tassePregressePagate = (boolean) stato.get("tassePregressePagate");
+            boolean giaRinnovato = (boolean) stato.get("giaRinnovato");
+            double importoStimato = (double) stato.get("importoStimato");
+
+            view.mostraMessaggio("Corso di Laurea: " + stato.get("nomeCorso"));
+            view.mostraMessaggio("Anno accademico attuale: " + annoAttuale + "° anno ("
+                    + (isFuoriCorsoAttuale ? "Fuori Corso" : "In Corso") + ")");
+            view.mostraMessaggio("Prossimo anno di iscrizione: " + prossimoAnno + "° anno ("
+                    + (saraFuoriCorso ? "Fuori Corso" : "In Corso") + ")");
+            view.mostraMessaggio(
+                    "Finestra temporale: " + (finestraAperta ? "APERTA (1 Settembre - 31 Dicembre)" : "CHIUSA"));
+            view.mostraMessaggio("Tasse anno precedente: "
+                    + (tassePregressePagate ? "REGOLARI (Saldate)" : "NON SALDATE (Debito pendente)"));
+            view.mostraMessaggio(
+                    "Rinnovo per ciclo corrente: " + (giaRinnovato ? "GIA' EFFETTUATO" : "NON ANCORA EFFETTUATO"));
+            view.mostraMessaggio("Importo tasse stimato: " + String.format("%.2f €", importoStimato));
+
+            if (!finestraAperta) {
+                String motivo = (String) stato.get("motivoBlocco");
+                view.mostraErrore(motivo != null ? motivo : "La finestra di rinnovo iscrizioni è attualmente chiusa.");
+                return;
+            }
+            if (!tassePregressePagate) {
+                view.mostraErrore(
+                        "Impossibile rinnovare l'iscrizione: è necessario prima saldare le tasse dell'anno precedente.");
+                return;
+            }
+            if (giaRinnovato) {
+                view.mostraMessaggio("\nHai già rinnovato l'iscrizione per questo anno accademico.");
+                return;
+            }
+
+            view.mostraMessaggio("\n1. Conferma ed esegui rinnovo iscrizione");
+            view.mostraMessaggio("0. Annulla e torna indietro");
+            int scelta = leggiIntero("Seleziona un'opzione: ");
+            if (scelta == 1) {
+                unicenter.rinnovaIscrizioneStudenteCorrente();
+                view.mostraMessaggio("\n[SUCCESSO] Rinnovo iscrizione completato con successo!");
+                view.mostraMessaggio("Sei ora iscritto al " + prossimoAnno + "° anno ("
+                        + (saraFuoriCorso ? "Fuori Corso" : "In Corso") + ").");
+                view.mostraMessaggio("Ricordati di procedere al pagamento delle tasse per il nuovo anno accademico.");
+            }
+        } catch (Exception e) {
+            view.mostraErrore("Errore durante il rinnovo dell'iscrizione: " + e.getMessage());
         }
     }
 

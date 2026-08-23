@@ -30,9 +30,61 @@ Il sistema è stato progettato seguendo i requisiti funzionali emersi in fase di
 
 ---
 
-## 🛠 Requisiti
-* **Java Development Kit (JDK) 25+**
-* **Maven**
+## 🛠 Requisiti di Sistema
 
-# Autori
-Simone Platania, Alessandra Scilio, Alberto Calabrese.
+Per compilare ed eseguire **UniCenter** sono necessari i seguenti prerequisiti software:
+
+* **Java Development Kit (JDK)**: Versione **21** o superiore (supporta anche JDK 25+ / 26).
+* **Apache Maven**: Versione **3.8+** per la gestione del ciclo di vita del software, risoluzione delle dipendenze e testing automatico.
+* **Browser Web**: Qualsiasi browser moderno (Google Chrome, Mozilla Firefox, Apple Safari, Microsoft Edge) con JavaScript abilitato.
+
+---
+
+## ⚡ Installazione e Avvio Rapido
+
+### 1. Clonazione del Repository
+```bash
+git clone https://github.com/simoplat/UniCenter.git
+cd UniCenter/unicenter
+```
+
+### 2. Compilazione del Progetto
+```bash
+mvn clean compile
+```
+
+### 3. Esecuzione della Suite di Test Unitari e di Integrazione
+Il progetto include una suite completa di oltre 280 test automatizzati:
+```bash
+mvn test
+```
+
+### 4. Avvio dell'Applicazione
+Per avviare il sistema e il relativo server web integrato:
+```bash
+mvn exec:java -Dexec.mainClass="it.project.Main"
+```
+
+Una volta avviato, la console mostrerà la conferma di inizializzazione e sarà possibile accedere al portale web all'indirizzo:
+👉 **[http://localhost:8080](http://localhost:8080)**
+
+---
+
+## 🏗️ Architettura e Design Patterns
+
+Il progetto segue rigorosamente i principi di **Object-Oriented Design** e i pattern architetturali **GRASP** e **GoF**:
+
+* **Chain of Responsibility**: validazione a catena per l'iscrizione agli appelli (controllo tasse, propedeuticità, fascia cognome, posti disponibili, scadenza).
+* **State Pattern**: gestione del ciclo di vita dei voti e verbali d'esame (`InAttesaConferma`, `Approvato`, `Rifiutato`, `Bocciato`).
+* **Strategy Pattern**: algoritmo di calcolo delle tasse universitarie e maggiorazioni fuori corso (`ICalcoloTasseStrategy`).
+* **Observer Pattern**: sistema asincrono di notifiche ed eventi per studenti e docenti (`ObserverNotifica`).
+* **Composite Pattern**: gestione gerarchica ad albero di cartelle e file del materiale didattico (`ElementoMateriale`, `Cartella`, `FileDidattico`).
+* **Builder & Factory**: creazione controllata di carriere/studenti (`StudenteBuilder`) e corsi di laurea (`CorsoDiLaureaFactory`).
+* **Pure Fabrication**: `ClockProvider` per la simulazione temporale e test manuali delle finestre di immatricolazione, rinnovo ed esami.
+
+---
+
+## 👥 Autori
+* **Simone Platania**
+* **Alessandra Scilio**
+* **Alberto Calabrese**

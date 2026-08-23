@@ -44,22 +44,22 @@ class DataTermineIscrizioneValidatorTest {
         assertTrue(ex.getMessage().contains("data di scadenza iscrizioni non definita"));
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        it.project.database.ClockProvider.resetClock();
+    }
+
     @Test
     void validate_oggiDopoIlTermine_lanciaDataNonValidaException() {
-        // Le date vanno costruite PRIMA di aprire mockStatic(LocalDate.class):
-        // se venissero create dentro il blocco, LocalDate.of(...) sarebbe a sua volta
-        // una chiamata al metodo statico mockato, causando UnfinishedStubbingException.
         LocalDate termine = LocalDate.of(2026, 1, 1);
         LocalDate oggi = LocalDate.of(2026, 1, 2);
         when(appello.getTermineIscrizione()).thenReturn(termine);
 
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(oggi);
+        it.project.database.ClockProvider.setFixedDate(oggi);
 
-            DataNonValidaException ex = assertThrows(DataNonValidaException.class,
-                    () -> validator.validate(studente, appello));
-            assertTrue(ex.getMessage().contains("si sono chiuse il"));
-        }
+        DataNonValidaException ex = assertThrows(DataNonValidaException.class,
+                () -> validator.validate(studente, appello));
+        assertTrue(ex.getMessage().contains("si sono chiuse il"));
     }
 
     @Test
@@ -67,11 +67,9 @@ class DataTermineIscrizioneValidatorTest {
         LocalDate termine = LocalDate.of(2026, 1, 1);
         when(appello.getTermineIscrizione()).thenReturn(termine);
 
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(termine);
+        it.project.database.ClockProvider.setFixedDate(termine);
 
-            assertTrue(validator.validate(studente, appello));
-        }
+        assertTrue(validator.validate(studente, appello));
     }
 
     @Test
@@ -80,11 +78,9 @@ class DataTermineIscrizioneValidatorTest {
         LocalDate oggi = LocalDate.of(2026, 1, 5);
         when(appello.getTermineIscrizione()).thenReturn(termine);
 
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(oggi);
+        it.project.database.ClockProvider.setFixedDate(oggi);
 
-            assertTrue(validator.validate(studente, appello));
-        }
+        assertTrue(validator.validate(studente, appello));
     }
 
     @Test
@@ -95,12 +91,10 @@ class DataTermineIscrizioneValidatorTest {
         when(nextValidator.validate(studente, appello)).thenReturn(true);
         validator.setNext(nextValidator);
 
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(oggi);
+        it.project.database.ClockProvider.setFixedDate(oggi);
 
-            assertTrue(validator.validate(studente, appello));
-            verify(nextValidator, times(1)).validate(studente, appello);
-        }
+        assertTrue(validator.validate(studente, appello));
+        verify(nextValidator, times(1)).validate(studente, appello);
     }
 
     @Test
@@ -110,11 +104,9 @@ class DataTermineIscrizioneValidatorTest {
         when(appello.getTermineIscrizione()).thenReturn(termine);
         validator.setNext(nextValidator);
 
-        try (MockedStatic<LocalDate> mockedLocalDate = mockStatic(LocalDate.class)) {
-            mockedLocalDate.when(LocalDate::now).thenReturn(oggi);
+        it.project.database.ClockProvider.setFixedDate(oggi);
 
-            assertThrows(DataNonValidaException.class, () -> validator.validate(studente, appello));
-        }
+        assertThrows(DataNonValidaException.class, () -> validator.validate(studente, appello));
 
         verifyNoInteractions(nextValidator);
     }
