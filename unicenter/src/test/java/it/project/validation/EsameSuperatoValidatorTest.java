@@ -14,6 +14,7 @@ import it.project.Appello;
 import it.project.EsameSostenuto;
 import it.project.Libretto;
 import it.project.Studente;
+import it.project.exceptions.validator.EsameGiaSuperatoException;
 
 @ExtendWith(MockitoExtension.class)
 class EsameSuperatoValidatorTest {
@@ -53,8 +54,8 @@ class EsameSuperatoValidatorTest {
     }
 
     @Test
-    @DisplayName("validate() lancia IllegalStateException se l'esame è già superato nel libretto")
-    void validate_esameGiaSuperatoNelLibretto_lanciaIllegalStateException() {
+    @DisplayName("validate() lancia EsameGiaSuperatoException se l'esame è già superato nel libretto")
+    void validate_esameGiaSuperatoNelLibretto_lanciaEsameGiaSuperatoException() {
         when(appello.getCodiceMateria()).thenReturn("IS01");
 
         // Registriamo l'esame approvato nel libretto dello studente
@@ -62,7 +63,7 @@ class EsameSuperatoValidatorTest {
         esame.accetta();
         studente.getLibretto().registraEsame(esame);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        EsameGiaSuperatoException ex = assertThrows(EsameGiaSuperatoException.class,
                 () -> validator.validate(studente, appello));
         assertTrue(ex.getMessage().contains("esame già superato"));
     }
@@ -77,7 +78,7 @@ class EsameSuperatoValidatorTest {
         esame.accetta();
         studente.getLibretto().registraEsame(esame);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(EsameGiaSuperatoException.class, () -> validator.validate(studente, appello));
         verifyNoInteractions(nextValidator);
     }
 

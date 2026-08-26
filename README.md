@@ -16,7 +16,7 @@ Il progetto **UniCenter** nasce con l'obiettivo di fornire uno strumento flessib
 Il sistema è stato progettato seguendo i requisiti funzionali emersi in fase di analisi, suddivisi per aree di competenza:
 
 ### 👨‍🎓 Area Studente
-* **`UC2` Iscriversi ad un Appello** Sistema di prenotazione esami con controllo automatico delle propedeuticità e verifica dello stato dei pagamenti (tasse).
+* **`UC2` Iscriversi ad un Appello** Sistema di prenotazione esami con controllo automatico dei vincoli curriculari (anno di corso, presenza nel piano di studi approvato, esame non ancora superato) e verifica dello stato dei pagamenti (tasse).
 * **`UC3` Accettare/Rifiutare Voto** Workflow per la gestione degli esiti dopo la pubblicazione da parte dei docenti.
 * **`UC8/UC9` Carriera e Piano di Studi** Procedure di immatricolazione ai Corsi di Laurea e compilazione assistita del Piano di Studi con validazione dei crediti.
 * **`UC10` Materiale Didattico** Accesso centralizzato alla documentazione e download delle risorse caricate dai docenti.
@@ -74,13 +74,13 @@ Una volta avviato, la console mostrerà la conferma di inizializzazione e sarà 
 
 Il progetto segue rigorosamente i principi di **Object-Oriented Design** e i pattern architetturali **GRASP** e **GoF**:
 
-* **Chain of Responsibility**: validazione a catena per l'iscrizione agli appelli (controllo tasse, propedeuticità, fascia cognome, posti disponibili, scadenza).
-* **State Pattern**: gestione del ciclo di vita dei voti e verbali d'esame (`InAttesaConferma`, `Approvato`, `Rifiutato`, `Bocciato`).
+* **Chain of Responsibility**: validazione modulare a catena per l'iscrizione agli appelli (esame non ancora superato, piano di studi approvato, coerenza anno di corso studente/materia, posti disponibili, tasse universitarie in regola, fascia alfabetica cognome, scadenza termini di prenotazione).
+* **State Pattern**: gestione del ciclo di vita dei voti e verbali d'esame (`InAttesaConferma`, `Approvato`, `Rifiutato`, `Bocciato`) e approvazione dei piani di studio.
 * **Strategy Pattern**: algoritmo di calcolo delle tasse universitarie e maggiorazioni fuori corso (`ICalcoloTasseStrategy`).
-* **Observer Pattern**: sistema asincrono di notifiche ed eventi per studenti e docenti (`ObserverNotifica`).
-* **Composite Pattern**: gestione gerarchica ad albero di cartelle e file del materiale didattico (`ElementoMateriale`, `Cartella`, `FileDidattico`).
-* **Builder & Factory**: creazione controllata di carriere/studenti (`StudenteBuilder`) e corsi di laurea (`CorsoDiLaureaFactory`).
-* **Pure Fabrication**: `ClockProvider` per la simulazione temporale e test manuali delle finestre di immatricolazione, rinnovo ed esami.
+* **Observer Pattern**: sistema asincrono di notifiche ed eventi per studenti e docenti (`ObserverNotifica`, `ObserverEsitoVoto`).
+* **Composite Pattern**: gestione gerarchica ad albero di cartelle e file del materiale didattico (`ElementoDidattico`, `Cartella`, `MaterialeDidattico` e sottoclassi polimorfiche).
+* **Builder & Simple Factory**: creazione fluente di studenti/carriere (`StudenteBuilder`) e creazione controllata con validazione strutturale per i corsi di laurea (`CorsoDiLaureaFactory`).
+* **Pure Fabrication**: `ClockProvider` per la simulazione temporale e test deterministici delle finestre di immatricolazione, rinnovo ed esami.
 
 ---
 

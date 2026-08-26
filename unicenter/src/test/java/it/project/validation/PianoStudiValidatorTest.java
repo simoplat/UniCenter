@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import it.project.Appello;
 import it.project.PianoDiStudi;
 import it.project.Studente;
+import it.project.exceptions.validator.PianoStudiNonValidoException;
 
 @ExtendWith(MockitoExtension.class)
 class PianoStudiValidatorTest {
@@ -57,21 +58,21 @@ class PianoStudiValidatorTest {
     }
 
     @Test
-    void validate_materiaAssenteNelPianoStudi_lanciaIllegalStateException() {
+    void validate_materiaAssenteNelPianoStudi_lanciaPianoStudiNonValidoException() {
         studente.setPianoDiStudi(pianoDiStudi);
         when(pianoDiStudi.contieneMateria("BD01")).thenReturn(false);
         when(appello.getCodiceMateria()).thenReturn("BD01");
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        PianoStudiNonValidoException ex = assertThrows(PianoStudiNonValidoException.class,
                 () -> validator.validate(studente, appello));
         assertTrue(ex.getMessage().contains("materia non presente"));
     }
 
     @Test
-    void validate_pianoStudiNullo_lanciaIllegalStateException() {
+    void validate_pianoStudiNullo_lanciaPianoStudiNonValidoException() {
         studente.setPianoDiStudi(null);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(PianoStudiNonValidoException.class, () -> validator.validate(studente, appello));
     }
 
     @Test
@@ -81,7 +82,7 @@ class PianoStudiValidatorTest {
         when(appello.getCodiceMateria()).thenReturn("BD01");
         validator.setNext(nextValidator);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(PianoStudiNonValidoException.class, () -> validator.validate(studente, appello));
         verifyNoInteractions(nextValidator);
     }
 }

@@ -336,4 +336,45 @@ class ImmatricolazioneControllerTest {
         assertEquals(2029, studente.getAnnoUltimoRinnovo());
         assertEquals(ImmatricolazioneController.TASSA_RINNOVO_BASE + 300.0, studente.getTasse());
     }
+
+    // ---------------------------------------------------------------
+    // getStatoRinnovoStudente
+    // ---------------------------------------------------------------
+
+    @Test
+    void getStatoRinnovoStudente_studenteNull_restituisceMappaVuota() {
+        var stato = controller.getStatoRinnovoStudente(null);
+        assertTrue(stato.isEmpty());
+    }
+
+    @Test
+    void getStatoRinnovoStudente_studenteIdoneo_restituisceDatiCorretti() {
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 15));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(true);
+
+        var stato = controller.getStatoRinnovoStudente(studente);
+        assertFalse(stato.isEmpty());
+        assertEquals(true, stato.get("idoneo"));
+        assertEquals(true, stato.get("finestraAperta"));
+        assertEquals(true, stato.get("tassePregressePagate"));
+        assertEquals(false, stato.get("giaRinnovato"));
+        assertEquals(1, stato.get("annoAttuale"));
+        assertEquals(2, stato.get("prossimoAnno"));
+        assertNull(stato.get("motivoBlocco"));
+    }
+
+    @Test
+    void getStatoRinnovoStudente_tasseNonPagate_motivoBloccoValorizzato() {
+        ClockProvider.setFixedDate(LocalDate.of(2027, 10, 15));
+        Studente studente = new Studente("M001", "Mario", "Rossi", "mario@studenti.it", "pass123", "CF001", "ING-INF");
+        studente.setAnnoImmatricolazione(2026);
+        studente.setTassePagate(false);
+
+        var stato = controller.getStatoRinnovoStudente(studente);
+        assertEquals(false, stato.get("idoneo"));
+        assertNotNull(stato.get("motivoBlocco"));
+        assertTrue(((String) stato.get("motivoBlocco")).contains("tasse universitarie"));
+    }
 }

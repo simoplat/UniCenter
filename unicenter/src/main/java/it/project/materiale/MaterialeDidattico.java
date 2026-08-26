@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import it.project.database.ClockProvider;
 import it.project.materiale.repository.MaterialeDidatticoRepository;
 
 /**
@@ -58,7 +59,7 @@ public abstract class MaterialeDidattico implements ElementoDidattico {
         this.ownerProfessoreId = ownerProfessoreId;
         this.codiceMateria = codiceMateria;
         this.tipo = tipo;
-        this.dataCreazione = LocalDateTime.now();
+        this.dataCreazione = ClockProvider.nowLocalDateTime();
         this.repository = repository;
     }
 
@@ -88,7 +89,7 @@ public abstract class MaterialeDidattico implements ElementoDidattico {
         this.ownerProfessoreId = ownerProfessoreId;
         this.codiceMateria = codiceMateria;
         this.tipo = tipo;
-        this.dataCreazione = dataCreazione != null ? dataCreazione : LocalDateTime.now();
+        this.dataCreazione = dataCreazione != null ? dataCreazione : ClockProvider.nowLocalDateTime();
         this.repository = repository;
     }
 

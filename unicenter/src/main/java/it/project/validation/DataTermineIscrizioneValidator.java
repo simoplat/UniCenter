@@ -3,6 +3,7 @@ package it.project.validation;
 import it.project.Appello;
 import it.project.Studente;
 import it.project.exceptions.DataNonValidaException;
+import it.project.exceptions.validator.IscrizioneNonValidaException;
 import java.time.LocalDate;
 
 import it.project.database.ClockProvider;
@@ -14,7 +15,7 @@ import it.project.database.ClockProvider;
 public class DataTermineIscrizioneValidator extends AbstractIscrizioneValidator {
 
     @Override
-    public boolean validate(Studente studente, Appello appello) throws Exception {
+    public boolean validate(Studente studente, Appello appello) throws IscrizioneNonValidaException {
         LocalDate oggi = ClockProvider.nowLocalDate();
         LocalDate termineIscrizione = appello.getTermineIscrizione(); // o appello.getRegistrationDeadline()
 

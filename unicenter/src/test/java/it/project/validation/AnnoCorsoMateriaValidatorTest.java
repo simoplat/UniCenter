@@ -12,6 +12,7 @@ import it.project.Materia;
 import it.project.PianoDiStudi;
 import it.project.Studente;
 import it.project.controller.GestioneCorsiLaureaController;
+import it.project.exceptions.validator.AnnoCorsoNonValidoException;
 
 class AnnoCorsoMateriaValidatorTest {
 
@@ -66,14 +67,14 @@ class AnnoCorsoMateriaValidatorTest {
     }
 
     @Test
-    void validate_materiaObbligatoria_annoFuturo_lanciaIllegalStateException() {
+    void validate_materiaObbligatoria_annoFuturo_lanciaAnnoCorsoNonValidoException() {
         Studente studente = creaStudente(1); // 1° anno
         studente.getPianoDiStudi().aggiungiMateriaObbligatoria("BD01"); // materia del 2° anno
 
         Appello appello = mock(Appello.class);
         when(appello.getCodiceMateria()).thenReturn("BD01");
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        AnnoCorsoNonValidoException ex = assertThrows(AnnoCorsoNonValidoException.class,
                 () -> validator.validate(studente, appello));
         assertTrue(ex.getMessage().contains("materia obbligatoria 'BD01'"));
         assertTrue(ex.getMessage().contains("2° anno"));

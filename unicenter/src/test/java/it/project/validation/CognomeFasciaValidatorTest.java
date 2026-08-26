@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import it.project.Appello;
 import it.project.Studente;
+import it.project.exceptions.validator.FasciaCognomeNonValidaException;
 
 @ExtendWith(MockitoExtension.class)
 class CognomeFasciaValidatorTest {
@@ -58,21 +59,21 @@ class CognomeFasciaValidatorTest {
     }
 
     @Test
-    void validate_cognomeSopraLaFascia_lanciaIllegalStateException() {
+    void validate_cognomeSopraLaFascia_lanciaFasciaCognomeNonValidaException() {
         Studente studente = creaStudente("Rossi"); // R
         when(appello.getVincoloLetteraCognome()).thenReturn("A-M");
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        FasciaCognomeNonValidaException ex = assertThrows(FasciaCognomeNonValidaException.class,
                 () -> validator.validate(studente, appello));
         assertTrue(ex.getMessage().contains("A-M"));
     }
 
     @Test
-    void validate_cognomeSottoLaFascia_lanciaIllegalStateException() {
+    void validate_cognomeSottoLaFascia_lanciaFasciaCognomeNonValidaException() {
         Studente studente = creaStudente("Bianchi"); // B
         when(appello.getVincoloLetteraCognome()).thenReturn("N-Z");
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(FasciaCognomeNonValidaException.class, () -> validator.validate(studente, appello));
     }
 
     @Test
@@ -100,21 +101,21 @@ class CognomeFasciaValidatorTest {
     }
 
     @Test
-    void validate_cognomeNullo_lanciaIllegalStateException() {
+    void validate_cognomeNullo_lanciaFasciaCognomeNonValidaException() {
         Studente studente = creaStudente("Placeholder");
         studente.setCognome(null);
         when(appello.getVincoloLetteraCognome()).thenReturn("A-Z");
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(FasciaCognomeNonValidaException.class, () -> validator.validate(studente, appello));
     }
 
     @Test
-    void validate_cognomeVuoto_lanciaIllegalStateException() {
+    void validate_cognomeVuoto_lanciaFasciaCognomeNonValidaException() {
         Studente studente = creaStudente("Placeholder");
         studente.setCognome("   ");
         when(appello.getVincoloLetteraCognome()).thenReturn("A-Z");
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(FasciaCognomeNonValidaException.class, () -> validator.validate(studente, appello));
     }
 
     @Test
@@ -150,7 +151,7 @@ class CognomeFasciaValidatorTest {
         when(appello.getVincoloLetteraCognome()).thenReturn("A-M");
         validator.setNext(nextValidator);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(FasciaCognomeNonValidaException.class, () -> validator.validate(studente, appello));
         verifyNoInteractions(nextValidator);
     }
 }

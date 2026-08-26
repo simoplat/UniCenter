@@ -163,14 +163,8 @@ public class GestioneAppelliController {
             throw new IllegalStateException("Sei già iscritto a questo appello.");
         }
 
-        // Controlla se lo studente ha già superato l'esame per questa materia
-        String codiceMateria = appello.getCodiceMateria();
-        if (studente.getLibretto() != null && studente.getLibretto().isEsameSuperato(codiceMateria)) {
-            throw new IllegalStateException(
-                    "Iscrizione rifiutata: esame già superato e verbalizzato nel libretto.");
-        }
-
         // Controlla se lo studente ha un esito pendente per questa materia
+        String codiceMateria = appello.getCodiceMateria();
         List<EsameSostenuto> esitiPendenti = unicenter.getEsitiPendentiByMatricola(studente.getMatricola());
         if (esitiPendenti != null) {
             for (EsameSostenuto esame : esitiPendenti) {
@@ -381,7 +375,7 @@ public class GestioneAppelliController {
                 "Posti disponibili " + postiRimanenti + "\n" +
                 "Vincolo cognome " + vincoloNormalizzato + "\n" +
                 "Data termine iscrizione: " + dataTermineIscrizione + "\n";
-        Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());
+        Notifica notifica = new Notifica(oggetto, contenuto, ClockProvider.nowLocalDateTime());
         appello.notifica(notifica);
         return true;
     }
@@ -397,7 +391,7 @@ public class GestioneAppelliController {
 
         String oggetto = "Eliminazione appello " + codiceAppello;
         String contenuto = "L'appello " + codiceAppello + " è stato eliminato.";
-        Notifica notifica = new Notifica(oggetto, contenuto, LocalDateTime.now());
+        Notifica notifica = new Notifica(oggetto, contenuto, ClockProvider.nowLocalDateTime());
         appello.notifica(notifica);
 
         appelli.remove(appello);

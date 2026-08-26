@@ -3,6 +3,7 @@ package it.project.materiale;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import it.project.database.ClockProvider;
 import it.project.materiale.repository.MaterialeDidatticoRepository;
 
 /**
@@ -38,7 +39,7 @@ public class Cartella implements ElementoDidattico {
         this.pathRelativo = pathRelativo != null ? pathRelativo : "";
         this.ownerProfessoreId = ownerProfessoreId;
         this.codiceMateria = codiceMateria;
-        this.dataCreazione = LocalDateTime.now();
+        this.dataCreazione = ClockProvider.nowLocalDateTime();
         this.elementi = new ArrayList<>();
     }
 
@@ -61,7 +62,7 @@ public class Cartella implements ElementoDidattico {
         this.pathRelativo = pathRelativo != null ? pathRelativo : "";
         this.ownerProfessoreId = ownerProfessoreId;
         this.codiceMateria = codiceMateria;
-        this.dataCreazione = dataCreazione != null ? dataCreazione : LocalDateTime.now();
+        this.dataCreazione = dataCreazione != null ? dataCreazione : ClockProvider.nowLocalDateTime();
         this.elementi = new ArrayList<>();
     }
 

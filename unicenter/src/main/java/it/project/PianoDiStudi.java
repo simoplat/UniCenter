@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import it.project.database.ClockProvider;
 import it.project.observer.ObserverNotifica;
 import it.project.state.IStatoPianoDiStudi;
 import it.project.state.StatoBozzaPiano;
@@ -321,7 +322,7 @@ public class PianoDiStudi {
     private void notificaOsservatori(String esito) {
         String oggetto = "Esito Piano di Studi: " + esito;
         String messaggio = "Il tuo piano di studi è stato " + esito.toLowerCase() + " dalla Segreteria/Amministratore.";
-        Notifica notifica = new Notifica(oggetto, messaggio, LocalDateTime.now());
+        Notifica notifica = new Notifica(oggetto, messaggio, ClockProvider.nowLocalDateTime());
         for (ObserverNotifica obs : new ArrayList<>(osservatori)) {
             obs.riceviNotifica(notifica);
         }

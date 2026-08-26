@@ -642,60 +642,7 @@ public class Unicenter {
      * @return mappa con parametri di stato rinnovo
      */
     public Map<String, Object> getStatoRinnovoStudente(Studente studente) {
-        if (studente == null) {
-            return Collections.emptyMap();
-        }
-        boolean finestraAperta = immatricolazioneController.isFinestraRinnovoAperta(studente);
-        boolean finestraGeneraleAperta = immatricolazioneController.isFinestraRinnovoAperta();
-        boolean tassePregressePagate = studente.isTassePagate();
-        boolean giaRinnovato = studente.isRinnovoEffettuatoPerAnnoCorrente();
-        int annoAttuale = studente.getAnnoCorrente();
-        int prossimoAnno = annoAttuale + 1;
-        int annoImmatricolazione = studente.getAnnoImmatricolazione();
-
-        CorsoDiLaurea corso = gestioneCorsiLaureaController.trovaCorsoDiLaureaById(studente.getIdCorsoDiLaurea());
-        if (corso == null) {
-            throw new CorsoDiLaureaNonTrovatoException(
-                    "Corso di laurea non trovato per lo studente: " + studente.getIdCorsoDiLaurea());
-        }
-        int durata = corso.getAnniAccademici();
-        String nomeCorso = corso.getNome();
-
-        boolean saraFuoriCorso = prossimoAnno > durata;
-        double importoStimato = immatricolazioneController.getCalcoloTasseStrategy().calcolaTasse(
-                ImmatricolazioneController.TASSA_RINNOVO_BASE, saraFuoriCorso);
-
-        boolean idoneo = finestraAperta && tassePregressePagate && !giaRinnovato;
-
-        String motivoBlocco = null;
-        if (!finestraGeneraleAperta) {
-            motivoBlocco = "La finestra temporale per il rinnovo è chiusa (aperta dal 1° settembre al 31 dicembre).";
-        } else if (!finestraAperta) {
-            motivoBlocco = "Non è possibile rinnovare l'iscrizione nello stesso anno solare di immatricolazione ("
-                    + annoImmatricolazione + "). La prima finestra di rinnovo valida sarà attiva a partire dall'anno "
-                    + (annoImmatricolazione + 1) + ".";
-        } else if (!tassePregressePagate) {
-            motivoBlocco = "È necessario prima saldare le tasse universitarie pendenti relative all'anno precedente.";
-        } else if (giaRinnovato) {
-            motivoBlocco = "Rinnovo già effettuato per l'anno accademico in corso.";
-        }
-
-        Map<String, Object> stato = new HashMap<>();
-        stato.put("finestraAperta", finestraAperta);
-        stato.put("finestraGeneraleAperta", finestraGeneraleAperta);
-        stato.put("tassePregressePagate", tassePregressePagate);
-        stato.put("giaRinnovato", giaRinnovato);
-        stato.put("annoAttuale", annoAttuale);
-        stato.put("prossimoAnno", prossimoAnno);
-        stato.put("annoImmatricolazione", annoImmatricolazione);
-        stato.put("isFuoriCorsoAttuale", studente.isFuoriCorso());
-        stato.put("saraFuoriCorso", saraFuoriCorso);
-        stato.put("durataCorso", durata);
-        stato.put("nomeCorso", nomeCorso);
-        stato.put("importoStimato", importoStimato);
-        stato.put("idoneo", idoneo);
-        stato.put("motivoBlocco", motivoBlocco);
-        return stato;
+        return immatricolazioneController.getStatoRinnovoStudente(studente);
     }
 
     /**

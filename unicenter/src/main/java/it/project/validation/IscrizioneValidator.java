@@ -2,6 +2,7 @@ package it.project.validation;
 
 import it.project.Appello;
 import it.project.Studente;
+import it.project.exceptions.validator.IscrizioneNonValidaException;
 
 /**
  * Handler interface per il Pattern Chain of Responsibility (GoF Comportamentale)
@@ -21,7 +22,7 @@ public interface IscrizioneValidator {
      * @param studente studente richiedente
      * @param appello  appello a cui iscriversi
      * @return true se valido
-     * @throws Exception in caso di violazione dei vincoli di iscrizione
+     * @throws IscrizioneNonValidaException in caso di violazione di uno dei vincoli di iscrizione
      */
-    boolean validate(Studente studente, Appello appello) throws Exception;
+    boolean validate(Studente studente, Appello appello) throws IscrizioneNonValidaException;
 }

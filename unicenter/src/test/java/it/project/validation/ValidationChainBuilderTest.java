@@ -11,6 +11,8 @@ import it.project.Appello;
 import it.project.PianoDiStudi;
 import it.project.Studente;
 import it.project.exceptions.DataNonValidaException;
+import it.project.exceptions.validator.PianoStudiNonValidoException;
+import it.project.exceptions.validator.TasseNonPagateException;
 
 class ValidationChainBuilderTest {
 
@@ -84,7 +86,7 @@ class ValidationChainBuilderTest {
         Appello appello = mock(Appello.class);
         when(appello.getCodiceMateria()).thenReturn("IS01");
 
-        assertThrows(IllegalStateException.class, () -> chain.validate(studente, appello));
+        assertThrows(PianoStudiNonValidoException.class, () -> chain.validate(studente, appello));
 
         verify(appello, never()).getPostiDisponibili();
         verify(appello, never()).getVincoloLetteraCognome();
@@ -105,7 +107,7 @@ class ValidationChainBuilderTest {
         when(appello.getCodiceMateria()).thenReturn("IS01");
         when(appello.getPostiDisponibili()).thenReturn(10);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        TasseNonPagateException ex = assertThrows(TasseNonPagateException.class,
                 () -> chain.validate(studente, appello));
         assertTrue(ex.getMessage().contains("tasse universitarie non saldate"));
 

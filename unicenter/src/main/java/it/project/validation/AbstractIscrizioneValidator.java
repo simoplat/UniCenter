@@ -2,6 +2,7 @@ package it.project.validation;
 
 import it.project.Appello;
 import it.project.Studente;
+import it.project.exceptions.validator.IscrizioneNonValidaException;
 
 /**
  * Base Handler astratto per il Pattern Chain of Responsibility (GoF Comportamentale).
@@ -21,9 +22,9 @@ public abstract class AbstractIscrizioneValidator implements IscrizioneValidator
      * @param studente studente da validare
      * @param appello  appello richiesto
      * @return true se tutti i validatori successivi hanno esito positivo
-     * @throws Exception in caso di violazione nei validatori successivi
+     * @throws IscrizioneNonValidaException in caso di violazione nei validatori successivi
      */
-    protected boolean checkNext(Studente studente, Appello appello) throws Exception {
+    protected boolean checkNext(Studente studente, Appello appello) throws IscrizioneNonValidaException {
         if (next == null) {
             return true;
         }

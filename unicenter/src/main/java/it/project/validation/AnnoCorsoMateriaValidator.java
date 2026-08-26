@@ -6,6 +6,8 @@ import it.project.PianoDiStudi;
 import it.project.Studente;
 import it.project.Unicenter;
 import it.project.controller.GestioneCorsiLaureaController;
+import it.project.exceptions.validator.AnnoCorsoNonValidoException;
+import it.project.exceptions.validator.IscrizioneNonValidaException;
 
 /**
  * Validatore Chain of Responsibility:
@@ -34,7 +36,7 @@ public class AnnoCorsoMateriaValidator extends AbstractIscrizioneValidator {
     }
 
     @Override
-    public boolean validate(Studente studente, Appello appello) throws Exception {
+    public boolean validate(Studente studente, Appello appello) throws IscrizioneNonValidaException {
         if (studente == null || appello == null) {
             return checkNext(studente, appello);
         }
@@ -68,7 +70,7 @@ public class AnnoCorsoMateriaValidator extends AbstractIscrizioneValidator {
 
             // La materia obbligatoria deve appartenere all'anno corrente o a un anno precedente
             if (annoMateria > 0 && annoMateria > annoCorrenteStudente) {
-                throw new IllegalStateException(
+                throw new AnnoCorsoNonValidoException(
                         "Iscrizione rifiutata: la materia obbligatoria '" + codiceMateria + "' è prevista per il "
                                 + annoMateria + "° anno, mentre lo studente è attualmente iscritto al "
                                 + annoCorrenteStudente + "° anno.");

@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import it.project.Appello;
 import it.project.Carriera;
 import it.project.Studente;
+import it.project.exceptions.validator.TasseNonPagateException;
 
 @ExtendWith(MockitoExtension.class)
 class TassaPaidValidatorTest {
@@ -43,10 +44,10 @@ class TassaPaidValidatorTest {
     }
 
     @Test
-    void validate_tasseNonPagate_lanciaIllegalStateException() {
+    void validate_tasseNonPagate_lanciaTasseNonPagateException() {
         studente.setTassePagate(false);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        TasseNonPagateException ex = assertThrows(TasseNonPagateException.class,
                 () -> validator.validate(studente, appello));
         assertTrue(ex.getMessage().contains("tasse universitarie non saldate"));
     }
@@ -66,7 +67,7 @@ class TassaPaidValidatorTest {
         studente.setTassePagate(false);
         validator.setNext(nextValidator);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(TasseNonPagateException.class, () -> validator.validate(studente, appello));
         verifyNoInteractions(nextValidator);
     }
 }

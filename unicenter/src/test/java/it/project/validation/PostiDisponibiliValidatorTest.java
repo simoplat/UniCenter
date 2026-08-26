@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import it.project.Appello;
 import it.project.Studente;
+import it.project.exceptions.PostiNonValidi;
 
 @ExtendWith(MockitoExtension.class)
 class PostiDisponibiliValidatorTest {
@@ -46,19 +47,19 @@ class PostiDisponibiliValidatorTest {
     }
 
     @Test
-    void validate_postiEsauriti_lanciaIllegalStateException() {
+    void validate_postiEsauriti_lanciaPostiNonValidi() {
         when(appello.getPostiDisponibili()).thenReturn(0);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        PostiNonValidi ex = assertThrows(PostiNonValidi.class,
                 () -> validator.validate(studente, appello));
         assertTrue(ex.getMessage().contains("posti esauriti"));
     }
 
     @Test
-    void validate_postiNegativi_lanciaIllegalStateException() {
+    void validate_postiNegativi_lanciaPostiNonValidi() {
         when(appello.getPostiDisponibili()).thenReturn(-1);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(PostiNonValidi.class, () -> validator.validate(studente, appello));
     }
 
     @Test
@@ -76,7 +77,7 @@ class PostiDisponibiliValidatorTest {
         when(appello.getPostiDisponibili()).thenReturn(0);
         validator.setNext(nextValidator);
 
-        assertThrows(IllegalStateException.class, () -> validator.validate(studente, appello));
+        assertThrows(PostiNonValidi.class, () -> validator.validate(studente, appello));
         verifyNoInteractions(nextValidator);
     }
 }

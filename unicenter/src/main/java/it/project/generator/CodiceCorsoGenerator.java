@@ -1,6 +1,6 @@
 package it.project.generator;
 
-import java.time.Year;
+import it.project.database.ClockProvider;
 
 /**
  * Pattern Utilizzati: Pure Fabrication e Singleton.
@@ -33,7 +33,7 @@ public class CodiceCorsoGenerator {
      * @return stringa con il codice generato (es. CDL-2026-001)
      */
     public synchronized String generateCodice() {
-        int anno = Year.now().getValue();
+        int anno = ClockProvider.nowLocalDate().getYear();
         return "CDL-" + anno + "-" + String.format("%03d", counter++);
     }
 }

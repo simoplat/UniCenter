@@ -4,9 +4,9 @@ import it.project.CorsoDiLaurea;
 import it.project.generator.CodiceCorsoGenerator;
 
 /**
- * Factory Method (GoF Creazionale):
- * Incapsula la logica di creazione di un CorsoDiLaurea,
- * applicando le regole di convalida dei dati iniziali prima dell'istanziazione.
+ * Simple Factory / Static Factory (Pattern Creazionale):
+ * Incapsula la logica di creazione, validazione dei dati iniziali (durata, tipologia)
+ * e generazione del codice univoco prima dell'istanziazione del CorsoDiLaurea (GRASP Creator).
  */
 public class CorsoDiLaureaFactory {
 

@@ -12,13 +12,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import it.project.Appello;
 import it.project.Studente;
+import it.project.exceptions.validator.IscrizioneNonValidaException;
 
 @ExtendWith(MockitoExtension.class)
 class AbstractIscrizioneValidatorTest {
 
     private static class DummyValidator extends AbstractIscrizioneValidator {
         @Override
-        public boolean validate(Studente studente, Appello appello) throws Exception {
+        public boolean validate(Studente studente, Appello appello) throws IscrizioneNonValidaException {
             return checkNext(studente, appello);
         }
     }

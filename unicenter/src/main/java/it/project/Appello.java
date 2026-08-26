@@ -3,6 +3,7 @@ package it.project;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import it.project.observer.ObserverNotifica;
@@ -124,7 +125,7 @@ public class Appello {
      *
      * @return lista studenti iscritti
      */
-    public List<Studente> getIscritti() { return iscritti; }
+    public List<Studente> getIscritti() { return Collections.unmodifiableList(iscritti); }
 
     /**
      * Imposta il codice della materia associata all'appello.

@@ -1,6 +1,7 @@
 package it.project.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -238,7 +239,7 @@ public class GestioneCorsiLaureaController {
      * @return lista completa corsi
      */
     public List<CorsoDiLaurea> getTuttiCorsi() {
-        return corsiDiLaurea;
+        return Collections.unmodifiableList(corsiDiLaurea);
     }
 
     /**

@@ -234,18 +234,18 @@ class GestioneAppelliControllerTest {
         aggiungiAppelloDirettamente(appello);
 
         IscrizioneValidator validatorMock = mock(IscrizioneValidator.class);
-        doThrow(new IllegalStateException("Vincolo non rispettato"))
+        doThrow(new it.project.exceptions.validator.IscrizioneNonValidaException("Vincolo non rispettato"))
                 .when(validatorMock).validate(any(), any());
         iniettaValidatorChainMock(validatorMock);
 
         Studente studente = creaStudente("M004");
-        assertThrows(IllegalStateException.class, () -> controller.iscriviStudente(studente, "APP003"));
+        assertThrows(it.project.exceptions.validator.IscrizioneNonValidaException.class, () -> controller.iscriviStudente(studente, "APP003"));
         assertFalse(appello.getIscritti().contains(studente));
         assertTrue(studente.getNotifiche().isEmpty());
     }
 
     @Test
-    void iscriviStudente_esameGiaSuperatoNelLibretto_lanciaIllegalStateException() throws Exception {
+    void iscriviStudente_esameGiaSuperatoNelLibretto_lanciaEsameGiaSuperatoException() throws Exception {
         Appello appello = creaAppelloValido("APP_SUP");
         aggiungiAppelloDirettamente(appello);
 
@@ -255,7 +255,7 @@ class GestioneAppelliControllerTest {
         esameSuperato.accetta();
         studente.getLibretto().registraEsame(esameSuperato);
 
-        assertThrows(IllegalStateException.class, () -> controller.iscriviStudente(studente, "APP_SUP"));
+        assertThrows(it.project.exceptions.validator.EsameGiaSuperatoException.class, () -> controller.iscriviStudente(studente, "APP_SUP"));
         assertFalse(appello.getIscritti().contains(studente));
     }
 
