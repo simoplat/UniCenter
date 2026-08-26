@@ -53,7 +53,7 @@ public class ImmatricolazioneController {
      * @return nuova istanza di Studente immatricolato
      */
     public Studente immatricolaStudente(String nome, String cognome, String email, String password, String corso,
-            String codiceFisale) {
+            String codiceFiscale) {
 
         CorsoDiLaurea corsoTrovato = unicenter.trovaCorsoDiLaureaByNome(corso);
 
@@ -63,7 +63,7 @@ public class ImmatricolazioneController {
                 .setEmail(email)
                 .setCorsoDiLaurea(corsoTrovato.getId())
                 .setPassword(password)
-                .setCodiceFiscale(codiceFisale)
+                .setCodiceFiscale(codiceFiscale)
                 .build();
         studente.calcolaTasse(calcoloTasseStrategy, tasseImmatricolazione);
         return studente;

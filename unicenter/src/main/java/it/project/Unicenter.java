@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -236,6 +235,9 @@ public class Unicenter {
      * @throws Exception in caso di fallimento della validazione o errore
      */
     public boolean iscriviStudenteAdAppello(String codiceAppello) throws Exception {
+        if (this.currentUser == null || !(this.currentUser instanceof Studente)) {
+            throw new IllegalStateException("Solo uno studente autenticato può iscriversi a un appello.");
+        }
         return gestioneAppelliController.iscriviStudente((Studente) this.currentUser, codiceAppello);
     }
 
@@ -247,6 +249,9 @@ public class Unicenter {
      * @throws Exception in caso di errore o esame già svolto
      */
     public boolean disiscriviStudenteDaAppello(String codiceAppello) throws Exception {
+        if (this.currentUser == null || !(this.currentUser instanceof Studente)) {
+            throw new IllegalStateException("Solo uno studente autenticato può disiscriversi da un appello.");
+        }
         // Vincolo: la disiscrizione è bloccata se la data dell'esame è già passata
         Appello appello = gestioneAppelliController.trovaAppelloByIdAppello(codiceAppello);
         if (appello != null && appello.getDataOra().isBefore(ClockProvider.nowLocalDateTime())) {
@@ -507,6 +512,9 @@ public class Unicenter {
      * @return lista materie del docente
      */
     public List<Materia> getMaterieDelProfessore() {
+        if (this.currentUser == null || !(this.currentUser instanceof Professore)) {
+            throw new IllegalStateException("Solo un professore autenticato può accedere alle proprie materie.");
+        }
         Professore professore = (Professore) getCurrentUser();
         return gestoreMaterie.trovaMaterieDiProfessore(professore.getIdProfessore());
     }
@@ -518,6 +526,9 @@ public class Unicenter {
      * @return true se abilitato
      */
     public boolean isProfessoreAbilitatoAMateria(String codiceMateria) {
+        if (this.currentUser == null || !(this.currentUser instanceof Professore)) {
+            return false;
+        }
         Professore professore = (Professore) getCurrentUser();
         return gestoreMaterie.isProfessoreAbilitatoAMateria(professore.getIdProfessore(), codiceMateria);
     }

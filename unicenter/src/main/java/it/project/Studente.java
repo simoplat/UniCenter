@@ -33,9 +33,6 @@ public class Studente extends Utente implements ObserverNotifica {
             String cognome, String email,
             String password, String codiceFiscale, String idCorsoDiLaurea) {
         super(nome, cognome, email, password, codiceFiscale);
-        this.setNome(nome);
-        this.setCognome(cognome);
-        this.setEmail(email);
         this.notifiche = new ArrayList<>();
         this.preferitiMaterialeIds = new ArrayList<>();
         this.carriera = new Carriera(matricola, idCorsoDiLaurea);

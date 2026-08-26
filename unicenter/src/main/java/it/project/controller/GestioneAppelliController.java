@@ -31,7 +31,7 @@ public class GestioneAppelliController {
     private IscrizioneValidator validatorChain;
     private final List<Appello> appelli;
     private final CodiceAppelloGenerator codiceAppelloGenerator;
-    Unicenter unicenter;
+    private Unicenter unicenter;
 
     /**
      * Costruttore del controller.
@@ -70,7 +70,7 @@ public class GestioneAppelliController {
         char primaLettera = senzaAccenti.charAt(0);
         char secondaLettera = senzaAccenti.charAt(2);
 
-        // Riporta all'ordine alfabetico correnotto se invertito (es. "Z-A" -> "A-Z")
+        // Riporta all'ordine alfabetico corretto se invertito (es. "Z-A" -> "A-Z")
         if (primaLettera > secondaLettera) {
             return "" + secondaLettera + "-" + primaLettera;
         }
@@ -117,7 +117,7 @@ public class GestioneAppelliController {
      */
     public void validateAppello(String codiceMateria, LocalDateTime dataOraStr, String aula,
             int postiDisponibili, String vincoloLetteraCognome, LocalDate termineIscrizione)
-            throws Exception, DataNonValidaException, PostiNonValidi {
+            throws DataNonValidaException, PostiNonValidi {
 
         if (dataOraStr == null || dataOraStr.isBefore(ClockProvider.nowLocalDateTime())) {
             throw new DataNonValidaException("La data e l'ora dell'appello non sono valide.");
@@ -133,15 +133,9 @@ public class GestioneAppelliController {
             throw new PostiNonValidi("Il numero di posti disponibili deve essere maggiore di zero.");
         }
 
-        // if (!(unicenter.getCurrentUser() instanceof Professore)) {
-        // throw new IllegalArgumentException("Solo un professore autenticato può
-        // gestire gli appelli.");
-        // }
-
         if (unicenter.getCurrentUser() != null && !unicenter.isProfessoreAbilitatoAMateria(codiceMateria)) {
             throw new IllegalArgumentException("Il professore non è abilitato a gestire questa materia.");
         }
-        return;
     }
 
     /**
@@ -346,7 +340,7 @@ public class GestioneAppelliController {
      * @throws Exception in caso di altri errori di validazione
      */
     public boolean modificaAppello(String codiceAppello, LocalDateTime dataOra, String aula, int postiDisponibili,
-            String vincolo, LocalDate dataTermineIscrizione) throws Exception, DataNonValidaException, PostiNonValidi {
+            String vincolo, LocalDate dataTermineIscrizione) throws DataNonValidaException, PostiNonValidi {
 
         Appello appello = trovaAppelloByIdAppello(codiceAppello);
         String vincoloNormalizzato = normalizzaEValidaVincolo(vincolo);

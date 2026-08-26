@@ -11,7 +11,7 @@ public class Notifica {
     private String oggetto;
     private String messaggio;
     private LocalDateTime dataOra;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm - dd/MM/yyyy");
 
     /**
      * Costruttore completo per la creazione di una notifica.
@@ -83,6 +83,6 @@ public class Notifica {
     @Override
     public String toString() {
         return "\nOggetto: " + oggetto +
-                "\n" + messaggio +  "[" + dataOra.format(formatter) + "]";
+                "\n" + messaggio +  "[" + dataOra.format(FORMATTER) + "]";
     }
 }
