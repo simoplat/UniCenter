@@ -649,6 +649,9 @@ function renderAuthenticatedView() {
       <a class="nav-item ${state.activeTab === 'comunicazioni' ? 'active' : ''}" onclick="switchTab('comunicazioni')">
         <span>📢 Avvisi & Comunicazioni</span>
       </a>
+      <a class="nav-item ${state.activeTab === 'notifiche' ? 'active' : ''}" onclick="switchTab('notifiche')">
+        <span>🔔 Notifiche</span>
+      </a>
       <a class="nav-item nav-item-logout" onclick="logout()" title="Disconnetti ed esci da UniCenter">
         <span>🚪 Esci</span>
       </a>
@@ -740,6 +743,7 @@ async function loadActiveTabContent() {
       else if (tab === 'pubblica-esito') await renderProfessorPubblicaEsito(container);
       else if (tab === 'esiti-pubblicati') await renderProfessorEsitiPubblicati(container);
       else if (tab === 'comunicazioni') await renderProfessorComunicazioni(container);
+      else if (tab === 'notifiche') await renderProfessorNotifiche(container);
     } else if (role === 'amministratore') {
       if (tab === 'dashboard') await renderAdminDashboard(container);
       else if (tab === 'corsi') await renderAdminCorsi(container);
@@ -2166,6 +2170,75 @@ async function handleInviaComunicazione(e) {
   } else {
     UI.toast(res.error || 'Errore invio comunicazione', 'error');
   }
+}
+
+async function renderProfessorNotifiche(container) {
+  const res = await API.get('/api/professor/notifiche');
+  const list = (res.data || []).slice();
+
+  // Ordina notifiche per data più recente prima
+  list.sort((a, b) => {
+    const timeA = a.data ? new Date(a.data).getTime() : 0;
+    const timeB = b.data ? new Date(b.data).getTime() : 0;
+    return timeB - timeA;
+  });
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Le Tue Notifiche</h1>
+        <p class="page-subtitle">Avvisi di sistema, conferme di esito e risposte degli studenti in ordine cronologico recente</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span class="badge badge-info" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+          ${list.length} notifiche ricevute
+        </span>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <div class="card-panel-header">
+        <h3 class="card-panel-title">Centro Avvisi & Notifiche Docente</h3>
+      </div>
+      ${list.length === 0 ? `
+        <div style="text-align: center; padding: 3rem 1rem;">
+          <div style="font-size: 3rem; margin-bottom: 0.75rem;">📭</div>
+          <h3 style="color: var(--text-primary); margin-bottom: 0.25rem;">Nessuna notifica</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Non hai ancora ricevuto notifiche o aggiornamenti di sistema.</p>
+        </div>
+      ` : `
+        <div class="notification-feed">
+          ${list.map(n => {
+            const isAvviso = n.titolo && (n.titolo.toLowerCase().includes('avviso') || n.titolo.toLowerCase().includes('comunicazione') || n.titolo.toLowerCase().includes('lezione'));
+            const isEsito = n.titolo && (n.titolo.toLowerCase().includes('esito') || n.titolo.toLowerCase().includes('voto') || n.titolo.toLowerCase().includes('esame') || n.titolo.toLowerCase().includes('accetta') || n.titolo.toLowerCase().includes('rifiuta'));
+            const isIscrizione = n.titolo && (n.titolo.toLowerCase().includes('iscrizione') || n.titolo.toLowerCase().includes('appello'));
+            const icon = isIscrizione ? '📅' : isAvviso ? '📢' : isEsito ? '🎓' : '🔔';
+
+            return `
+              <div class="notification-card">
+                <div class="notification-icon-wrap">
+                  ${icon}
+                </div>
+                <div class="notification-body">
+                  <div class="notification-header">
+                    <span class="notification-title">${n.titolo || 'Avviso di Sistema'}</span>
+                    <span class="notification-time">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      ${UI.formatDate(n.data)}
+                    </span>
+                  </div>
+                  ${formatNotificationBody(n.messaggio)}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `}
+    </div>
+  `;
 }
 
 // ==========================================

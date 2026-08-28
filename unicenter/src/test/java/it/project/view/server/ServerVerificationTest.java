@@ -92,6 +92,12 @@ public class ServerVerificationTest {
         assert respProfMat.statusCode() == 200 : "Prof materie status not 200: " + respProfMat.statusCode();
         System.out.println("✓ API /api/professor/materie: " + respProfMat.body());
 
+        // 9b. Test Professor Notifiche API
+        HttpRequest reqProfNotif = HttpRequest.newBuilder(URI.create(baseUrl + "/api/professor/notifiche")).build();
+        HttpResponse<String> respProfNotif = client.send(reqProfNotif, HttpResponse.BodyHandlers.ofString());
+        assert respProfNotif.statusCode() == 200 : "Prof notifiche status not 200: " + respProfNotif.statusCode();
+        System.out.println("✓ API /api/professor/notifiche: " + respProfNotif.body());
+
         // 10. Test Admin Login API
         String adminLoginJson = "{\"email\":\"admin@unicenter.it\",\"password\":\"admin123\"}";
         HttpRequest reqAdminLogin = HttpRequest.newBuilder(URI.create(baseUrl + "/api/auth/login"))

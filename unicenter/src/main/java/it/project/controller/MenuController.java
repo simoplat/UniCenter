@@ -414,6 +414,7 @@ public class MenuController {
             view.mostraMessaggio("5. Pubblica esito esame (UC3)");
             view.mostraMessaggio("6. Visualizza esiti pubblicati");
             view.mostraMessaggio("7. Invia comunicazione / avviso di corso (UC7)");
+            view.mostraMessaggio("8. Visualizza notifiche");
             view.mostraMessaggio("0. Torna al menu principale");
             int scelta = leggiIntero("Seleziona un'opzione: ");
 
@@ -744,6 +745,18 @@ public class MenuController {
                                 "\n[SUCCESSO] Comunicazione pubblicata e inviata a " + notificati + " studente/i.");
                     } catch (Exception e) {
                         view.mostraErrore("Errore durante l'invio della comunicazione: " + e.getMessage());
+                    }
+                }
+
+                case 8 -> {
+                    view.mostraMessaggio("\n--- Notifiche ---");
+                    List<Notifica> notifiche = unicenter.getNotifichePerProfessore();
+                    if (notifiche == null || notifiche.isEmpty()) {
+                        view.mostraMessaggio("Nessuna notifica disponibile.");
+                    } else {
+                        for (Notifica notifica : notifiche) {
+                            view.mostraMessaggio(notifica.toString());
+                        }
                     }
                 }
 

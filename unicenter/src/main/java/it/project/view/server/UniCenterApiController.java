@@ -833,6 +833,28 @@ public class UniCenterApiController {
                     int inviati = unicenter.inviaComunicazioneMateria(codMateria, titolo, msg);
                     return ok(Map.of("message", "Comunicazione pubblicata e inviata a " + inviati + " studenti."));
                 }
+
+                if (path.equals("/api/professor/notifiche")) {
+                    List<Notifica> list = unicenter.getNotifichePerProfessore();
+                    List<Map<String, Object>> result = new ArrayList<>();
+                    if (list != null) {
+                        List<Notifica> sortedList = new ArrayList<>(list);
+                        sortedList.sort((n1, n2) -> {
+                            if (n1.getDataOra() == null && n2.getDataOra() == null) return 0;
+                            if (n1.getDataOra() == null) return 1;
+                            if (n2.getDataOra() == null) return -1;
+                            return n2.getDataOra().compareTo(n1.getDataOra());
+                        });
+                        for (Notifica n : sortedList) {
+                            result.add(Map.of(
+                                    "titolo", n.getOggetto() != null ? n.getOggetto() : "Avviso",
+                                    "messaggio", n.getMessaggio() != null ? n.getMessaggio() : "",
+                                    "data", n.getDataOra() != null ? n.getDataOra().toString() : ""
+                            ));
+                        }
+                    }
+                    return ok(result);
+                }
             }
 
             // ==========================================

@@ -270,6 +270,24 @@ class UnicenterTest {
     }
 
     @Test
+    void getNotifichePerProfessore_currentUserStudente_ritornaListaVuota() {
+        boolean loggato = unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123");
+        assertTrue(loggato);
+
+        assertTrue(unicenter.getNotifichePerProfessore().isEmpty());
+    }
+
+    @Test
+    void getNotifichePerProfessore_currentUserProfessore_ritornaLeNotifiche() {
+        boolean loggato = unicenter.passwordCorretta("mario.rossi@unicenter.it", "pass123");
+        assertTrue(loggato);
+
+        List<Notifica> notifiche = unicenter.getNotifichePerProfessore();
+        assertNotNull(notifiche);
+        assertFalse(notifiche.isEmpty(), "Il professore deve avere le notifiche generate da popolaDataBase()");
+    }
+
+    @Test
     void trovaAppelliProfessore_currentUserStudente_ritornaListaVuota() {
         unicenter.passwordCorretta("mario.rossi@studenti.it", "pass123"); // login come studente
 

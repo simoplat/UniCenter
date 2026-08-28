@@ -556,6 +556,20 @@ public class Unicenter {
     }
 
     /**
+     * Restituisce le notifiche per il docente attualmente loggato.
+     *
+     * @return lista notifiche del professore
+     */
+    public List<Notifica> getNotifichePerProfessore() {
+        if (currentUser instanceof Professore) {
+            Professore professore = (Professore) currentUser;
+            return professore.getNotifiche();
+        }
+        return Collections.emptyList();
+    }
+
+
+    /**
      * Modifica i dettagli logistici di un appello d'esame.
      *
      * @param codiceAppello         codice dell'appello
